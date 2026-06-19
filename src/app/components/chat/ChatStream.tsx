@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Send,
   Square,
@@ -88,10 +89,27 @@ export function ChatStream({
   h: ChatEventHandlers;
   onOpenSidebar?: () => void;
 }) {
+  const navigate = useNavigate();
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<ComposerMode>('Investigate');
   const [streaming, setStreaming] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+
+  // ⌘K → search, ⌘N → new chat (for when TopBar is hidden on mobile)
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        navigate('/search');
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        onOpenSidebar?.();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [navigate, onOpenSidebar]);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
