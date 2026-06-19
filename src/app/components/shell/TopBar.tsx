@@ -4,7 +4,7 @@ import { Search, Settings, Menu } from 'lucide-react';
 import { BackendStatusPill } from './BackendStatusPill';
 import { CommandSheet } from './CommandSheet';
 import { ThemeToggle } from './ThemeToggle';
-import { NavDrawer } from './NavDrawer';
+import { useNavContext } from './NavContext';
 
 function SystemLogo() {
   return (
@@ -22,8 +22,8 @@ function SystemLogo() {
 
 export function TopBar() {
   const navigate = useNavigate();
+  const { openNav } = useNavContext();
   const [searchOpen, setSearchOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,18 +40,12 @@ export function TopBar() {
       }
       if (e.key === 'Escape') {
         setSearchOpen(false);
-        setDrawerOpen(false);
         inputRef.current?.blur();
       }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
-
-  // Close drawer on route change
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, [navigate]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -67,13 +61,12 @@ export function TopBar() {
     <>
       <header className="flex h-14 items-center gap-2 border-b border-border-subtle bg-surface px-3 sm:gap-3 sm:px-4">
         <div className="flex min-w-0 shrink-0 items-center gap-2.5">
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger — always visible on mobile */}
           <button
             type="button"
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => openNav()}
             className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
             aria-label="Open navigation"
-            aria-expanded={drawerOpen}
           >
             <Menu className="size-5" />
           </button>
@@ -131,7 +124,6 @@ export function TopBar() {
       </header>
 
       {searchOpen && <CommandSheet onClose={() => setSearchOpen(false)} />}
-      <NavDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </>
   );
 }

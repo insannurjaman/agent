@@ -6,11 +6,11 @@ import {
   Paperclip,
   X,
   Loader2,
-  Menu,
   MoreHorizontal,
   ChevronDown,
   MessageSquareDashed,
 } from 'lucide-react';
+import { useNavContext } from '../shell/NavContext';
 import {
   composerModes,
   composerModeDescriptions,
@@ -79,7 +79,6 @@ export function ChatStream({
   onRemoveContext,
   onAttachContext,
   h,
-  onOpenSidebar,
 }: {
   session: ChatSession;
   transcript: ChatEvent[];
@@ -87,15 +86,15 @@ export function ChatStream({
   onRemoveContext: (id: string) => void;
   onAttachContext: () => void;
   h: ChatEventHandlers;
-  onOpenSidebar?: () => void;
 }) {
   const navigate = useNavigate();
+  const { openNav } = useNavContext();
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<ComposerMode>('Investigate');
   const [streaming, setStreaming] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  // ⌘K → search, ⌘N → new chat
+  // ⌘K → search, ⌘N → open chats drawer
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -104,12 +103,12 @@ export function ChatStream({
       }
       if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
         e.preventDefault();
-        onOpenSidebar?.();
+        openNav('chats');
       }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [navigate, onOpenSidebar]);
+  }, [navigate, openNav]);
 
   useEffect(() => {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
@@ -128,17 +127,6 @@ export function ChatStream({
     <div className="flex min-w-0 flex-1 flex-col bg-background">
       {/* Mobile chat header — sticky, 56px */}
       <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle bg-surface px-3 md:h-auto md:gap-3 md:px-5 md:py-2.5">
-        {/* Mobile hamburger */}
-        {onOpenSidebar && (
-          <button
-            type="button"
-            onClick={onOpenSidebar}
-            className="flex size-11 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
-            aria-label="Open navigation"
-          >
-            <Menu className="size-5" />
-          </button>
-        )}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14px] font-medium text-text">{session.title}</div>
           <div className="flex items-center gap-2 font-mono text-[11px] text-text-muted">

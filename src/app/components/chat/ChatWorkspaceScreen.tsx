@@ -1,5 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useLocation } from 'react-router';
+import { useState, useCallback } from 'react';
 import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
 import type { ChatEventHandlers, ProposalStatus } from './ChatEvents';
 import { ChatStream } from './ChatStream';
@@ -14,9 +13,7 @@ const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as 
 
 export function ChatWorkspaceScreen() {
   const bp = useBreakpoint();
-  const location = useLocation();
   const [session, setSession] = useState<ChatSession>(sessions[0]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [artifactOpen, setArtifactOpen] = useState(false);
   const [artifactId, setArtifactId] = useState<string | null>(null);
   const [attachedContext, setAttachedContext] = useState<string[]>(['F-0050', 'Q-0014']);
@@ -30,11 +27,6 @@ export function ChatWorkspaceScreen() {
   const bundle = getSessionBundle(session.id) ?? EMPTY_BUNDLE;
 
   const artifact = artifactId ? bundle.artifacts[artifactId] ?? null : null;
-
-  // Close sidebar on route change
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [location.pathname]);
 
   const handlers: ChatEventHandlers = {
     onNav: (id) => setAttachedContext((prev) => (prev.includes(id) ? prev : [...prev, id])),
@@ -84,37 +76,6 @@ export function ChatWorkspaceScreen() {
         />
       )}
 
-      {/* Mobile/tablet sidebar — off-canvas drawer */}
-      {bp !== 'desktop' && (
-        <Drawer
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          side="left"
-          width="w-[min(86vw,320px)]"
-        >
-          <SessionExplorerPane
-            sessionList={sessions}
-            activeSessionId={session.id}
-            onSelectSession={(id) => {
-              const s = sessions.find((x) => x.id === id);
-              if (s) {
-                setSession(s);
-                setSidebarOpen(false);
-              }
-            }}
-            onNewChat={() => {
-              setSidebarOpen(false);
-              setNewChatOpen(true);
-            }}
-            relay="connected"
-            currentSlug={session.slug}
-            tree={bundle.tree}
-            activeFilePath={null}
-            onSelectFile={() => {}}
-          />
-        </Drawer>
-      )}
-
       {/* Main chat area */}
       <ChatStream
         session={session}
@@ -123,7 +84,6 @@ export function ChatWorkspaceScreen() {
         onRemoveContext={(id) => setAttachedContext((prev) => prev.filter((x) => x !== id))}
         onAttachContext={() => {}}
         h={handlers}
-        onOpenSidebar={() => setSidebarOpen(true)}
       />
 
       {/* Artifact panel — closed by default, desktop only */}
