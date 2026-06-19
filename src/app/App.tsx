@@ -1,4 +1,5 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
+import { ThemeProvider } from 'next-themes';
 import { AppShell } from './components/shell/AppShell';
 import { FindingsScreen } from './components/findings/FindingsScreen';
 import { ExperimentsScreen } from './components/experiments/ExperimentsScreen';
@@ -33,8 +34,8 @@ const router = createHashRouter([
 
 export default function App() {
   return (
-    <div className="dark">
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <RouterProvider router={router} />
-    </div>
+    </ThemeProvider>
   );
 }

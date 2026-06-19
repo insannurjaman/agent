@@ -39,6 +39,74 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Oxide light palette — mirrors the dark block below */
+  --surface: #f8f9fa;
+  --surface-2: #f1f3f5;
+  --elevated: #ffffff;
+  --surface-hover: #e9ecef;
+  --code-surface: #f1f3f5;
+  --border-subtle: #e0e3e1;
+  --border-strong: #c8cdc9;
+  --text: #1a1d1e;
+  --text-secondary: #5f6b66;
+  --text-muted: #8a9590;
+  --green: #0d9668;
+  --teal: #0e7490;
+  --amber: #b45309;
+  --error: #dc2626;
+  --red: #dc2626;
+  --blue: #2563eb;
+  --purple: #6d28d9;
+  --brand-primary: #d43600;
+  --brand-primary-hover: #b82e00;
+  --brand-primary-muted: rgba(212, 54, 0, 0.08);
+  --brand-primary-border: rgba(212, 54, 0, 0.3);
+  --brand-primary-ring: rgba(212, 54, 0, 0.45);
+  --brand-primary-glow: rgba(212, 54, 0, 0.12);
+  --brand-primary-surface: #fef2ee;
+  --success: #0d9668;
+  --info: #0e7490;
+  --warning: #b45309;
+  --lineage: #6d28d9;
+
+  /* Re-map shadcn semantic tokens for light Oxide */
+  --background: #ffffff;
+  --foreground: #1a1d1e;
+  --card: #f8f9fa;
+  --card-foreground: #1a1d1e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1d1e;
+  --primary: var(--brand-primary);
+  --primary-foreground: #ffffff;
+  --secondary: #f1f3f5;
+  --secondary-foreground: #1a1d1e;
+  --muted: #f1f3f5;
+  --muted-foreground: #8a9590;
+  --accent: var(--brand-primary-surface);
+  --accent-foreground: #1a1d1e;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e0e3e1;
+  --input: #e0e3e1;
+  --input-background: #f8f9fa;
+  --switch-background: #c8cdc9;
+  --ring: var(--brand-primary);
+  --chart-1: var(--brand-primary);
+  --chart-2: var(--info);
+  --chart-3: var(--warning);
+  --chart-4: var(--lineage);
+  --chart-5: var(--error);
+  --radius: 0.25rem;
+
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #5f6b66;
+  --sidebar-primary: var(--brand-primary);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: var(--brand-primary-surface);
+  --sidebar-accent-foreground: #1a1d1e;
+  --sidebar-border: #e0e3e1;
+  --sidebar-ring: var(--brand-primary);
 }
 
 .dark {

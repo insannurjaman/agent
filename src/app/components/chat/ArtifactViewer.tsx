@@ -194,15 +194,15 @@ function ArtifactBody({ artifact }: { artifact: Artifact }) {
 function PngPreview() {
   return (
     <div className="overflow-hidden rounded-sm border border-border-subtle bg-surface-2">
-      <div className="relative h-56 bg-[radial-gradient(circle,#252b30_1px,transparent_1px)] [background-size:14px_14px]">
+      <div className="relative h-56 bg-[radial-gradient(circle,var(--border-subtle)_1px,transparent_1px)] [background-size:14px_14px]">
         <svg viewBox="0 0 400 220" preserveAspectRatio="none" className="absolute inset-0 size-full">
-          <line x1="40" y1="10" x2="40" y2="190" stroke="#343c43" strokeWidth="1" />
-          <line x1="40" y1="190" x2="390" y2="190" stroke="#343c43" strokeWidth="1" />
+          <line x1="40" y1="10" x2="40" y2="190" stroke="var(--border-strong)" strokeWidth="1" />
+          <line x1="40" y1="190" x2="390" y2="190" stroke="var(--border-strong)" strokeWidth="1" />
           {[60, 120, 180, 240, 300, 360].map((x, i) => (
-            <circle key={i} cx={x} cy={180 - i * 22 - (i % 2) * 10} r="4" fill="#ff3e01" />
+            <circle key={i} cx={x} cy={180 - i * 22 - (i % 2) * 10} r="4" fill="var(--brand-primary)" />
           ))}
-          <polyline points="60,160 120,150 180,120 240,108 300,80 360,58" fill="none" stroke="#ff3e01" strokeWidth="1.5" />
-          <polyline points="60,176 120,170 180,160 240,150 300,138 360,120" fill="none" stroke="#6ba6ff" strokeWidth="1" strokeDasharray="3 3" />
+          <polyline points="60,160 120,150 180,120 240,108 300,80 360,58" fill="none" stroke="var(--brand-primary)" strokeWidth="1.5" />
+          <polyline points="60,176 120,170 180,160 240,150 300,138 360,120" fill="none" stroke="var(--blue)" strokeWidth="1" strokeDasharray="3 3" />
         </svg>
       </div>
     </div>

@@ -3,15 +3,16 @@ import { Search, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { BackendStatusPill } from './BackendStatusPill';
 import { CommandSheet } from './CommandSheet';
+import { ThemeToggle } from './ThemeToggle';
 
 function SystemLogo() {
   return (
     <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden className="shrink-0">
-      <rect x="0.5" y="0.5" width="21" height="21" rx="2" stroke="#343c43" />
+      <rect x="0.5" y="0.5" width="21" height="21" rx="2" stroke="var(--border-strong)" />
       {[3, 8, 13, 18].map((x) =>
         [3, 8, 13, 18].map((y) => {
           const on = (x + y) % 3 === 0;
-          return <circle key={`${x}-${y}`} cx={x} cy={y} r="1.4" fill={on ? '#ff3e01' : '#252b30'} />;
+          return <circle key={`${x}-${y}`} cx={x} cy={y} r="1.4" fill={on ? 'var(--brand-primary)' : 'var(--border-subtle)'} />;
         }),
       )}
     </svg>
@@ -62,6 +63,7 @@ export function TopBar() {
         <div className="hidden md:block">
           <BackendStatusPill />
         </div>
+        <ThemeToggle />
         <button
           type="button"
           onClick={() => navigate('/status')}

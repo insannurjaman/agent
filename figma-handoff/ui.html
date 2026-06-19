@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Inter, sans-serif; background: #080a0b; color: #f2f5f3; padding: 16px; }
+    h2 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #ff3e01; }
+    h3 { font-size: 12px; font-weight: 500; margin: 12px 0 8px; color: #a9b2af; }
+    .section { margin-bottom: 20px; }
+    .btn { width: 100%; padding: 10px; border: 1px solid #252b30; background: #12161a; color: #f2f5f3; border-radius: 4px; cursor: pointer; font-size: 13px; font-family: Inter, sans-serif; }
+    .btn:hover { background: #171c20; }
+    .btn-primary { background: #ff3e01; border-color: #ff3e01; color: #080a0b; font-weight: 500; }
+    .btn-primary:hover { background: #e63700; }
+    .progress { height: 4px; background: #252b30; border-radius: 2px; margin-top: 8px; overflow: hidden; display: none; }
+    .progress-bar { height: 100%; background: #ff3e01; width: 0%; transition: width 0.3s; }
+    .status { font-size: 11px; color: #6f7a76; margin-top: 8px; }
+    .checkbox-group { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+    .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #a9b2af; cursor: pointer; }
+    .checkbox-label input { accent-color: #ff3e01; }
+    .info { font-size: 11px; color: #6f7a76; line-height: 1.5; margin-top: 8px; padding: 8px; background: #0d1012; border-radius: 4px; border: 1px solid #252b30; }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <h2>QAS Handoff Builder</h2>
+    <p class="info">
+      Builds the complete Quick Agent System component library, variable collections,
+      and route screens in the current Figma file.
+    </p>
+  </div>
+
+  <div class="section">
+    <h3>Build Steps</h3>
+    <div class="checkbox-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="step-variables" checked> Variable Collections
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="step-components" checked> Component Library
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="step-screens" checked> Route Screens
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="step-foundations" checked> Foundations / Color Palette
+      </label>
+    </div>
+  </div>
+
+  <div class="section">
+    <button class="btn btn-primary" id="build-btn">Build Everything</button>
+    <div class="progress" id="progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <p class="status" id="status">Ready to build</p>
+  </div>
+
+  <div class="section">
+    <button class="btn" id="build-vars-btn">Build Variables Only</button>
+  </div>
+
+  <div class="section">
+    <button class="btn" id="build-components-btn">Build Components Only</button>
+  </div>
+
+  <div class="section">
+    <button class="btn" id="build-screens-btn">Build Screens Only</button>
+  </div>
+
+  <script>
+    document.getElementById('build-btn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'build-all' } }, '*');
+      document.getElementById('progress').style.display = 'block';
+      document.getElementById('status').textContent = 'Building...';
+    };
+
+    document.getElementById('build-vars-btn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'build-variables' } }, '*');
+    };
+
+    document.getElementById('build-components-btn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'build-components' } }, '*');
+    };
+
+    document.getElementById('build-screens-btn').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'build-screens' } }, '*');
+    };
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg && msg.type === 'progress') {
+        const bar = document.getElementById('progress-bar');
+        bar.style.width = msg.percent + '%';
+        document.getElementById('status').textContent = msg.text;
+      }
+      if (msg && msg.type === 'done') {
+        document.getElementById('status').textContent = '✅ Build complete!';
+      }
+    };
+  </script>
+</body>
+</html>

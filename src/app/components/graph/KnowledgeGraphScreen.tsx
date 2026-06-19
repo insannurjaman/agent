@@ -20,23 +20,23 @@ import { cn } from '../ui/utils';
 import { forceLayout, radialLayout, type Pos } from './layout';
 
 const EDGE_COLOR: Record<EdgeType, string> = {
-  origin: '#ff3e01',
-  cite: '#6ba6ff',
-  'report-use': '#2dd4bf',
-  relates: '#6f7a76',
-  'resolve-partial': '#f3c969',
-  'conflict-suspected': '#ff6b6b',
-  supersedes: '#8b7cf6',
-  'relates-finding': '#6f7a76',
-  addresses: '#6ba6ff',
-  strengthens: '#39d98a',
-  resolves: '#39d98a',
+  origin: 'var(--brand-primary)',
+  cite: 'var(--blue)',
+  'report-use': 'var(--teal)',
+  relates: 'var(--text-muted)',
+  'resolve-partial': 'var(--amber)',
+  'conflict-suspected': 'var(--error)',
+  supersedes: 'var(--lineage)',
+  'relates-finding': 'var(--text-muted)',
+  addresses: 'var(--blue)',
+  strengthens: 'var(--green)',
+  resolves: 'var(--green)',
 };
 
 const KIND_COLOR: Record<NodeKind, string> = {
-  finding: '#ff3e01',
-  question: '#f3c969',
-  experiment: '#2dd4bf',
+  finding: 'var(--brand-primary)',
+  question: 'var(--amber)',
+  experiment: 'var(--teal)',
 };
 
 const NODE_W = 158;
@@ -423,18 +423,18 @@ export function KnowledgeGraphScreen() {
                         width={NODE_W}
                         height={NODE_H}
                         rx={3}
-                        fill="#12161a"
-                        stroke={isSel || isRoot ? color : '#252b30'}
+                        fill="var(--surface-2)"
+                        stroke={isSel || isRoot ? color : 'var(--border-subtle)'}
                         strokeWidth={isSel || isRoot ? 2 : 1}
                       />
                       <rect width={3} height={NODE_H} rx={1.5} fill={color} />
                       <text x={12} y={18} fontSize="11" fontFamily="JetBrains Mono, monospace" fill={color}>
                         {id.replace('experiments/', '')}
                       </text>
-                      <text x={12} y={32} fontSize="10" fill="#f2f5f3">
+                      <text x={12} y={32} fontSize="10" fill="var(--text)">
                         {truncate(node.label, 22)}
                       </text>
-                      <text x={12} y={43} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="#6f7a76">
+                      <text x={12} y={43} fontSize="9" fontFamily="JetBrains Mono, monospace" fill="var(--text-muted)">
                         {node.sub}
                       </text>
                     </g>
@@ -562,7 +562,7 @@ function FilterChip({
           : 'border-border-subtle bg-surface text-text-muted opacity-50',
       )}
     >
-      <span className="size-2 rounded-full" style={{ background: active ? color : '#343c43' }} />
+      <span className="size-2 rounded-full" style={{ background: active ? color : 'var(--border-strong)' }} />
       {children}
     </button>
   );

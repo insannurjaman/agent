@@ -7,9 +7,26 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <title>Quick Agent System</title>
       <meta name="description" content="Quick Agent System is a frontend prototype for exploring findings, experiments, knowledge graphs, lineage, agent sessions, and simulated system status." />
-      <meta name="theme-color" content="#080a0b" />
+      <meta name="theme-color" content="#080a0b" media="(prefers-color-scheme: dark)" />
+      <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
       <meta name="robots" content="index, follow" />
       <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
+      <script>
+        (function() {
+          try {
+            var t = localStorage.getItem('theme');
+            if (t === 'light') {
+              document.documentElement.classList.remove('dark');
+            } else if (t === 'dark') {
+              document.documentElement.classList.add('dark');
+            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+              document.documentElement.classList.remove('dark');
+            } else {
+              document.documentElement.classList.add('dark');
+            }
+          } catch(e) {}
+        })();
+      </script>
       
     </head>
 

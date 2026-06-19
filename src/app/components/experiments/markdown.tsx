@@ -85,18 +85,18 @@ function renderInline(text: string, navigate: (to: string) => void, keyBase: str
 function Figure({ caption, path }: { caption: string; path: string }) {
   return (
     <figure className="my-5 overflow-hidden rounded-sm border border-border-strong bg-surface-2 shadow-[0_10px_28px_rgba(0,0,0,0.16)]">
-      <div className="relative h-48 bg-[radial-gradient(circle,#20262b_1px,transparent_1px)] [background-size:16px_16px] sm:h-56">
+      <div className="relative h-48 bg-[radial-gradient(circle,var(--border-subtle)_1px,transparent_1px)] [background-size:16px_16px] sm:h-56">
         <svg viewBox="0 0 320 120" preserveAspectRatio="none" className="absolute inset-0 size-full">
           <polyline
             points="0,96 40,90 80,74 120,80 160,52 200,58 240,30 280,38 320,16"
             fill="none"
-            stroke="#ff3e01"
+            stroke="var(--brand-primary)"
             strokeWidth="1.5"
           />
           <polyline
             points="0,108 40,104 80,100 120,96 160,88 200,84 240,72 280,66 320,58"
             fill="none"
-            stroke="#6ba6ff"
+            stroke="var(--blue)"
             strokeWidth="1"
             strokeDasharray="3 3"
           />
