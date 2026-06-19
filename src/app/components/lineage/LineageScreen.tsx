@@ -13,6 +13,7 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 
 export function LineageScreen() {
@@ -79,14 +80,14 @@ export function LineageScreen() {
                 className={cn(
                   'mb-1.5 w-full rounded-sm border px-3 py-2.5 text-left transition-colors',
                   isActive
-                    ? 'border-teal/40 bg-surface-2'
+                    ? 'border-brand-border bg-brand-muted'
                     : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
                 )}
               >
                 <div className="flex items-center gap-1.5 font-mono text-[12px]">
                   <span className="text-text-muted">{head}</span>
                   <ArrowUpRight className="size-3 text-text-muted" />
-                  <span className="text-green">{tail}</span>
+                  <span className="text-brand">{tail}</span>
                 </div>
                 <div className="mt-1 line-clamp-2 text-[12px] text-text-secondary">
                   {getFindingById(tail)?.title}
@@ -137,7 +138,7 @@ export function LineageScreen() {
 
       {/* Right: detail inspector — overlay below lg */}
       {selectedFinding && (
-        <div className="fixed inset-0 z-50 lg:static lg:inset-auto lg:z-auto lg:flex">
+        <ResponsiveInspectorOverlay>
           <LineageInspector
             finding={selectedFinding}
             latest={getLatestVersion(selectedFinding.id)}
@@ -145,7 +146,7 @@ export function LineageScreen() {
             onGoLatest={() => setSelected(getLatestVersion(selectedFinding.id))}
             navigate={navigate}
           />
-        </div>
+        </ResponsiveInspectorOverlay>
       )}
     </div>
   );
@@ -171,15 +172,15 @@ function ChainCard({
       onClick={onClick}
       className={cn(
         'block w-full rounded-sm border px-4 py-3 text-left transition-colors',
-        selected ? 'border-teal/50' : 'border-border-subtle hover:border-border-strong',
+        selected ? 'border-brand-border bg-brand-muted' : 'border-border-subtle hover:border-border-strong',
         isLatest ? 'bg-surface' : 'bg-surface opacity-60',
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <MonoId className={isLatest ? 'text-green' : 'text-text-muted'}>{finding.id}</MonoId>
+          <MonoId className={isLatest ? 'text-brand' : 'text-text-muted'}>{finding.id}</MonoId>
           {isLatest ? (
-            <StatusBadge value="high" tone="green" />
+            <StatusBadge value="high" tone="success" />
           ) : (
             <StatusBadge value="superseded" showDot={false} />
           )}
@@ -190,7 +191,7 @@ function ChainCard({
       <p className="mt-1 line-clamp-2 text-[12px] text-text-secondary">{finding.summary}</p>
 
       {isLatest && (
-        <div className="mt-2 inline-flex items-center gap-1.5 rounded-sm border border-green/30 bg-green/10 px-2 py-0.5 font-mono text-[11px] text-green">
+        <div className="mt-2 inline-flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-2 py-0.5 font-mono text-[11px] text-brand">
           Latest valid claim
         </div>
       )}
@@ -207,7 +208,7 @@ function ChainCard({
               e.stopPropagation();
               onGoLatest();
             }}
-            className="inline-flex items-center gap-1 font-mono text-[11px] text-teal hover:underline"
+            className="inline-flex items-center gap-1 font-mono text-[11px] text-brand hover:underline"
           >
             Go to Latest <ArrowUpRight className="size-3" />
           </span>
@@ -254,7 +255,7 @@ function LineageInspector({
               : `/findings?focus=${id}`,
         )
       }
-      className="font-mono text-[12px] text-teal hover:underline"
+      className="font-mono text-[12px] text-brand hover:underline"
     >
       {id.replace('experiments/', '')}
     </button>
@@ -265,7 +266,7 @@ function LineageInspector({
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">FINDING</span>
-          <MonoId className="text-teal">{finding.id}</MonoId>
+          <MonoId className="text-brand">{finding.id}</MonoId>
         </div>
         <button
           type="button"
@@ -291,7 +292,7 @@ function LineageInspector({
             <button
               type="button"
               onClick={onGoLatest}
-              className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-teal hover:underline"
+              className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-brand hover:underline"
             >
               Go to Latest Version {latest} <ArrowUpRight className="size-3" />
             </button>

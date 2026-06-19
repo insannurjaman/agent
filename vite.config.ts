@@ -17,6 +17,9 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig({
+  // GitHub Pages serves project sites from /<repository>/.
+  // Local development keeps the app at the root path.
+  base: process.env.BASE_PATH || '/',
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if

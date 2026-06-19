@@ -1,42 +1,11 @@
-import { X, FileText, Share2, GitBranch, ArrowUpRight } from 'lucide-react';
+import { FileText, Share2, GitBranch, ArrowUpRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import type { Finding, OpenQuestion } from '../../data';
 import { getLatestVersion } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { MetaRow, MonoId } from '../common/primitives';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
-
-function InspectorFrame({
-  kicker,
-  id,
-  onClose,
-  children,
-}: {
-  kicker: string;
-  id: string;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <aside className="flex h-full w-full shrink-0 flex-col border-l border-border-subtle bg-surface lg:w-[380px]">
-      <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{kicker}</span>
-          <MonoId className="text-teal">{id}</MonoId>
-        </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close inspector"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-4">{children}</div>
-    </aside>
-  );
-}
+import { InspectorFrame } from '../common/InspectorFrame';
 
 function Tags({ items }: { items: string[] }) {
   return (
@@ -72,7 +41,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
       <div className="mt-3 flex flex-wrap gap-1.5">
         <StatusBadge value={finding.category} />
         <StatusBadge value={finding.confidence} />
-        {finding.actionable && <StatusBadge value="actionable" tone="green" />}
+        {finding.actionable && <StatusBadge value="actionable" tone="brand" />}
       </div>
 
       {isSuperseded && (
@@ -85,9 +54,9 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
             <button
               type="button"
               onClick={() => navigate(`/findings?focus=${latest}`)}
-              className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-teal hover:underline"
+              className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-brand hover:underline"
             >
-              Go to Latest Version <MonoId className="text-teal">{latest}</MonoId>
+              Go to Latest Version <MonoId className="text-brand">{latest}</MonoId>
               <ArrowUpRight className="size-3" />
             </button>
           )}
@@ -102,7 +71,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
           <MonoId>{finding.date}</MonoId>
         </MetaRow>
         <MetaRow label="Evidence">
-          <MonoId className="text-teal">{finding.evidence}</MonoId>
+          <MonoId className="text-info">{finding.evidence}</MonoId>
         </MetaRow>
         {finding.supersedes && (
           <MetaRow label="Supersedes">
@@ -135,7 +104,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
                 key={q}
                 type="button"
                 onClick={() => navigate(`/findings?tab=questions&focus=${q}`)}
-                className="text-left font-mono text-[12px] text-teal hover:underline"
+                className="text-left font-mono text-[12px] text-brand hover:underline"
               >
                 {q}
               </button>
@@ -215,8 +184,8 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
           <ol className="relative ml-1 border-l border-border-strong pl-4">
             {events.map((e, i) => (
               <li key={i} className="relative pb-3 last:pb-0">
-                <span className="absolute -left-[21px] top-1 size-2 rounded-full border border-border-strong bg-teal" />
-                <MonoId className="text-teal">{e.date}</MonoId>
+                <span className="absolute -left-[21px] top-1 size-2 rounded-full border border-border-strong bg-brand" />
+                <MonoId className="text-brand">{e.date}</MonoId>
                 <p className="mt-0.5 text-[12px] text-text-secondary">{e.text}</p>
               </li>
             ))}
@@ -234,7 +203,7 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
             key={r}
             type="button"
             onClick={() => navigate(r.startsWith('experiments/') ? `/experiments/${r}` : `/findings?focus=${r}`)}
-            className="text-left font-mono text-[12px] text-teal hover:underline"
+            className="text-left font-mono text-[12px] text-brand hover:underline"
           >
             {r}
           </button>

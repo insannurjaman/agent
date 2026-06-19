@@ -119,9 +119,9 @@ export function ChatWorkspaceScreen() {
   };
 
   const related: RelatedItem[] = useMemo(() => {
-    const out: RelatedItem[] = [{ label: 'Source experiment', id: activeSession.slug, tone: 'text-teal' }];
+    const out: RelatedItem[] = [{ label: 'Source experiment', id: activeSession.slug, tone: 'text-info' }];
     for (const ev of bundle.transcript) {
-      if (ev.kind === 'finding-proposal') out.push({ label: 'Related finding proposal', id: ev.proposal.findingId, tone: 'text-green' });
+      if (ev.kind === 'finding-proposal') out.push({ label: 'Related finding proposal', id: ev.proposal.findingId, tone: 'text-brand' });
       if (ev.kind === 'question-proposal') out.push({ label: 'Related open question', id: ev.proposal.questionId, tone: 'text-amber' });
     }
     if (bundle.artifacts['REPORT.md']) out.push({ label: 'Related report', id: 'REPORT.md', tone: 'text-text-secondary' });
@@ -180,7 +180,7 @@ export function ChatWorkspaceScreen() {
                   title={d === 'focus' ? 'Conversation-first' : 'Full execution trace'}
                   className={cn(
                     'rounded-sm px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
-                    density === d ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                    density === d ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                   )}
                 >
                   {d}
@@ -367,7 +367,7 @@ function DevControls({
   ];
   const chip = (active: boolean) =>
     `rounded-sm border px-2 py-0.5 font-mono text-[10px] transition-colors ${
-      active ? 'border-teal/40 bg-teal/10 text-teal' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary'
+      active ? 'border-brand-border bg-brand-muted text-brand' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary'
     }`;
   return (
     <div className="absolute right-0 top-full z-50 mt-1 w-64 rounded-sm border border-border-strong bg-popover p-3 shadow-xl">
@@ -420,7 +420,7 @@ function RelayGate({ relay, onRetry, navigate }: { relay: RelayState; onRetry: (
             : 'Chat requires Claude Code stream relay. Configure the local backend to enable chat.'}
         </p>
         <div className="mt-4 flex items-center justify-center gap-2">
-          <button type="button" onClick={onRetry} className="flex items-center gap-1.5 rounded-sm border border-teal/40 bg-teal/10 px-3 py-1.5 text-[12px] text-teal hover:bg-teal/15">
+          <button type="button" onClick={onRetry} className="flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-3 py-1.5 text-[12px] text-brand hover:bg-brand-surface">
             <RefreshCw className="size-3.5" /> {disconnected ? 'Reconnect' : 'Retry connection'}
           </button>
           <button type="button" onClick={() => navigate('/status')} className="flex items-center gap-1.5 rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text">
@@ -458,7 +458,7 @@ function MismatchPanel({ onReload }: { onReload: () => void }) {
         <p className="mx-auto mt-1.5 max-w-sm text-[13px] text-text-secondary">
           This chat transcript and artifact viewer reference different experiment directories.
         </p>
-        <button type="button" onClick={onReload} className="mt-4 inline-flex items-center gap-1.5 rounded-sm border border-teal/40 bg-teal/10 px-3 py-1.5 text-[12px] text-teal hover:bg-teal/15">
+        <button type="button" onClick={onReload} className="mt-4 inline-flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-3 py-1.5 text-[12px] text-brand hover:bg-brand-surface">
           <RefreshCw className="size-3.5" /> Reload session
         </button>
       </div>

@@ -13,6 +13,7 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 
 type Mode = 'topic' | 'facet' | 'neighbors' | 'experiment';
@@ -143,7 +144,7 @@ export function FacetedSearchScreen() {
 
         {/* Search bar + mode selector */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
-          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-teal/40">
+          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               value={topic}
@@ -160,7 +161,7 @@ export function FacetedSearchScreen() {
                 onClick={() => setMode(m)}
                 className={cn(
                   'rounded-sm px-2.5 py-1 font-mono text-[12px] capitalize transition-colors',
-                  mode === m ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                  mode === m ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 {m}
@@ -180,7 +181,7 @@ export function FacetedSearchScreen() {
                 key={k}
                 type="button"
                 onClick={() => toggleFacet(k)}
-                className="flex items-center gap-1 rounded-sm border border-teal/30 bg-teal/10 px-1.5 py-0.5 font-mono text-[11px] text-teal hover:bg-teal/15"
+                className="flex items-center gap-1 rounded-sm border border-brand-border bg-brand-muted px-1.5 py-0.5 font-mono text-[11px] text-brand hover:bg-brand-surface"
               >
                 {k}
                 <X className="size-3" />
@@ -234,9 +235,9 @@ export function FacetedSearchScreen() {
 
       {/* Right selected-result inspector — overlay below lg */}
       {selectedResult && (
-        <div className="fixed inset-0 z-50 lg:static lg:inset-auto lg:z-auto lg:flex">
+        <ResponsiveInspectorOverlay>
           <ResultInspector result={selectedResult} onClose={() => setSelectedResult(null)} navigate={navigate} />
-        </div>
+        </ResponsiveInspectorOverlay>
       )}
     </div>
   );
@@ -271,7 +272,7 @@ function FacetPanel({
         )}
       </div>
       <div className="border-b border-border-subtle px-3 py-2">
-        <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 focus-within:border-teal/40">
+        <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 focus-within:border-brand-border">
           <Search className="size-3.5 shrink-0 text-text-muted" />
           <input
             value={within}
@@ -319,10 +320,10 @@ function FacetPanel({
                         <span
                           className={cn(
                             'flex size-3.5 shrink-0 items-center justify-center rounded-[3px] border',
-                            checked ? 'border-teal bg-teal/20' : 'border-border-strong',
+                            checked ? 'border-brand bg-brand-muted' : 'border-border-strong',
                           )}
                         >
-                          {checked && <span className="size-1.5 rounded-[1px] bg-teal" />}
+                          {checked && <span className="size-1.5 rounded-[1px] bg-brand" />}
                         </span>
                         <span className={cn('font-mono text-[12px]', checked ? 'text-text' : 'text-text-secondary')}>
                           {term}
@@ -363,14 +364,14 @@ function ResultGroup({
 }
 
 function ResultRow({ r, selected, onSelect }: { r: Result; selected: boolean; onSelect: () => void }) {
-  const idColor = r.kind === 'finding' ? 'text-green' : r.kind === 'question' ? 'text-amber' : 'text-teal';
+  const idColor = r.kind === 'finding' ? 'text-brand' : r.kind === 'question' ? 'text-warning' : 'text-info';
   return (
     <button
       type="button"
       onClick={onSelect}
       className={cn(
         'w-full rounded-sm border px-3 py-2.5 text-left transition-colors',
-        selected ? 'border-teal/50 bg-surface-2' : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
+        selected ? 'border-brand-border bg-brand-muted' : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -383,7 +384,7 @@ function ResultRow({ r, selected, onSelect }: { r: Result; selected: boolean; on
       <div className="mt-1.5 flex flex-wrap items-center gap-1">
         {r.matched.length > 0 ? (
           r.matched.map((f) => (
-            <span key={f} className="rounded-sm border border-teal/30 bg-teal/10 px-1 py-0.5 font-mono text-[10px] text-teal">
+            <span key={f} className="rounded-sm border border-brand-border bg-brand-muted px-1 py-0.5 font-mono text-[10px] text-brand">
               {f}
             </span>
           ))
@@ -426,7 +427,9 @@ function ResultInspector({
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{result.kind}</span>
-          <MonoId className="text-teal">{result.id.replace('experiments/', '')}</MonoId>
+          <MonoId className={result.kind === 'experiment' ? 'text-info' : 'text-brand'}>
+            {result.id.replace('experiments/', '')}
+          </MonoId>
         </div>
         <button
           type="button"
@@ -451,7 +454,7 @@ function ResultInspector({
               className={cn(
                 'rounded-sm border px-1.5 py-0.5 font-mono text-[11px]',
                 result.matched.includes(f)
-                  ? 'border-teal/30 bg-teal/10 text-teal'
+                  ? 'border-brand-border bg-brand-muted text-brand'
                   : 'border-border-subtle bg-surface-2 text-text-secondary',
               )}
             >
@@ -461,7 +464,7 @@ function ResultInspector({
         </div>
 
         <Label>Source / Evidence</Label>
-        <MonoId className="text-teal">{result.source}</MonoId>
+        <MonoId className="text-info">{result.source}</MonoId>
 
         <Label>Actions</Label>
         <div className="flex flex-col gap-2">

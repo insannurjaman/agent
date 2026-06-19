@@ -7,7 +7,6 @@ import {
   GitBranch,
   Terminal,
   Activity,
-  Component,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -26,5 +25,4 @@ export const navItems: NavItem[] = [
   { to: '/lineage', label: 'Lineage', icon: GitBranch },
   { to: '/chat', label: 'Chat Workspace', icon: Terminal },
   { to: '/status', label: 'System Status', icon: Activity },
-  { to: '/design', label: 'Design System', icon: Component },
 ];

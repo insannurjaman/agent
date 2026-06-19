@@ -11,7 +11,7 @@ function SystemLogo() {
       {[3, 8, 13, 18].map((x) =>
         [3, 8, 13, 18].map((y) => {
           const on = (x + y) % 3 === 0;
-          return <circle key={`${x}-${y}`} cx={x} cy={y} r="1.4" fill={on ? '#2dd4bf' : '#252b30'} />;
+          return <circle key={`${x}-${y}`} cx={x} cy={y} r="1.4" fill={on ? '#ff3e01' : '#252b30'} />;
         }),
       )}
     </svg>
@@ -23,19 +23,22 @@ export function TopBar() {
   const navigate = useNavigate();
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b border-border-subtle bg-surface px-3 sm:px-4">
-      <div className="flex min-w-0 shrink items-center gap-2.5">
+    <header className="flex h-14 items-center gap-2 border-b border-border-subtle bg-surface px-3 sm:gap-3 sm:px-4">
+      <div className="flex min-w-0 shrink-0 items-center gap-2.5">
         <SystemLogo />
-        <span className="truncate text-text" style={{ fontSize: '14px', fontWeight: 600 }}>
+        <span className="text-[14px] font-semibold text-text md:hidden xl:inline">
           Quick Agent System
         </span>
-        <span className="hidden rounded-sm border border-border-subtle px-1.5 py-0.5 font-mono text-[11px] text-text-muted sm:inline">
+        <span className="hidden font-mono text-[13px] font-semibold tracking-wide text-text md:inline xl:hidden">
+          QAS
+        </span>
+        <span className="hidden rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-text-muted xl:inline">
           v0.1.0
         </span>
       </div>
 
       {/* Desktop / tablet search input */}
-      <div className="mx-auto hidden w-full max-w-xl items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 focus-within:border-teal/40 md:flex">
+      <div className="group mx-auto hidden min-w-0 max-w-xl flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 transition-colors hover:border-border-strong focus-within:border-brand-border focus-within:bg-code-surface focus-within:ring-2 focus-within:ring-brand-ring md:flex">
         <Search className="size-4 shrink-0 text-text-muted" />
         <input
           className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
@@ -49,7 +52,7 @@ export function TopBar() {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="flex size-9 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted hover:text-text md:hidden"
+          className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted outline-none transition-colors hover:border-border-strong hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring md:hidden"
           aria-label="Search"
         >
           <Search className="size-4" />
@@ -63,7 +66,7 @@ export function TopBar() {
           type="button"
           onClick={() => navigate('/status')}
           aria-label="Backend status"
-          className="flex size-9 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 md:hidden"
+          className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 outline-none transition-colors hover:border-border-strong hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-brand-ring md:hidden"
         >
           <span className="relative flex size-2">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-green opacity-60" />
@@ -73,7 +76,7 @@ export function TopBar() {
 
         <button
           type="button"
-          className="flex size-9 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted transition-colors hover:text-text md:size-8"
+          className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted outline-none transition-colors hover:border-border-strong hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring md:size-9"
           aria-label="Settings"
         >
           <Settings className="size-4" />

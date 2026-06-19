@@ -5,7 +5,7 @@ export function CommandSheet({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top)]">
       <div className="flex items-center gap-2 border-b border-border-subtle bg-surface px-3 py-3">
-        <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 focus-within:border-teal/40">
+        <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 focus-within:border-brand-border">
           <Search className="size-4 shrink-0 text-text-muted" />
           <input
             autoFocus

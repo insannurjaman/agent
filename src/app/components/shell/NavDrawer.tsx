@@ -24,11 +24,11 @@ export function NavDrawer({ onClose }: { onClose: () => void }) {
               className={({ isActive }) =>
                 cn(
                   'flex min-h-[44px] items-center gap-3 rounded-sm px-3 text-[14px] transition-colors',
-                  isActive ? 'bg-surface-2 text-text' : 'text-text-secondary hover:bg-surface-2',
+                  isActive ? 'bg-brand-muted text-brand' : 'text-text-secondary hover:bg-surface-2',
                 )
               }
             >
-              <Icon className="size-[18px] shrink-0 text-text-muted" strokeWidth={1.75} />
+              <Icon className="size-[18px] shrink-0 text-current" strokeWidth={1.75} />
               {label}
             </NavLink>
           ))}

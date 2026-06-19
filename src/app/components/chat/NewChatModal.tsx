@@ -76,7 +76,7 @@ export function NewChatModal({
               onChange={(e) => setPrompt(e.target.value)}
               rows={3}
               placeholder="Describe what you want Claude to investigate…"
-              className="w-full resize-none rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 text-[13px] text-text outline-none placeholder:text-text-muted focus:border-teal/40"
+              className="w-full resize-none rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 text-[13px] text-text outline-none placeholder:text-text-muted focus:border-brand-border"
             />
           </Field>
 
@@ -85,7 +85,7 @@ export function NewChatModal({
               {context.map((c) => (
                 <span
                   key={c}
-                  className="flex items-center gap-1 rounded-sm border border-teal/30 bg-teal/10 px-1.5 py-0.5 font-mono text-[11px] text-teal"
+                  className="flex items-center gap-1 rounded-sm border border-brand-border bg-brand-muted px-1.5 py-0.5 font-mono text-[11px] text-brand"
                 >
                   {c.replace('experiments/', 'experiment:')}
                   <button type="button" onClick={() => setContext((p) => p.filter((x) => x !== c))} className="text-text-muted hover:text-text">
@@ -126,7 +126,7 @@ export function NewChatModal({
             <div
               className={cn(
                 'rounded-sm border bg-surface-2 px-3 py-2 font-mono text-[12px]',
-                validity === 'valid' ? 'border-border-subtle text-teal' : validity === 'duplicate' ? 'border-amber/40 text-amber' : 'border-red/40 text-red',
+                validity === 'valid' ? 'border-border-subtle text-brand' : validity === 'duplicate' ? 'border-amber/40 text-amber' : 'border-red/40 text-red',
               )}
             >
               {slug}
@@ -152,7 +152,7 @@ export function NewChatModal({
 
           <Field label="Working directory preview">
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 font-mono text-[12px] text-text-secondary">
-              <div className="text-teal">{slug}/</div>
+              <div className="text-brand">{slug}/</div>
               <div className="mt-1 space-y-0.5 pl-3 text-text-muted">
                 <div className="flex items-center gap-1.5">
                   <FileText className="size-3" /> README.md
@@ -176,7 +176,7 @@ export function NewChatModal({
                   onClick={() => setMode(m.label)}
                   className={cn(
                     'rounded-sm border px-2.5 py-1.5 text-left transition-colors',
-                    mode === m.label ? 'border-teal/40 bg-surface-2' : 'border-border-subtle bg-surface hover:border-border-strong',
+                    mode === m.label ? 'border-brand-border bg-brand-muted' : 'border-border-subtle bg-surface hover:border-border-strong',
                   )}
                 >
                   <div className="text-[12px] text-text">{m.label}</div>
@@ -187,7 +187,7 @@ export function NewChatModal({
           </Field>
 
           <p className="mt-1 flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 font-mono text-[11px] text-text-muted">
-            <FolderPlus className="size-3.5 shrink-0 text-teal" />
+            <FolderPlus className="size-3.5 shrink-0 text-brand" />
             Each chat session is associated with one experiment directory.
           </p>
         </div>
@@ -207,7 +207,7 @@ export function NewChatModal({
             className={cn(
               'rounded-sm border px-3 py-1.5 text-[12px] transition-colors',
               validity === 'valid'
-                ? 'border-purple/40 bg-purple/15 text-purple hover:bg-purple/20'
+                ? 'border-brand-border bg-brand text-primary-foreground hover:bg-brand-hover'
                 : 'cursor-not-allowed border-border-subtle bg-surface text-text-muted',
             )}
           >

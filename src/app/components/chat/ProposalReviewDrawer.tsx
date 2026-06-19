@@ -70,7 +70,7 @@ export function ProposalReviewDrawer({
               onClick={() => setActive(t.key)}
               className={cn(
                 'rounded-sm px-2.5 py-1 font-mono text-[11px] transition-colors',
-                t.key === active ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                t.key === active ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
               )}
             >
               {t.label}
@@ -86,14 +86,14 @@ export function ProposalReviewDrawer({
         </div>
 
         <SectionLabel>Target</SectionLabel>
-        <MonoId className="text-teal">{isFinding ? tab.finding!.targetFile : tab.question!.targetFile}</MonoId>
+        <MonoId className="text-info">{isFinding ? tab.finding!.targetFile : tab.question!.targetFile}</MonoId>
 
         <SectionLabel>Gateway</SectionLabel>
         <MonoId className="text-text-secondary">{isFinding ? tab.finding!.gateway : tab.question!.gateway}</MonoId>
 
         <SectionLabel>Execution</SectionLabel>
         <p className="flex items-start gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-2 text-[12px] leading-relaxed text-text-muted">
-          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-teal" />
+          <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" />
           Frontend is read-only. Updates are performed through Claude-mediated workflows.
         </p>
       </div>
@@ -108,7 +108,7 @@ export function ProposalReviewDrawer({
         <button
           type="button"
           onClick={() => onConfirm(tab.kind, isFinding ? tab.finding!.findingId : tab.question!.questionId)}
-          className="rounded-sm border border-purple/40 bg-purple/15 px-3 py-1.5 text-[12px] text-purple hover:bg-purple/20"
+          className="rounded-sm border border-brand-border bg-brand px-3 py-1.5 text-[12px] text-primary-foreground hover:bg-brand-hover"
         >
           Confirm through Claude
         </button>
@@ -120,10 +120,10 @@ export function ProposalReviewDrawer({
 function FindingFields({ p }: { p: FindingProposal }) {
   return (
     <>
-      <Field label="ID"><MonoId className="text-green">{p.findingId}</MonoId></Field>
+      <Field label="ID"><MonoId className="text-brand">{p.findingId}</MonoId></Field>
       <Field label="Title">{p.title}</Field>
       <Field label="Summary"><span className="text-text-secondary">{p.summary}</span></Field>
-      <Field label="Evidence"><MonoId className="text-teal">{p.evidence}</MonoId></Field>
+      <Field label="Evidence"><MonoId className="text-info">{p.evidence}</MonoId></Field>
       <Field label="Confidence"><StatusBadge value={p.confidence} /></Field>
       <Field label="Facets">
         <div className="flex flex-wrap gap-1">
@@ -146,7 +146,7 @@ function QuestionFields({ p }: { p: QuestionProposal }) {
       <Field label="Title">{p.title}</Field>
       <Field label="Priority"><StatusBadge value={p.priority} showDot={false} /></Field>
       <Field label="Area">{p.area}</Field>
-      <Field label="Related"><MonoId className="text-green">{p.relatedFinding}</MonoId></Field>
+      <Field label="Related"><MonoId className="text-brand">{p.relatedFinding}</MonoId></Field>
     </>
   );
 }

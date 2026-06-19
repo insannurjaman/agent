@@ -24,13 +24,13 @@ export function BottomNav() {
             className={({ isActive }) =>
               cn(
                 'relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 text-text-muted',
-                isActive && 'text-text',
+                isActive && 'text-brand',
               )
             }
           >
             {({ isActive }) => (
               <>
-                {isActive && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-teal" />}
+                {isActive && <span className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-brand" />}
                 <Icon className="size-[18px]" strokeWidth={1.75} />
                 <span className="font-mono text-[10px]">{label}</span>
               </>

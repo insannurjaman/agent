@@ -102,12 +102,12 @@ export function ChatStream({
       <div className="border-b border-border-subtle bg-surface px-5 py-2.5">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Active Chat</span>
-          <span className="font-mono text-[12px] text-teal">{session.id}</span>
+          <span className="font-mono text-[12px] text-brand">{session.id}</span>
           <span className="text-[13px] text-text">· {session.title}</span>
           <span
             className={cn(
               'ml-auto inline-flex items-center gap-1.5 font-mono text-[11px] uppercase',
-              session.status === 'running' ? 'text-teal' : session.status === 'failed' ? 'text-red' : 'text-green',
+              session.status === 'running' ? 'text-brand' : session.status === 'failed' ? 'text-red' : 'text-green',
             )}
           >
             {session.status === 'running' && <Loader2 className="size-3 animate-spin" />}
@@ -116,7 +116,7 @@ export function ChatStream({
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px] text-text-muted">
           <span>
-            Experiment: <span className="text-teal">{session.slug}</span>
+            Experiment: <span className="text-info">{session.slug}</span>
           </span>
           <span>· working dir fixed</span>
           <span className="inline-flex items-center gap-1 text-green">
@@ -163,7 +163,7 @@ export function ChatStream({
               return <ProposalGroup key={i} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
             })}
             {streaming && (
-              <div className="flex items-center gap-2 text-[13px] text-purple">
+              <div className="flex items-center gap-2 text-[13px] text-brand">
                 <Loader2 className="size-3.5 animate-spin" />
                 <span>Claude is working…</span>
               </div>
@@ -190,10 +190,10 @@ export function ChatStream({
 
 function ContextChip({ id, onRemove, onClick }: { id: string; onRemove: () => void; onClick: () => void }) {
   const color = id.startsWith('F-')
-    ? 'text-green border-green/30'
+    ? 'text-brand border-brand-border'
     : id.startsWith('Q-')
       ? 'text-amber border-amber/30'
-      : 'text-teal border-teal/30';
+      : 'text-brand border-brand-border';
   return (
     <span className={cn('flex items-center gap-1 rounded-sm border bg-surface-2 px-1.5 py-0.5', color)}>
       <button type="button" onClick={onClick} className="font-mono text-[11px] hover:underline">
@@ -241,7 +241,7 @@ function Composer({
             key={a}
             type="button"
             onClick={() => setDraft(a)}
-            className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary transition-colors hover:border-teal/40 hover:text-text"
+            className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary transition-colors hover:border-brand-border hover:text-text"
           >
             {a}
           </button>
@@ -274,7 +274,7 @@ function Composer({
         </div>
       </div>
 
-      <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-teal/40">
+      <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-brand-border">
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
@@ -350,7 +350,7 @@ function Composer({
                 className={cn(
                   'flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] transition-colors',
                   draft.trim()
-                    ? 'border border-purple/40 bg-purple/15 text-purple hover:bg-purple/20'
+                    ? 'border border-brand-border bg-brand text-primary-foreground hover:bg-brand-hover'
                     : 'cursor-not-allowed border border-border-subtle bg-surface text-text-muted',
                 )}
               >

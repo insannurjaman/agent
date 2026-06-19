@@ -60,9 +60,9 @@ export function ArtifactViewer({
         <>
           {/* Auto-follow banner */}
           {autoFollow ? (
-            <div className="flex items-center gap-2 border-b border-border-subtle bg-teal/[0.06] px-4 py-1.5">
-              <span className="size-1.5 rounded-full bg-teal" />
-              <span className="font-mono text-[11px] text-teal">Following latest artifact</span>
+            <div className="flex items-center gap-2 border-b border-border-subtle bg-brand-muted px-4 py-1.5">
+              <span className="size-1.5 rounded-full bg-brand" />
+              <span className="font-mono text-[11px] text-brand">Following latest artifact</span>
               <button
                 type="button"
                 onClick={onPause}
@@ -79,7 +79,7 @@ export function ArtifactViewer({
                 <button type="button" onClick={onResume} className="flex items-center gap-1 font-mono text-[11px] text-text-secondary hover:text-text">
                   <Play className="size-3" /> Resume
                 </button>
-                <button type="button" onClick={onOpenLatest} className="flex items-center gap-1 font-mono text-[11px] text-teal hover:underline">
+                <button type="button" onClick={onOpenLatest} className="flex items-center gap-1 font-mono text-[11px] text-brand hover:underline">
                   Open latest <ArrowRight className="size-3" />
                 </button>
               </div>
@@ -89,12 +89,12 @@ export function ArtifactViewer({
           {/* New artifact notification (while paused) */}
           {!autoFollow && newArtifact && (
             <div className="flex items-center gap-2 border-b border-border-subtle bg-surface-2 px-4 py-2">
-              <span className="size-1.5 rounded-full bg-teal" />
+              <span className="size-1.5 rounded-full bg-brand" />
               <span className="font-mono text-[11px] text-text-secondary">
-                New artifact generated: <span className="text-teal">{newArtifact.name}</span>
+                New artifact generated: <span className="text-brand">{newArtifact.name}</span>
               </span>
               <div className="ml-auto flex items-center gap-2">
-                <button type="button" onClick={onOpenLatest} className="font-mono text-[11px] text-teal hover:underline">
+                <button type="button" onClick={onOpenLatest} className="font-mono text-[11px] text-brand hover:underline">
                   Open latest
                 </button>
                 <button type="button" onClick={onKeepPinned} className="flex items-center gap-0.5 font-mono text-[11px] text-text-muted hover:text-text-secondary">
@@ -121,7 +121,7 @@ export function ArtifactViewer({
                 onClick={() => setTab(t)}
                 className={cn(
                   'rounded-sm px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
-                  tab === t ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                  tab === t ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 {t}
@@ -199,9 +199,9 @@ function PngPreview() {
           <line x1="40" y1="10" x2="40" y2="190" stroke="#343c43" strokeWidth="1" />
           <line x1="40" y1="190" x2="390" y2="190" stroke="#343c43" strokeWidth="1" />
           {[60, 120, 180, 240, 300, 360].map((x, i) => (
-            <circle key={i} cx={x} cy={180 - i * 22 - (i % 2) * 10} r="4" fill="#2dd4bf" />
+            <circle key={i} cx={x} cy={180 - i * 22 - (i % 2) * 10} r="4" fill="#ff3e01" />
           ))}
-          <polyline points="60,160 120,150 180,120 240,108 300,80 360,58" fill="none" stroke="#39d98a" strokeWidth="1.5" />
+          <polyline points="60,160 120,150 180,120 240,108 300,80 360,58" fill="none" stroke="#ff3e01" strokeWidth="1.5" />
           <polyline points="60,176 120,170 180,160 240,150 300,138 360,120" fill="none" stroke="#6ba6ff" strokeWidth="1" strokeDasharray="3 3" />
         </svg>
       </div>
@@ -212,7 +212,7 @@ function PngPreview() {
 function JsonTree({ value, depth }: { value: unknown; depth: number }) {
   if (value === null) return <span className="text-text-muted">null</span>;
   if (typeof value !== 'object') {
-    const color = typeof value === 'number' ? 'text-teal' : typeof value === 'boolean' ? 'text-amber' : 'text-green';
+    const color = typeof value === 'number' ? 'text-brand' : typeof value === 'boolean' ? 'text-amber' : 'text-text-secondary';
     return <span className={cn('font-mono text-[11px]', color)}>{JSON.stringify(value)}</span>;
   }
   const entries = Array.isArray(value)
@@ -268,7 +268,7 @@ function Timeline({ timeline, onOpen }: { timeline: TimelineItem[]; onOpen: (ite
         const clickable = !!t.artifactId;
         return (
           <li key={i} className="relative pb-3 last:pb-0">
-            <span className="absolute -left-[21px] top-1 flex size-4 items-center justify-center rounded-full border border-border-strong bg-surface text-[9px] text-teal">
+            <span className="absolute -left-[21px] top-1 flex size-4 items-center justify-center rounded-full border border-border-strong bg-surface text-[9px] text-brand">
               {i + 1}
             </span>
             <button
@@ -277,7 +277,7 @@ function Timeline({ timeline, onOpen }: { timeline: TimelineItem[]; onOpen: (ite
               onClick={() => clickable && onOpen(t)}
               className={cn(
                 'text-left text-[12px]',
-                clickable ? 'text-text-secondary hover:text-teal hover:underline' : 'cursor-default text-text-secondary',
+                clickable ? 'text-text-secondary hover:text-brand hover:underline' : 'cursor-default text-text-secondary',
               )}
             >
               {t.label}
@@ -294,7 +294,7 @@ function Row({ k, v, accent }: { k: string; v: string; accent?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <span className="shrink-0 uppercase tracking-wide text-text-muted">{k}</span>
-      <span className={cn('text-right break-all', accent ? 'text-teal' : 'text-text-secondary')}>{v}</span>
+      <span className={cn('text-right break-all', accent ? 'text-brand' : 'text-text-secondary')}>{v}</span>
     </div>
   );
 }

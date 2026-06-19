@@ -3,9 +3,30 @@ import { cn } from '../ui/utils';
 // Single source of truth for every badge color rule in the brief.
 // Renders a small uppercase, low-radius, dot-prefixed industrial chip.
 
-type Tone = 'green' | 'teal' | 'amber' | 'red' | 'blue' | 'purple' | 'muted';
+export type StatusTone =
+  | 'brand'
+  | 'success'
+  | 'info'
+  | 'warning'
+  | 'error'
+  | 'lineage'
+  | 'neutral'
+  | 'green'
+  | 'teal'
+  | 'amber'
+  | 'red'
+  | 'blue'
+  | 'purple'
+  | 'muted';
 
-const TONE: Record<Tone, { text: string; border: string; bg: string; dot: string }> = {
+const TONE: Record<StatusTone, { text: string; border: string; bg: string; dot: string }> = {
+  brand: { text: 'text-brand', border: 'border-brand-border', bg: 'bg-brand-muted', dot: 'bg-brand' },
+  success: { text: 'text-success', border: 'border-success/30', bg: 'bg-success/10', dot: 'bg-success' },
+  info: { text: 'text-info', border: 'border-info/30', bg: 'bg-info/10', dot: 'bg-info' },
+  warning: { text: 'text-warning', border: 'border-warning/30', bg: 'bg-warning/10', dot: 'bg-warning' },
+  error: { text: 'text-error', border: 'border-error/30', bg: 'bg-error/10', dot: 'bg-error' },
+  lineage: { text: 'text-lineage', border: 'border-lineage/30', bg: 'bg-lineage/10', dot: 'bg-lineage' },
+  neutral: { text: 'text-text-muted', border: 'border-border-strong', bg: 'bg-surface-2', dot: 'bg-text-muted' },
   green: { text: 'text-green', border: 'border-green/30', bg: 'bg-green/10', dot: 'bg-green' },
   teal: { text: 'text-teal', border: 'border-teal/30', bg: 'bg-teal/10', dot: 'bg-teal' },
   amber: { text: 'text-amber', border: 'border-amber/30', bg: 'bg-amber/10', dot: 'bg-amber' },
@@ -15,43 +36,43 @@ const TONE: Record<Tone, { text: string; border: string; bg: string; dot: string
   muted: { text: 'text-text-muted', border: 'border-border-strong', bg: 'bg-surface-2', dot: 'bg-text-muted' },
 };
 
-const VALUE_TONE: Record<string, Tone> = {
+const VALUE_TONE: Record<string, StatusTone> = {
   // finding category
   factor: 'blue',
-  schema: 'teal',
-  'data-quality': 'amber',
+  schema: 'info',
+  'data-quality': 'warning',
   process: 'blue',
-  hypothesis: 'purple',
-  'anomaly-pattern': 'red',
-  method: 'teal',
+  hypothesis: 'lineage',
+  'anomaly-pattern': 'error',
+  method: 'info',
   // confidence
-  high: 'green',
-  'medium-high': 'green',
-  medium: 'amber',
-  low: 'muted',
-  superseded: 'muted',
+  high: 'success',
+  'medium-high': 'success',
+  medium: 'warning',
+  low: 'neutral',
+  superseded: 'neutral',
   // question status
   open: 'blue',
-  resolved: 'green',
-  'in-progress': 'teal',
-  'partial-progress': 'amber',
+  resolved: 'success',
+  'in-progress': 'info',
+  'partial-progress': 'warning',
   // report status
-  report: 'green',
-  'exploration-only': 'amber',
-  missing: 'muted',
-  outdated: 'red',
+  report: 'success',
+  'exploration-only': 'warning',
+  missing: 'neutral',
+  outdated: 'error',
   // edge types
-  origin: 'green',
+  origin: 'brand',
   cite: 'blue',
-  'report-use': 'teal',
-  supersedes: 'purple',
-  'conflict-suspected': 'red',
-  'resolve-partial': 'amber',
-  relates: 'muted',
+  'report-use': 'info',
+  supersedes: 'lineage',
+  'conflict-suspected': 'error',
+  'resolve-partial': 'warning',
+  relates: 'neutral',
   addresses: 'blue',
-  strengthens: 'green',
-  resolves: 'green',
-  'relates-finding': 'muted',
+  strengthens: 'success',
+  resolves: 'success',
+  'relates-finding': 'neutral',
 };
 
 const LABELS: Record<string, string> = {
@@ -69,7 +90,7 @@ export function StatusBadge({
   className,
 }: {
   value: string;
-  tone?: Tone;
+  tone?: StatusTone;
   showDot?: boolean;
   className?: string;
 }) {
@@ -78,7 +99,7 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[11px] uppercase tracking-wide whitespace-nowrap',
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.08em]',
         t.text,
         t.border,
         t.bg,

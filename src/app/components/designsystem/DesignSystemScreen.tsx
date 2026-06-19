@@ -122,14 +122,14 @@ export function DesignSystemScreen() {
                 <span className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface px-2 py-1 font-mono text-[11px] text-text-secondary">
                   <Paperclip className="size-3.5" /> Attach context
                 </span>
-                <span className="flex items-center gap-1.5 rounded-sm border border-purple/40 bg-purple/15 px-3 py-1.5 text-[12px] text-purple">
+                <span className="flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand px-3 py-1.5 text-[12px] text-primary-foreground">
                   <Send className="size-3.5" /> Send
                 </span>
               </div>
             </Spec>
             <Spec label="Streaming + stop">
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-2 text-[13px] text-purple">
+                <span className="flex items-center gap-2 text-[13px] text-brand">
                   <Loader2 className="size-3.5 animate-spin" /> Claude is working…
                 </span>
                 <span className="flex items-center gap-1.5 rounded-sm border border-red/40 bg-red/10 px-3 py-1.5 text-[12px] text-red">
@@ -158,7 +158,7 @@ export function DesignSystemScreen() {
           <Group title="Artifact components">
             <Spec label="Auto-follow ON">
               <Banner tone="teal">
-                <span className="size-1.5 rounded-full bg-teal" /> Following latest artifact
+                <span className="size-1.5 rounded-full bg-brand" /> Following latest artifact
                 <span className="ml-auto flex items-center gap-1 text-text-secondary"><Pause className="size-3" /> Pause</span>
               </Banner>
             </Spec>
@@ -167,15 +167,15 @@ export function DesignSystemScreen() {
                 <span className="size-1.5 rounded-full bg-amber" /> Viewing pinned artifact
                 <span className="ml-auto flex items-center gap-2 text-text-secondary">
                   <span className="flex items-center gap-1"><Play className="size-3" /> Resume</span>
-                  <span className="flex items-center gap-1 text-teal">Open latest <ArrowRight className="size-3" /></span>
+                  <span className="flex items-center gap-1 text-brand">Open latest <ArrowRight className="size-3" /></span>
                 </span>
               </Banner>
             </Spec>
             <Spec label="New artifact notification">
               <Banner tone="muted">
-                <span className="size-1.5 rounded-full bg-teal" /> New artifact generated: <span className="text-teal">residual_trend.png</span>
+                <span className="size-1.5 rounded-full bg-brand" /> New artifact generated: <span className="text-brand">residual_trend.png</span>
                 <span className="ml-auto flex items-center gap-2">
-                  <span className="text-teal">Open latest</span>
+                  <span className="text-brand">Open latest</span>
                   <span className="flex items-center gap-0.5 text-text-muted">Keep pinned <X className="size-3" /></span>
                 </span>
               </Banner>
@@ -212,19 +212,19 @@ function Spec({ label, children }: { label: string; children: React.ReactNode })
 }
 
 function Chip({ tone, children }: { tone: 'green' | 'amber' | 'teal'; children: React.ReactNode }) {
-  const cls = tone === 'green' ? 'text-green border-green/30' : tone === 'amber' ? 'text-amber border-amber/30' : 'text-teal border-teal/30';
+  const cls = tone === 'green' ? 'text-green border-green/30' : tone === 'amber' ? 'text-amber border-amber/30' : 'text-brand border-brand-border';
   return <span className={cn('rounded-sm border bg-surface-2 px-1.5 py-0.5 font-mono text-[11px]', cls)}>{children}</span>;
 }
 
 function Banner({ tone, children }: { tone: 'teal' | 'amber' | 'red' | 'muted'; children: React.ReactNode }) {
-  const bg = tone === 'teal' ? 'bg-teal/[0.06]' : tone === 'amber' ? 'bg-amber/[0.06]' : tone === 'red' ? 'bg-red/[0.06]' : 'bg-surface-2';
+  const bg = tone === 'teal' ? 'bg-brand-muted' : tone === 'amber' ? 'bg-amber/[0.06]' : tone === 'red' ? 'bg-red/[0.06]' : 'bg-surface-2';
   return <div className={cn('flex items-center gap-2 rounded-sm border border-border-subtle px-3 py-1.5 font-mono text-[11px] text-text-secondary', bg)}>{children}</div>;
 }
 
 function SessionSpec({ id, title, status, tone, selected }: { id: string; title: string; status: string; tone: 'teal' | 'green' | 'red'; selected?: boolean }) {
   return (
     <div className={cn('relative rounded-sm border px-2.5 py-2', selected ? 'border-border-strong bg-surface-2' : 'border-border-subtle bg-surface')}>
-      {selected && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-teal" />}
+      {selected && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-brand" />}
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-[11px] text-text-secondary">{id}</span>
         <StatusBadge value={status} tone={tone} showDot />

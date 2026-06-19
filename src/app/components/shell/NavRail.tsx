@@ -11,7 +11,7 @@ const STORAGE_KEY = 'qas.navrail.expanded';
 const GROUPS: { label: string; routes: string[] }[] = [
   { label: 'Knowledge', routes: ['/overview', '/findings', '/experiments', '/search', '/graph', '/lineage'] },
   { label: 'Workspace', routes: ['/chat'] },
-  { label: 'System', routes: ['/status', '/design'] },
+  { label: 'System', routes: ['/status'] },
 ];
 
 const byRoute = new Map(navItems.map((i) => [i.to, i]));
@@ -67,7 +67,7 @@ export function NavRail() {
             aria-label={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
             title={expanded ? 'Collapse sidebar' : 'Expand sidebar'}
             className={cn(
-              'flex h-11 w-full items-center rounded-md text-text-muted outline-none transition-colors hover:bg-surface-2 hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-teal/50',
+              'flex h-11 w-full items-center rounded-md text-text-muted outline-none transition-colors hover:bg-surface-2 hover:text-text-secondary focus-visible:ring-1 focus-visible:ring-brand-ring',
               !expanded && 'justify-center',
             )}
           >
@@ -94,18 +94,18 @@ function RailItem({ item, expanded }: { item: NavItem; expanded: boolean }) {
       to={to}
       className={({ isActive }) =>
         cn(
-          'group relative flex h-11 items-center rounded-md outline-none transition-colors focus-visible:ring-1 focus-visible:ring-teal/50',
-          isActive ? 'bg-surface-2 text-text' : 'text-text-muted hover:bg-surface-2/60 hover:text-text-secondary',
+          'group relative flex h-11 items-center rounded-md outline-none transition-colors focus-visible:ring-1 focus-visible:ring-brand-ring',
+          isActive ? 'bg-brand-muted text-text' : 'text-text-muted hover:bg-surface-2/60 hover:text-text-secondary',
           !expanded && 'justify-center',
         )
       }
     >
       {({ isActive }) => (
         <>
-          {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-teal" />}
+          {isActive && <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-brand" />}
           {/* Fixed icon column keeps icons aligned across collapsed/expanded */}
           <span className="flex w-9 shrink-0 items-center justify-center">
-            <Icon className={cn('size-[18px]', isActive && 'text-teal')} strokeWidth={1.75} />
+            <Icon className={cn('size-[18px]', isActive && 'text-brand')} strokeWidth={1.75} />
           </span>
           <span
             className={cn(

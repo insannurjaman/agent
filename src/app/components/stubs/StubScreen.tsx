@@ -102,7 +102,7 @@ export function StubScreen({ route }: { route: string }) {
             <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
               Specified · Not yet built
             </span>
-            <span className="rounded-sm border border-teal/30 bg-teal/10 px-1.5 py-0.5 font-mono text-[11px] uppercase text-teal">
+            <span className="rounded-sm border border-brand-border bg-brand-muted px-1.5 py-0.5 font-mono text-[11px] uppercase text-brand">
               {cfg.mvp}
             </span>
           </div>

@@ -15,11 +15,12 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 import { forceLayout, radialLayout, type Pos } from './layout';
 
 const EDGE_COLOR: Record<EdgeType, string> = {
-  origin: '#39d98a',
+  origin: '#ff3e01',
   cite: '#6ba6ff',
   'report-use': '#2dd4bf',
   relates: '#6f7a76',
@@ -33,7 +34,7 @@ const EDGE_COLOR: Record<EdgeType, string> = {
 };
 
 const KIND_COLOR: Record<NodeKind, string> = {
-  finding: '#39d98a',
+  finding: '#ff3e01',
   question: '#f3c969',
   experiment: '#2dd4bf',
 };
@@ -199,7 +200,7 @@ export function KnowledgeGraphScreen() {
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
           {/* Node search */}
           <div className="relative">
-            <div className="flex w-60 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-teal/40">
+            <div className="flex w-60 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
               <Search className="size-3.5 shrink-0 text-text-muted" />
               <input
                 value={nodeSearch}
@@ -254,7 +255,7 @@ export function KnowledgeGraphScreen() {
                   onClick={() => setDepth(d)}
                   className={cn(
                     'rounded-sm px-2 py-0.5 font-mono text-[12px]',
-                    depth === d ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                    depth === d ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                   )}
                 >
                   {d}-hop
@@ -467,8 +468,10 @@ export function KnowledgeGraphScreen() {
 
       {/* Node inspector — bottom sheet / overlay below lg */}
       {selectedNode && (
-        <div className="fixed inset-0 z-50 lg:static lg:inset-auto lg:z-auto lg:flex">
-          <div className="absolute inset-0 bg-black/50 lg:hidden" onClick={() => setSelected(null)} />
+        <ResponsiveInspectorOverlay
+          showBackdrop
+          onDismiss={() => setSelected(null)}
+        >
           <NodeInspector
             node={selectedNode}
             incident={filtered.edges.filter((e) => e.src === selectedNode.id || e.dst === selectedNode.id)}
@@ -477,7 +480,7 @@ export function KnowledgeGraphScreen() {
             onPickNode={focusNode}
             navigate={navigate}
           />
-        </div>
+        </ResponsiveInspectorOverlay>
       )}
     </div>
   );
@@ -507,7 +510,7 @@ function ModeBtn({
       title={title}
       className={cn(
         'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
-        active ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+        active ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
       )}
     >
       <Icon className="size-3.5" />
@@ -654,7 +657,9 @@ function NodeInspector({
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
             {node.kind}
           </span>
-          <MonoId className="text-teal">{node.id.replace('experiments/', '')}</MonoId>
+          <MonoId className={node.kind === 'experiment' ? 'text-info' : 'text-brand'}>
+            {node.id.replace('experiments/', '')}
+          </MonoId>
         </div>
         <button
           type="button"
@@ -681,7 +686,7 @@ function NodeInspector({
             <Label>Summary</Label>
             <p className="text-[13px] leading-relaxed text-text-secondary">{f.summary}</p>
             <Label>Evidence</Label>
-            <MonoId className="text-teal">{f.evidence}</MonoId>
+            <MonoId className="text-info">{f.evidence}</MonoId>
             {(f.supersedes || f.supersededBy) && (
               <>
                 <Label>Lineage</Label>

@@ -268,7 +268,7 @@ function DocumentationLayers() {
               <span className={cn('font-mono text-[13px]', TONE_TEXT[l.tone])}>{l.id}</span>
             </div>
             <div className="min-w-0 flex-1">
-              <MonoId className="text-teal">{l.path}</MonoId>
+              <MonoId className="text-info">{l.path}</MonoId>
               <p className="mt-0.5 text-[12px] text-text-secondary">{l.purpose}</p>
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {l.files.map((f) => (
@@ -296,7 +296,7 @@ function ActionLink({ children, onClick, claude }: { children: React.ReactNode; 
       className={cn(
         'rounded-sm border px-1.5 py-0.5 font-mono text-[11px] transition-colors',
         claude
-          ? 'border-purple/40 bg-purple/10 text-purple hover:bg-purple/15'
+          ? 'border-brand-border bg-brand-muted text-brand hover:bg-brand-surface'
           : 'border-border-strong bg-surface-2 text-text-secondary hover:text-text',
       )}
     >
@@ -312,10 +312,10 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
       <button
         type="button"
         onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}
-        className="mb-2.5 flex w-full items-center gap-2 rounded-sm border border-purple/30 bg-purple/[0.07] px-3 py-2 text-left transition-colors hover:bg-purple/[0.12]"
+        className="mb-2.5 flex w-full items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-left transition-colors hover:bg-brand-surface"
       >
         <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Recommended next step</span>
-        <span className="ml-auto font-mono text-[12px] text-purple">Ask Claude to investigate Q-0014 →</span>
+        <span className="ml-auto font-mono text-[12px] text-brand">Ask Claude to investigate Q-0014 →</span>
       </button>
       <div className="flex flex-col gap-2.5">
         {/* Active Investigation */}
@@ -325,7 +325,7 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
             <span className="ml-auto font-mono text-[10px] text-text-muted">2m ago</span>
           </div>
           <div className="mt-1 flex items-center gap-2">
-            <MonoId className="text-green">F-0050</MonoId>
+            <MonoId className="text-brand">F-0050</MonoId>
             <span className="text-[13px] text-text">Entry temperature variance</span>
           </div>
           <p className="mt-1 text-[12px] leading-snug text-text-secondary">
@@ -353,7 +353,7 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
           </div>
           <div className="mt-1.5 flex items-center gap-2 font-mono text-[10px] text-text-muted">
             <StatusBadge value="open" />
-            <span>Related finding: <span className="text-green">F-0050</span></span>
+            <span>Related finding: <span className="text-brand">F-0050</span></span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <ActionLink onClick={() => navigate('/findings?tab=questions&focus=Q-0014')}>Open Question</ActionLink>
@@ -418,19 +418,19 @@ function ActiveContext({ navigate }: { navigate: (to: string) => void }) {
     <Panel title="Active Context">
       <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
         <MetaRow label="Backend API">
-          <StatusBadge value="Connected" tone="green" />
+          <StatusBadge value="Connected" tone="success" />
         </MetaRow>
         <MetaRow label="Knowledge Index">
-          <StatusBadge value="Ready" tone="green" />
+          <StatusBadge value="Ready" tone="success" />
         </MetaRow>
         <MetaRow label="Graph Index">
-          <StatusBadge value="Ready" tone="green" />
+          <StatusBadge value="Ready" tone="success" />
         </MetaRow>
         <MetaRow label="Claude Relay">
-          <StatusBadge value="Connected" tone="blue" />
+          <StatusBadge value="Connected" tone="info" />
         </MetaRow>
         <MetaRow label="Repository Watcher">
-          <StatusBadge value="Active" tone="teal" />
+          <StatusBadge value="Active" tone="info" />
         </MetaRow>
         <MetaRow label="Frontend Mode">
           <span className="font-mono text-[12px] text-text-secondary">Read-only</span>
@@ -469,11 +469,11 @@ function QuickAction({
       className={cn(
         'flex w-full flex-col rounded-sm border px-3 py-2 text-left transition-colors',
         claude
-          ? 'border-purple/40 bg-purple/10 hover:bg-purple/15'
-          : 'border-border-strong bg-surface-2 hover:border-teal/40',
+          ? 'border-brand-border bg-brand-muted hover:bg-brand-surface'
+          : 'border-border-strong bg-surface-2 hover:border-brand-border',
       )}
     >
-      <span className={cn('flex items-center gap-2 text-[13px]', claude ? 'text-purple' : 'text-text')}>
+      <span className={cn('flex items-center gap-2 text-[13px]', claude ? 'text-brand' : 'text-text')}>
         <Icon className="size-3.5" /> {label}
       </span>
       <span className="mt-0.5 pl-[22px] font-mono text-[10px] text-text-muted">{desc}</span>

@@ -10,7 +10,7 @@ export function AskClaudeButton({ children, onClick }: { children: ReactNode; on
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-sm border border-purple/30 bg-purple/10 px-3 py-2 text-left text-[13px] text-purple transition-colors hover:bg-purple/15"
+      className="flex min-h-10 w-full items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-left text-[13px] text-brand outline-none transition-colors hover:bg-brand-surface focus-visible:ring-2 focus-visible:ring-brand-ring disabled:pointer-events-none disabled:opacity-50"
     >
       <Sparkles className="size-3.5 shrink-0" />
       {children}
@@ -32,7 +32,7 @@ export function NavActionButton({
       type="button"
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3 py-2 text-left text-[13px] text-text-secondary transition-colors hover:border-teal/40 hover:text-text',
+        'flex min-h-10 w-full items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3 py-2 text-left text-[13px] text-text-secondary outline-none transition-colors hover:border-brand-border hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring disabled:pointer-events-none disabled:opacity-50',
         className,
       )}
     >

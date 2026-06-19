@@ -85,7 +85,7 @@ export function SessionExplorerPane({
             onClick={() => setTab(t)}
             className={cn(
               'flex-1 rounded-sm px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
-              tab === t ? 'bg-surface-2 text-text' : 'text-text-muted hover:text-text-secondary',
+              tab === t ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
             )}
           >
             {t}
@@ -99,7 +99,7 @@ export function SessionExplorerPane({
             <button
               type="button"
               onClick={onNewChat}
-              className="flex w-full items-center justify-center gap-2 rounded-sm border border-purple/40 bg-purple/10 px-3 py-2 text-[13px] text-purple transition-colors hover:bg-purple/15"
+              className="flex w-full items-center justify-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-[13px] text-brand transition-colors hover:bg-brand-surface"
             >
               <Plus className="size-4" /> New Chat
             </button>
@@ -134,7 +134,7 @@ export function SessionExplorerPane({
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="border-b border-border-subtle px-3 py-2.5">
             <div className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Current Experiment</div>
-            <div className="mt-0.5 font-mono text-[11px] text-teal">{currentSlug}/</div>
+            <div className="mt-0.5 font-mono text-[11px] text-info">{currentSlug}/</div>
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
             <FileTree nodes={tree} depth={0} activeFilePath={activeFilePath} onSelect={onSelectFile} />
@@ -152,10 +152,10 @@ function SessionRow({ session, active, onClick }: { session: ChatSession; active
       onClick={onClick}
       className={cn(
         'relative mb-1 w-full rounded-sm border px-2.5 py-2 text-left transition-colors',
-        active ? 'border-border-strong bg-surface-2' : 'border-transparent hover:border-border-subtle hover:bg-surface-2',
+        active ? 'border-brand-border bg-brand-muted' : 'border-transparent hover:border-border-subtle hover:bg-surface-2',
       )}
     >
-      {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-teal" />}
+      {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-brand" />}
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-[11px] text-text-secondary">{session.id}</span>
         <StatusBadge value={session.status} tone={STATUS_TONE[session.status]} showDot />
@@ -227,14 +227,14 @@ function FileRow({
       title={node.generated && node.generatedAt ? `Generated ${node.generatedAt}` : undefined}
       className={cn(
         'flex w-full items-center gap-1.5 rounded-sm py-1 pr-2 transition-colors',
-        isActive ? 'bg-surface-2 text-text' : 'text-text-secondary hover:bg-surface-2',
+        isActive ? 'bg-brand-muted text-brand' : 'text-text-secondary hover:bg-surface-2',
       )}
       style={{ paddingLeft: depth * 12 + 18 }}
     >
       <Icon className="size-3.5 shrink-0 text-text-muted" />
       <span className="truncate font-mono text-[12px]">{node.name}</span>
       {node.generated && (
-        <span className="ml-auto rounded-sm border border-teal/30 bg-teal/10 px-1 font-mono text-[9px] uppercase text-teal">new</span>
+        <span className="ml-auto rounded-sm border border-brand-border bg-brand-muted px-1 font-mono text-[9px] uppercase text-brand">new</span>
       )}
       {!node.generated && node.modified && <span className="ml-auto size-1.5 rounded-full bg-amber" />}
     </button>

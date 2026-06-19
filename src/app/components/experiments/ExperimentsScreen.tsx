@@ -1,13 +1,23 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { FolderTree, AlertTriangle, Share2, Copy, Image as ImageIcon } from 'lucide-react';
+import {
+  AlertTriangle,
+  Check,
+  Copy,
+  FileText,
+  FolderTree,
+  Image as ImageIcon,
+  PanelRightOpen,
+  Share2,
+} from 'lucide-react';
 import { experiments, getExperimentBySlug } from '../../data';
 import type { Experiment } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { MonoId } from '../common/primitives';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
-import { Markdown, extractHeadings } from './markdown';
+import { Drawer } from '../responsive/Drawer';
+import { Markdown, extractHeadings, type Heading } from './markdown';
 import { useBreakpoint } from '../responsive/useBreakpoint';
 import { cn } from '../ui/utils';
 
@@ -15,71 +25,55 @@ export function ExperimentsScreen() {
   const params = useParams();
   const navigate = useNavigate();
   const bp = useBreakpoint();
-  // The :slug param captures the rest of the path after /experiments/.
   const slugParam = params['*'] ?? '';
   const sorted = useMemo(() => [...experiments].sort((a, b) => b.date.localeCompare(a.date)), []);
   const active = slugParam ? getExperimentBySlug(slugParam) : sorted[0];
 
-  // Mobile: list-first — show the list until an experiment is chosen, then the report.
   const mobileShowReport = bp === 'mobile' && !!slugParam && !!active;
   const mobileShowList = bp === 'mobile' && !mobileShowReport;
 
   return (
     <div className="flex h-full">
-      {/* Left: experiment list */}
-      <div
+      <section
+        aria-label="Experiment reports"
         className={cn(
           'flex shrink-0 flex-col border-r border-border-subtle bg-surface',
-          'w-full md:w-[300px] lg:w-[340px]',
+          'w-full md:w-[300px] lg:w-[320px]',
           bp === 'mobile' && !mobileShowList && 'hidden',
         )}
       >
-        <div className="border-b border-border-subtle px-4 py-3">
-          <h1 className="text-text" style={{ fontSize: '15px' }}>
-            Experiments & Reports
-          </h1>
-          <p className="mt-0.5 font-mono text-[11px] text-text-muted">
-            {experiments.length} experiments + _template
+        <div className="border-b border-border-subtle px-4 py-3.5">
+          <h1 className="text-[15px] font-semibold text-text">Experiments & Reports</h1>
+          <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">
+            {experiments.length} indexed experiments · 1 template
           </p>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto p-2">
-          {sorted.map((e) => (
-            <ExperimentListItem
-              key={e.slug}
-              exp={e}
-              active={active?.slug === e.slug}
-              onClick={() => navigate(`/experiments/${e.slug}`)}
-            />
-          ))}
+        <div className="min-h-0 flex-1 overflow-auto px-2 py-2.5 [scrollbar-gutter:stable]">
+          <div className="space-y-2">
+            {sorted.map((experiment) => (
+              <ExperimentListItem
+                key={experiment.slug}
+                exp={experiment}
+                active={active?.slug === experiment.slug}
+                onClick={() => navigate(`/experiments/${experiment.slug}`)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
-      {/* Center: report viewer */}
-      <div className={cn('flex min-w-0 flex-1 flex-col bg-background', mobileShowList && 'hidden')}>
+      <div className={cn('flex min-w-0 flex-1 bg-background', mobileShowList && 'hidden')}>
         {active ? (
-          <>
-            {bp === 'mobile' && (
-              <button
-                type="button"
-                onClick={() => navigate('/experiments')}
-                className="flex items-center gap-1.5 border-b border-border-subtle bg-surface px-4 py-2 text-left font-mono text-[12px] text-teal"
-              >
-                ← All experiments
-              </button>
-            )}
-            <ReportViewer exp={active} />
-          </>
+          <ReportWorkspace
+            key={active.slug}
+            exp={active}
+            showMobileBack={bp === 'mobile'}
+            onBack={() => navigate('/experiments')}
+          />
         ) : (
           <EmptyState title="Select an experiment" />
         )}
       </div>
-
-      {/* Right: outline + metadata — desktop only */}
-      {active && (
-        <div className="hidden xl:flex">
-          <OutlinePanel exp={active} />
-        </div>
-      )}
     </div>
   );
 }
@@ -94,211 +88,387 @@ function ExperimentListItem({
   onClick: () => void;
 }) {
   const bare = exp.slug.replace('experiments/', '');
+
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       className={cn(
-        'mb-1.5 w-full rounded-sm border px-3 py-2.5 text-left transition-colors',
+        'group relative min-h-28 w-full overflow-hidden rounded-sm border px-3 py-3 text-left outline-none transition-[background-color,border-color,box-shadow]',
+        'focus-visible:border-brand focus-visible:ring-2 focus-visible:ring-brand-ring',
         active
-          ? 'border-teal/40 bg-surface-2'
-          : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
+          ? 'border-brand-border bg-brand-muted shadow-[inset_0_0_0_1px_rgba(255,62,1,0.04)]'
+          : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-hover',
       )}
     >
-      <div className="flex items-center justify-between gap-2">
-        <MonoId className="text-teal">{bare}</MonoId>
-        <StatusBadge value={exp.outdated ? 'outdated' : exp.reportStatus} showDot={false} />
+      {active && <span className="absolute inset-y-2 left-0 w-0.5 rounded-r-full bg-brand" />}
+
+      <div className="flex items-start justify-between gap-3">
+        <h2 className={cn('line-clamp-2 text-[13px] font-semibold leading-snug', active ? 'text-text' : 'text-text-secondary group-hover:text-text')}>
+          {exp.title}
+        </h2>
+        <StatusBadge
+          value={exp.outdated ? 'outdated' : exp.reportStatus}
+          showDot={false}
+          className="mt-0.5 shrink-0 text-[9px]"
+        />
       </div>
-      <div className="mt-1 line-clamp-1 text-[13px] text-text">{exp.title}</div>
-      <ul className="mt-1.5 space-y-0.5">
-        {exp.conclusions.slice(0, 3).map((c, i) => (
-          <li key={i} className="flex gap-1.5 text-[11px] leading-snug text-text-muted">
-            <span className="mt-1.5 size-1 shrink-0 rounded-full bg-border-strong" />
-            <span className="line-clamp-1">{c}</span>
+
+      <div className="mt-1.5 flex items-center gap-2 font-mono text-[10px] text-text-muted">
+        <span className={cn('truncate', active && 'text-brand')}>{bare}</span>
+        <span aria-hidden>·</span>
+        <span className="shrink-0">{exp.date}</span>
+      </div>
+
+      <ul className="mt-2 space-y-1">
+        {exp.conclusions.slice(0, 2).map((conclusion, index) => (
+          <li key={index} className="flex gap-1.5 text-[11px] leading-[1.45] text-text-muted">
+            <span className="mt-[6px] size-1 shrink-0 rounded-full bg-border-strong" />
+            <span className="line-clamp-1">{conclusion}</span>
           </li>
         ))}
       </ul>
-      <div className="mt-2 flex items-center gap-3 font-mono text-[10px] text-text-muted">
+
+      <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-border-subtle pt-2 font-mono text-[10px] text-text-muted">
         <span>{exp.relatedFindings.length} findings</span>
-        <span>·</span>
-        <span>{exp.lastModified}</span>
+        <span className="truncate text-right">modified {exp.lastModified}</span>
       </div>
     </button>
   );
 }
 
-function ReportViewer({ exp }: { exp: Experiment }) {
-  const hasReport = exp.reportStatus === 'report' && exp.report;
+function ReportWorkspace({
+  exp,
+  showMobileBack,
+  onBack,
+}: {
+  exp: Experiment;
+  showMobileBack: boolean;
+  onBack: () => void;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeSection, setActiveSection] = useState('');
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
+  const hasReport = exp.reportStatus === 'report' && !!exp.report;
   const doc = hasReport ? exp.report! : exp.readme;
-  const docKind = hasReport ? 'REPORT.md' : 'README.md';
-  const path = `${exp.slug}/${docKind}`;
+  const headings = useMemo(
+    () => extractHeadings(doc).filter((heading) => heading.level > 1),
+    [doc],
+  );
+
+  useEffect(() => {
+    setActiveSection(headings[0]?.id ?? '');
+  }, [exp.slug, headings]);
+
+  const handleReportScroll = () => {
+    const scroller = scrollRef.current;
+    if (!scroller || headings.length === 0) return;
+
+    const scrollerTop = scroller.getBoundingClientRect().top;
+    let current = headings[0].id;
+    for (const heading of headings) {
+      const element = scroller.querySelector<HTMLElement>(`[data-report-heading="${heading.id}"]`);
+      if (element && element.getBoundingClientRect().top - scrollerTop <= 120) current = heading.id;
+    }
+    setActiveSection(current);
+  };
+
+  const scrollToSection = (id: string) => {
+    const scroller = scrollRef.current;
+    const element = scroller?.querySelector<HTMLElement>(`[data-report-heading="${id}"]`);
+    if (!scroller || !element) return;
+    scroller.scrollTo({ top: element.offsetTop - 18, behavior: 'smooth' });
+    setActiveSection(id);
+  };
 
   return (
     <>
-      <div className="border-b border-border-subtle bg-surface px-6 py-4">
-        <div className="flex items-center gap-2">
-          <StatusBadge value={exp.outdated ? 'outdated' : exp.reportStatus} />
-          {exp.reportStatus === 'exploration-only' && (
-            <span className="font-mono text-[11px] text-text-muted">
-              No REPORT — showing README
-            </span>
-          )}
-          {exp.reportStatus === 'missing' && (
-            <span className="font-mono text-[11px] text-text-muted">
-              REPORT.md not found — showing README
-            </span>
-          )}
-        </div>
-        <h1 className="mt-2 text-text" style={{ fontSize: '18px' }}>
-          {exp.title}
-        </h1>
-        <MonoId muted className="mt-1 block">
-          {path}
-        </MonoId>
-        {exp.outdated && (
-          <div className="mt-3 flex items-center gap-2 rounded-sm border border-red/30 bg-red/10 px-3 py-2">
-            <AlertTriangle className="size-4 text-red" />
-            <span className="text-[12px] text-red">
-              Outdated data — fit before the dedup fix (F-0038). Conclusions may shift on refit.
-            </span>
-          </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        {showMobileBack && (
+          <button
+            type="button"
+            onClick={onBack}
+            className="flex min-h-11 items-center gap-1.5 border-b border-border-subtle bg-surface px-4 text-left font-mono text-[12px] text-brand outline-none hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-brand-ring"
+          >
+            ← All experiments
+          </button>
         )}
-      </div>
-      <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
-        <div className="max-w-3xl">
-          <Markdown source={doc} />
+
+        <ReportHeader exp={exp} onOpenDetails={() => setDetailsOpen(true)} />
+
+        <div
+          ref={scrollRef}
+          onScroll={handleReportScroll}
+          className="min-h-0 flex-1 overflow-auto px-4 py-5 [scrollbar-gutter:stable] sm:px-6 lg:px-8 lg:py-7"
+        >
+          <article className="mx-auto max-w-[800px]">
+            <Markdown source={doc} suppressTitle />
+          </article>
         </div>
       </div>
+
+      <aside className="hidden h-full w-[300px] shrink-0 border-l border-border-subtle bg-surface xl:flex">
+        <ReportDetailsContent
+          exp={exp}
+          headings={headings}
+          activeSection={activeSection}
+          onSelectSection={scrollToSection}
+        />
+      </aside>
+
+      {detailsOpen && (
+        <div className="xl:hidden">
+          <Drawer side="right" width="w-full sm:w-[380px]" onClose={() => setDetailsOpen(false)}>
+            <ReportDetailsContent
+              exp={exp}
+              headings={headings}
+              activeSection={activeSection}
+              onSelectSection={(id) => {
+                setDetailsOpen(false);
+                requestAnimationFrame(() => scrollToSection(id));
+              }}
+              onClose={() => setDetailsOpen(false)}
+            />
+          </Drawer>
+        </div>
+      )}
     </>
   );
 }
 
-function OutlinePanel({ exp }: { exp: Experiment }) {
-  const navigate = useNavigate();
+function ReportHeader({ exp, onOpenDetails }: { exp: Experiment; onOpenDetails: () => void }) {
   const hasReport = exp.reportStatus === 'report' && exp.report;
-  const headings = extractHeadings(hasReport ? exp.report! : exp.readme).filter((h) => h.level > 1);
-
-  const Label = ({ children }: { children: React.ReactNode }) => (
-    <div className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">
-      {children}
-    </div>
-  );
+  const docKind = hasReport ? 'REPORT.md' : 'README.md';
+  const path = `${exp.slug}/${docKind}`;
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-border-subtle bg-surface">
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
-        <Label>On This Page</Label>
-        <nav className="flex flex-col gap-1">
-          {headings.length === 0 && <span className="text-[12px] text-text-muted">No sections</span>}
-          {headings.map((h) => (
-            <a
-              key={h.id}
-              href={`#${h.id}`}
-              className="border-l border-border-subtle pl-2 text-[12px] text-text-secondary transition-colors hover:border-teal hover:text-text"
-            >
-              {h.text}
-            </a>
-          ))}
-        </nav>
+    <header className="relative border-b border-border-subtle bg-surface px-4 py-4 sm:px-6 lg:px-8">
+      <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge value={exp.outdated ? 'outdated' : exp.reportStatus} />
+            {!hasReport && (
+              <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                {exp.reportStatus === 'missing' ? 'Report missing · README fallback' : 'Exploration · README'}
+              </span>
+            )}
+          </div>
+          <h1 className="mt-2.5 pr-12 text-[19px] font-semibold leading-tight text-text sm:pr-36 sm:text-[21px]">
+            {exp.title}
+          </h1>
+          <MonoId muted className="mt-1.5 block break-all text-[10px] sm:text-[11px]">
+            {path}
+          </MonoId>
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-wide text-text-muted">
+            <span>{exp.date}</span>
+            <span aria-hidden>·</span>
+            <span>{exp.relatedFindings.length} findings</span>
+            <span aria-hidden>·</span>
+            <span>modified {exp.lastModified}</span>
+          </div>
+      </div>
 
-        <Label>Metadata</Label>
-        <div className="space-y-1.5 font-mono text-[11px]">
-          <MetaLine k="SOURCE" v={exp.slug} />
-          <MetaLine k="REPORT PATH" v={hasReport ? `${exp.slug}/REPORT.md` : '—'} />
-          <MetaLine k="README PATH" v={`${exp.slug}/README.md`} />
-          <MetaLine k="FIGURES" v={`${exp.figures.length}`} />
-          <MetaLine k="LAST INDEXED" v={exp.lastModified} />
+      <button
+        type="button"
+        onClick={onOpenDetails}
+        aria-label="Report details"
+        className="absolute right-4 top-4 flex min-h-10 shrink-0 items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary outline-none transition-colors hover:border-brand-border hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring sm:right-6 lg:right-8 xl:hidden"
+      >
+        <PanelRightOpen className="size-4" />
+        <span className="hidden sm:inline">Report details</span>
+      </button>
+
+      {exp.outdated && (
+        <div className="mt-3 flex items-start gap-2 rounded-sm border border-error/30 bg-error/10 px-3 py-2.5">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-error" />
+          <span className="text-[12px] leading-relaxed text-error">
+            Outdated data — fit before the dedup fix (F-0038). Conclusions may shift on refit.
+          </span>
         </div>
+      )}
+    </header>
+  );
+}
 
-        <Label>Data Freshness</Label>
-        <div className="space-y-1.5 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 font-mono text-[11px]">
-          <MetaLine k="parquet_mtime" v={exp.freshness.parquetMtime} />
-          <MetaLine k="row_counts" v={exp.freshness.rowCounts} />
-          <MetaLine k="date_range" v={exp.freshness.dateRange} />
+function ReportDetailsContent({
+  exp,
+  headings,
+  activeSection,
+  onSelectSection,
+  onClose,
+}: {
+  exp: Experiment;
+  headings: Heading[];
+  activeSection: string;
+  onSelectSection: (id: string) => void;
+  onClose?: () => void;
+}) {
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const hasReport = exp.reportStatus === 'report' && exp.report;
+  const reportPath = hasReport ? `${exp.slug}/REPORT.md` : `${exp.slug}/README.md`;
+
+  const copyPath = async () => {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = reportPath;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    } catch {
+      // Feedback still confirms the intended local prototype action.
+    }
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1600);
+  };
+
+  return (
+    <div className="flex min-h-0 w-full flex-col">
+      <div className="flex min-h-12 items-center justify-between border-b border-border-subtle px-4">
+        <div>
+          <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">Report details</div>
+          <div className="mt-0.5 truncate text-[12px] text-text-secondary">{exp.title}</div>
         </div>
-
-        <Label>Related Findings</Label>
-        <div className="flex flex-wrap gap-1.5">
-          {exp.relatedFindings.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => navigate(`/findings?focus=${f}`)}
-              className="rounded-sm border border-green/30 bg-green/10 px-1.5 py-0.5 font-mono text-[11px] text-green hover:bg-green/15"
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-
-        {exp.relatedQuestions && exp.relatedQuestions.length > 0 && (
-          <>
-            <Label>Related Open Questions</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {exp.relatedQuestions.map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => navigate(`/findings?tab=questions&focus=${q}`)}
-                  className="rounded-sm border border-amber/30 bg-amber/10 px-1.5 py-0.5 font-mono text-[11px] text-amber hover:bg-amber/15"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          </>
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-9 rounded-sm px-2 font-mono text-[11px] text-text-muted hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring"
+          >
+            Close
+          </button>
         )}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto px-4 py-4 [scrollbar-gutter:stable]">
+        <DetailSection title="On this page">
+          <nav aria-label="Report sections" className="flex flex-col gap-0.5">
+            {headings.length === 0 && <span className="text-[12px] text-text-muted">No sections</span>}
+            {headings.map((heading) => (
+              <button
+                key={heading.id}
+                type="button"
+                onClick={() => onSelectSection(heading.id)}
+                className={cn(
+                  'min-h-8 border-l-2 px-2 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring',
+                  activeSection === heading.id
+                    ? 'border-brand bg-brand-muted text-text'
+                    : 'border-border-subtle text-text-secondary hover:border-border-strong hover:bg-surface-hover hover:text-text',
+                )}
+              >
+                {heading.text}
+              </button>
+            ))}
+          </nav>
+        </DetailSection>
+
+        <DetailSection title="Overview">
+          <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
+            <MetaLine k="SOURCE" v={exp.slug} />
+            <MetaLine k="DOCUMENT" v={hasReport ? 'REPORT.md' : 'README.md'} />
+            <MetaLine k="FIGURES" v={`${exp.figures.length}`} />
+            <MetaLine k="INDEXED" v={exp.lastModified} />
+          </div>
+        </DetailSection>
+
+        <DetailSection title="Data freshness">
+          <div className="rounded-sm border border-border-subtle bg-code-surface px-3">
+            <MetaLine k="PARQUET" v={exp.freshness.parquetMtime} />
+            <MetaLine k="ROWS" v={exp.freshness.rowCounts} />
+            <MetaLine k="RANGE" v={exp.freshness.dateRange} />
+          </div>
+        </DetailSection>
+
+        <DetailSection title="Relationships">
+          <div className="flex flex-wrap gap-1.5">
+            {exp.relatedFindings.map((finding) => (
+              <button
+                key={finding}
+                type="button"
+                onClick={() => navigate(`/findings?focus=${finding}`)}
+                className="min-h-7 rounded-sm border border-brand-border bg-brand-muted px-2 font-mono text-[11px] text-brand outline-none hover:bg-brand-surface focus-visible:ring-2 focus-visible:ring-brand-ring"
+              >
+                {finding}
+              </button>
+            ))}
+            {exp.relatedQuestions?.map((question) => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => navigate(`/findings?tab=questions&focus=${question}`)}
+                className="min-h-7 rounded-sm border border-warning/30 bg-warning/10 px-2 font-mono text-[11px] text-warning outline-none hover:bg-warning/15 focus-visible:ring-2 focus-visible:ring-brand-ring"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        </DetailSection>
 
         {exp.figures.length > 0 && (
-          <>
-            <Label>Figures</Label>
-            <div className="space-y-1">
-              {exp.figures.map((fig) => (
+          <DetailSection title="Figures">
+            <div className="space-y-1.5">
+              {exp.figures.map((figure) => (
                 <div
-                  key={fig}
-                  className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5"
+                  key={figure}
+                  className="flex min-h-9 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5"
                 >
-                  <ImageIcon className="size-3.5 shrink-0 text-text-muted" />
+                  <ImageIcon className="size-3.5 shrink-0 text-info" />
                   <span className="truncate font-mono text-[11px] text-text-secondary">
-                    {fig.replace('outputs/figures/', '')}
+                    {figure.replace('outputs/figures/', '')}
                   </span>
                 </div>
               ))}
             </div>
-          </>
+          </DetailSection>
         )}
 
-        <Label>Actions</Label>
-        <div className="flex flex-col gap-2">
-          <NavActionButton onClick={() => navigate('/graph')}>
-            <Share2 className="size-3.5" /> View in Graph
-          </NavActionButton>
-          <NavActionButton onClick={() => navigate('/chat')}>
-            <FolderTree className="size-3.5" /> Open Evidence
-          </NavActionButton>
-          <NavActionButton>
-            <Copy className="size-3.5" /> Copy Path
-          </NavActionButton>
-          <AskClaudeButton
-            onClick={() =>
-              navigate(
-                `/chat?ctx=${[exp.slug, ...exp.relatedFindings, ...(exp.relatedQuestions ?? [])].join(',')}`,
-              )
-            }
-          >
-            Ask Claude about this report
-          </AskClaudeButton>
-        </div>
+        <DetailSection title="Actions">
+          <div className="flex flex-col gap-2">
+            <NavActionButton onClick={() => navigate(`/graph?focus=${exp.relatedFindings[0] ?? ''}`)}>
+              <Share2 className="size-3.5" /> View in Graph
+            </NavActionButton>
+            <NavActionButton onClick={() => navigate(`/chat?ctx=${exp.slug}`)}>
+              <FolderTree className="size-3.5" /> Open Evidence
+            </NavActionButton>
+            <NavActionButton onClick={copyPath}>
+              {copied ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
+              {copied ? 'Path copied' : 'Copy Path'}
+            </NavActionButton>
+            <AskClaudeButton
+              onClick={() =>
+                navigate(
+                  `/chat?ctx=${[exp.slug, ...exp.relatedFindings, ...(exp.relatedQuestions ?? [])].join(',')}`,
+                )
+              }
+            >
+              Ask Claude about this report
+            </AskClaudeButton>
+          </div>
+        </DetailSection>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-5 last:mb-0">
+      <h2 className="mb-2 font-mono text-[10px] uppercase tracking-[0.14em] text-text-muted">{title}</h2>
+      {children}
+    </section>
   );
 }
 
 function MetaLine({ k, v }: { k: string; v: string }) {
   return (
-    <div className="flex items-start justify-between gap-2">
-      <span className="shrink-0 uppercase tracking-wide text-text-muted">{k}</span>
-      <span className="truncate text-right text-text-secondary">{v}</span>
+    <div className="grid grid-cols-[78px_minmax(0,1fr)] gap-3 border-b border-border-subtle py-2 last:border-0">
+      <span className="font-mono text-[9px] uppercase tracking-wider text-text-muted">{k}</span>
+      <span className="break-words text-right font-mono text-[10px] leading-relaxed text-text-secondary">{v}</span>
     </div>
   );
 }

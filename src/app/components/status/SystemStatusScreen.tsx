@@ -151,7 +151,7 @@ export function SystemStatusScreen() {
                 }}
                 className={cn(
                   'rounded-sm px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
-                  mode === m ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                  mode === m ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 {m}
@@ -220,10 +220,10 @@ export function SystemStatusScreen() {
             key={t.id}
             className={cn(
               'flex items-center gap-2 rounded-sm border bg-surface px-3 py-2 shadow-lg',
-              t.tone === 'green' ? 'border-green/40' : t.tone === 'amber' ? 'border-amber/40' : t.tone === 'red' ? 'border-red/40' : 'border-teal/40',
+              t.tone === 'green' ? 'border-green/40' : t.tone === 'amber' ? 'border-amber/40' : t.tone === 'red' ? 'border-red/40' : 'border-brand-border',
             )}
           >
-            <CheckCircle2 className={cn('size-3.5', t.tone === 'green' ? 'text-green' : t.tone === 'amber' ? 'text-amber' : t.tone === 'red' ? 'text-red' : 'text-teal')} />
+            <CheckCircle2 className={cn('size-3.5', t.tone === 'green' ? 'text-green' : t.tone === 'amber' ? 'text-amber' : t.tone === 'red' ? 'text-red' : 'text-brand')} />
             <span className="font-mono text-[12px] text-text-secondary">{t.text}</span>
           </div>
         ))}
@@ -313,7 +313,7 @@ function OfflineError({ navigate, pending, onRetry, onCopy }: { navigate: (to: s
               type="button"
               onClick={onRetry}
               disabled={pending}
-              className="flex items-center gap-1.5 rounded-sm border border-teal/40 bg-teal/10 px-2.5 py-1 font-mono text-[11px] text-teal hover:bg-teal/15 disabled:opacity-60"
+              className="flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-2.5 py-1 font-mono text-[11px] text-brand hover:bg-brand-surface disabled:opacity-60"
             >
               {pending ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />} Retry connection
             </button>
@@ -384,7 +384,7 @@ function Services({
                 <td className="px-2 py-1.5">
                   {/* Hover-revealed inline actions */}
                   <div className="flex items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onSelect(s); }} className="font-mono text-[11px] text-teal hover:underline">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onSelect(s); }} className="font-mono text-[11px] text-brand hover:underline">
                       View details
                     </button>
                     <button type="button" onClick={(e) => { e.stopPropagation(); onCopyEndpoint(s.endpoint); }} className="font-mono text-[11px] text-text-muted hover:text-text">
@@ -431,7 +431,7 @@ function RepositoryIndexing({
       <div className="flex flex-col">
         {INDEXED.map((r) => (
           <div key={r.path} className="flex items-center gap-3 border-b border-border-subtle py-2 last:border-0">
-            <MonoId className="min-w-0 flex-1 truncate text-teal">{r.path}</MonoId>
+            <MonoId className="min-w-0 flex-1 truncate text-info">{r.path}</MonoId>
             <StatusBadge value={degraded ? 'Stale' : 'Indexed'} tone={degraded ? 'amber' : 'green'} />
             <span className="w-28 shrink-0 text-right font-mono text-[11px] text-text-secondary">{r.metric}</span>
             <span className="w-24 shrink-0 text-right font-mono text-[11px] text-text-muted">{degraded ? 'stale' : 'last 2m ago'}</span>
@@ -446,13 +446,13 @@ function ClaudeRelay({ degraded, navigate }: { degraded: boolean; navigate: (to:
   if (degraded) {
     return (
       <Panel title="Claude Relay">
-        <StatusBadge value="Not Configured" tone="amber" />
+        <StatusBadge value="Not Configured" tone="warning" />
         <p className="mt-2 text-[13px] leading-relaxed text-text-secondary">
           Chat requires Claude Code stream relay. Configure the local backend to enable chat.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <ActionBtn onClick={() => navigate('/chat')}>View setup guide</ActionBtn>
-          <button type="button" className="rounded-sm border border-teal/40 bg-teal/10 px-2.5 py-1 font-mono text-[11px] text-teal hover:bg-teal/15">
+          <button type="button" className="rounded-sm border border-brand-border bg-brand-muted px-2.5 py-1 font-mono text-[11px] text-brand hover:bg-brand-surface">
             Retry connection
           </button>
           <ActionBtn>
@@ -536,7 +536,7 @@ function RepositoryWatcher({ degraded }: { degraded: boolean }) {
   );
 }
 
-const SEV_TONE: Record<Severity, string> = { INFO: 'text-teal', WARN: 'text-amber', ERROR: 'text-red' };
+const SEV_TONE: Record<Severity, string> = { INFO: 'text-info', WARN: 'text-amber', ERROR: 'text-red' };
 const SERVICE_LABEL: Record<ServiceKey, string> = { backend: 'backend', index: 'indexer', graph: 'graph', watcher: 'watcher', claude: 'claude', file: 'file' };
 
 function Diagnostics({ degraded, onCopy, onDownload }: { degraded: boolean; onCopy: () => void; onDownload: () => void }) {
@@ -610,7 +610,7 @@ function FilterChip({ active, onClick, children }: { active: boolean; onClick: (
       onClick={onClick}
       className={cn(
         'rounded-sm border px-2 py-0.5 font-mono text-[10px] uppercase transition-colors',
-        active ? 'border-teal/40 bg-teal/10 text-teal' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
+        active ? 'border-brand-border bg-brand-muted text-brand' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
       )}
     >
       {children}
@@ -638,7 +638,7 @@ function ServiceDrawer({
   const Row = ({ k, v, accent }: { k: string; v: string; accent?: boolean }) => (
     <div className="flex items-center justify-between gap-3 border-b border-border-subtle py-1.5 last:border-0">
       <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{k}</span>
-      <span className={cn('truncate text-right font-mono text-[12px]', accent ? 'text-teal' : 'text-text-secondary')}>{v}</span>
+      <span className={cn('truncate text-right font-mono text-[12px]', accent ? 'text-brand' : 'text-text-secondary')}>{v}</span>
     </div>
   );
   return (

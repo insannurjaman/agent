@@ -33,7 +33,7 @@ export interface ChatEventHandlers {
 }
 
 function IdLink({ id, onNav }: { id: string; onNav: (id: string) => void }) {
-  const color = id.startsWith('F-') ? 'text-green' : id.startsWith('Q-') ? 'text-amber' : 'text-teal';
+  const color = id.startsWith('F-') ? 'text-brand' : id.startsWith('Q-') ? 'text-warning' : 'text-info';
   return (
     <button type="button" onClick={() => onNav(id)} className={cn('font-mono hover:underline', color)}>
       {id}
@@ -58,7 +58,7 @@ function ClaudeBtn({ children, onClick }: { children: React.ReactNode; onClick?:
     <button
       type="button"
       onClick={onClick}
-      className="rounded-sm border border-purple/40 bg-purple/10 px-2.5 py-1 text-[12px] text-purple transition-colors hover:bg-purple/15"
+      className="rounded-sm border border-brand-border bg-brand-muted px-2.5 py-1 text-[12px] text-brand transition-colors hover:bg-brand-surface"
     >
       {children}
     </button>
@@ -297,7 +297,7 @@ function ProposalSummary({
         <div className="space-y-1">
           {findings.map((f) => (
             <div key={f.findingId} className="flex items-center gap-2 text-[13px]">
-              <span className="font-mono text-green">{f.findingId}</span>
+              <span className="font-mono text-brand">{f.findingId}</span>
               <span className="text-text-secondary">Finding · {f.confidence} confidence</span>
             </div>
           ))}
@@ -316,7 +316,7 @@ function ProposalSummary({
           </div>
         )}
         {status === 'pending' && (
-          <div className="mt-2.5 flex items-center gap-2 text-[12px] text-teal">
+          <div className="mt-2.5 flex items-center gap-2 text-[12px] text-brand">
             <Loader2 className="size-3.5 animate-spin" /> Registering through Claude…
           </div>
         )}
@@ -360,9 +360,9 @@ function ConfirmationState({
   const noun = kind === 'finding' ? 'Finding' : 'Open question';
   if (status === 'pending')
     return (
-      <div className="mt-2.5 flex items-center gap-2 rounded-sm border border-teal/30 bg-teal/[0.06] px-2.5 py-1.5">
-        <Loader2 className="size-3.5 animate-spin text-teal" />
-        <span className="text-[12px] text-teal">
+      <div className="mt-2.5 flex items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-2.5 py-1.5">
+        <Loader2 className="size-3.5 animate-spin text-brand" />
+        <span className="text-[12px] text-brand">
           {noun} registration requested · <span className="font-mono">Pending</span>
         </span>
       </div>
@@ -406,12 +406,12 @@ function FindingProposalCard({ p, time, h }: { p: FindingProposal; time: string;
       </div>
       <div className="px-3 py-3">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[13px] text-green">{p.findingId}</span>
+          <span className="font-mono text-[13px] text-brand">{p.findingId}</span>
           <span className="font-mono text-[11px] text-text-muted">{p.confidence}</span>
         </div>
         <p className="mt-1.5 text-[13px] text-text">{p.title}</p>
         <div className="mt-2 space-y-0.5 font-mono text-[11px] text-text-muted">
-          <div>evidence: <span className="text-teal">{p.evidence}</span></div>
+          <div>evidence: <span className="text-info">{p.evidence}</span></div>
           <div>target: {p.targetFile} · gateway: {p.gateway}</div>
         </div>
         {status === 'idle' ? (
@@ -444,7 +444,7 @@ function QuestionProposalCard({ p, time, h }: { p: QuestionProposal; time: strin
         </div>
         <p className="mt-1.5 text-[13px] text-text">{p.title}</p>
         <div className="mt-2 space-y-0.5 font-mono text-[11px] text-text-muted">
-          <div>related: <span className="text-green">{p.relatedFinding}</span> · area: {p.area}</div>
+          <div>related: <span className="text-brand">{p.relatedFinding}</span> · area: {p.area}</div>
           <div>target: {p.targetFile} · gateway: {p.gateway}</div>
         </div>
         {status === 'idle' ? (

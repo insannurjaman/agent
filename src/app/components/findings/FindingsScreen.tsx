@@ -7,6 +7,8 @@ import { getLatestVersion } from '../../data';
 import { ScreenHeader } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
+import { FilterSelect } from '../common/FilterSelect';
+import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { FindingInspector, QuestionInspector } from './Inspectors';
 import {
   DropdownMenu,
@@ -139,7 +141,7 @@ export function FindingsScreen() {
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
-          <div className="flex w-64 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-teal/40">
+          <div className="flex w-64 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               value={query}
@@ -157,7 +159,7 @@ export function FindingsScreen() {
                 onClick={() => setTab(t.id)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
-                  tab === t.id ? 'bg-elevated text-text' : 'text-text-muted hover:text-text-secondary',
+                  tab === t.id ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 {t.label}
@@ -195,7 +197,7 @@ export function FindingsScreen() {
               className={cn(
                 'rounded-sm border px-2 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
                 actionableOnly
-                  ? 'border-green/40 bg-green/10 text-green'
+                  ? 'border-brand-border bg-brand-muted text-brand'
                   : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
               )}
             >
@@ -310,10 +312,10 @@ export function FindingsScreen() {
       </div>
 
       {(selectedFinding || selectedQuestion) && (
-        <div className="fixed inset-0 z-50 lg:static lg:inset-auto lg:z-auto lg:flex">
+        <ResponsiveInspectorOverlay>
           {selectedFinding && <FindingInspector finding={selectedFinding} onClose={() => setSelected(null)} />}
           {selectedQuestion && <QuestionInspector question={selectedQuestion} onClose={() => setSelected(null)} />}
-        </div>
+        </ResponsiveInspectorOverlay>
       )}
     </div>
   );
@@ -331,14 +333,14 @@ function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[12px] text-green">{f.id}</span>
+        <span className="font-mono text-[12px] text-brand">{f.id}</span>
         <span className="font-mono text-[10px] text-text-muted">{f.date}</span>
       </div>
       <div className="mt-1 text-[14px] leading-snug text-text">{f.title}</div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <StatusBadge value={f.confidence} />
         <StatusBadge value={f.category} showDot={false} />
-        {f.actionable && <span className="font-mono text-[10px] text-green">actionable</span>}
+        {f.actionable && <span className="font-mono text-[10px] text-brand">actionable</span>}
       </div>
     </button>
   );
@@ -365,35 +367,6 @@ function QuestionCard({ q, onSelect }: { q: OpenQuestion; onSelect: () => void }
   );
 }
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: string[];
-}) {
-  return (
-    <label className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1">
-      <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="bg-transparent text-[12px] text-text-secondary outline-none"
-      >
-        {options.map((o) => (
-          <option key={o} value={o} className="bg-surface-2 text-text">
-            {o}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
-
 function FindingRow({
   f,
   expanded,
@@ -416,7 +389,7 @@ function FindingRow({
         onClick={onSelect}
         className={cn(
           'cursor-pointer border-b border-border-subtle transition-colors hover:bg-surface-2',
-          selected && 'bg-surface-2',
+          selected && 'bg-brand-muted',
           isSuperseded && 'opacity-55',
         )}
       >
@@ -433,7 +406,7 @@ function FindingRow({
           </button>
         </td>
         <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-teal">{f.id}</span>
+          <span className="font-mono text-[13px] text-brand">{f.id}</span>
         </td>
         <td className="px-3 py-2 text-text">
           <div className="flex items-center gap-2">
@@ -452,7 +425,7 @@ function FindingRow({
         </td>
         <td className="px-3 py-2">
           {f.actionable ? (
-            <span className="font-mono text-[11px] text-green">yes</span>
+            <span className="font-mono text-[11px] text-brand">yes</span>
           ) : (
             <span className="font-mono text-[11px] text-text-muted">no</span>
           )}
@@ -486,7 +459,7 @@ function FindingRow({
                   e.stopPropagation();
                   onGoLatest(getLatestVersion(f.id));
                 }}
-                className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-teal hover:underline"
+                className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-brand hover:underline"
               >
                 Go to Latest Version {getLatestVersion(f.id)} <ArrowUpRight className="size-3" />
               </button>
@@ -517,7 +490,7 @@ function QuestionRow({
         onClick={onSelect}
         className={cn(
           'cursor-pointer border-b border-border-subtle transition-colors hover:bg-surface-2',
-          selected && 'bg-surface-2',
+          selected && 'bg-brand-muted',
         )}
       >
         <td className="px-1 text-center">
@@ -594,7 +567,7 @@ function RowMenu({ isQuestion }: { isQuestion?: boolean }) {
         <DropdownMenuItem>View in Graph</DropdownMenuItem>
         <DropdownMenuItem>View Lineage</DropdownMenuItem>
         <DropdownMenuItem>Copy ID</DropdownMenuItem>
-        <DropdownMenuItem className="text-purple">
+        <DropdownMenuItem className="text-brand">
           {isQuestion ? 'Ask Claude to resolve' : 'Ask Claude about this'}
         </DropdownMenuItem>
       </DropdownMenuContent>
