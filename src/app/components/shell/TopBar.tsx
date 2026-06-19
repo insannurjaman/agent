@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Search, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router';
 import { BackendStatusPill } from './BackendStatusPill';
 import { CommandSheet } from './CommandSheet';
 import { ThemeToggle } from './ThemeToggle';
@@ -21,7 +20,6 @@ function SystemLogo() {
 
 export function TopBar() {
   const [searchOpen, setSearchOpen] = useState(false);
-  const navigate = useNavigate();
 
   return (
     <header className="flex h-14 items-center gap-2 border-b border-border-subtle bg-surface px-3 sm:gap-3 sm:px-4">
@@ -64,17 +62,6 @@ export function TopBar() {
           <BackendStatusPill />
         </div>
         <ThemeToggle />
-        <button
-          type="button"
-          onClick={() => navigate('/status')}
-          aria-label="Backend status"
-          className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 outline-none transition-colors hover:border-border-strong hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-brand-ring md:hidden"
-        >
-          <span className="relative flex size-2">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-green opacity-60" />
-            <span className="relative inline-flex size-2 rounded-full bg-green" />
-          </span>
-        </button>
 
         <button
           type="button"

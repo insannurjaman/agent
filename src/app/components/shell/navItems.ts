@@ -6,7 +6,6 @@ import {
   Share2,
   GitBranch,
   Terminal,
-  Activity,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -24,5 +23,4 @@ export const navItems: NavItem[] = [
   { to: '/graph', label: 'Knowledge Graph', icon: Share2 },
   { to: '/lineage', label: 'Lineage', icon: GitBranch },
   { to: '/chat', label: 'Chat Workspace', icon: Terminal },
-  { to: '/status', label: 'System Status', icon: Activity },
 ];

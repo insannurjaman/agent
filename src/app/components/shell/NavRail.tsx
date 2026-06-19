@@ -11,7 +11,6 @@ const STORAGE_KEY = 'qas.navrail.expanded';
 const GROUPS: { label: string; routes: string[] }[] = [
   { label: 'Knowledge', routes: ['/overview', '/findings', '/experiments', '/search', '/graph', '/lineage'] },
   { label: 'Workspace', routes: ['/chat'] },
-  { label: 'System', routes: ['/status'] },
 ];
 
 const byRoute = new Map(navItems.map((i) => [i.to, i]));
