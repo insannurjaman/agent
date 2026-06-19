@@ -247,8 +247,8 @@ export function ProposalGroup({
   return <ProposalSummary findings={findings} questions={questions} time={time} h={h} />;
 }
 
-function statusOf(ids: string[], map: Record<string, ProposalStatus>): ProposalStatus {
-  const states = ids.map((id) => map[id] ?? 'idle');
+function statusOf(ids: string[], map?: Record<string, ProposalStatus>): ProposalStatus {
+  const states = ids.map((id) => map?.[id] ?? 'idle');
   if (states.some((s) => s === 'failed')) return 'failed';
   if (states.some((s) => s === 'pending')) return 'pending';
   if (states.length > 0 && states.every((s) => s === 'completed')) return 'completed';
@@ -267,7 +267,7 @@ function ProposalSummary({
   h: ChatEventHandlers;
 }) {
   const ids = [...findings.map((f) => f.findingId), ...questions.map((q) => q.questionId)];
-  const status = statusOf(ids, h.proposalStatus);
+  const status = statusOf(ids, h?.proposalStatus);
   return (
     <div className="rounded-sm border border-border-subtle bg-surface">
       <div className="flex items-center gap-1.5 px-3 py-1.5">

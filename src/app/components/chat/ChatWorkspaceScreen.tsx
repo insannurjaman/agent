@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal } from '../../data/chat';
+import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
 import type { ChatEventHandlers, ProposalStatus } from './ChatEvents';
 import { ChatStream } from './ChatStream';
 import { SessionExplorerPane } from './SessionExplorerPane';
@@ -8,6 +8,8 @@ import { ProposalReviewDrawer } from './ProposalReviewDrawer';
 import { NewChatModal } from './NewChatModal';
 import { useBreakpoint } from '../responsive/useBreakpoint';
 import { Drawer } from '../responsive/Drawer';
+
+const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as TimelineItem[], context: [], latestArtifactId: null };
 
 export function ChatWorkspaceScreen() {
   const bp = useBreakpoint();
@@ -23,7 +25,9 @@ export function ChatWorkspaceScreen() {
   const [proposalStatus, setProposalStatus] = useState<Record<string, ProposalStatus>>({});
   const [newChatOpen, setNewChatOpen] = useState(false);
 
-  const bundle = getSessionBundle(session.id);
+  const bundle = getSessionBundle(session.id) ?? EMPTY_BUNDLE;
+
+  const artifact = artifactId ? bundle.artifacts[artifactId] ?? null : null;
 
   const handlers: ChatEventHandlers = {
     onNav: (id) => setAttachedContext((prev) => (prev.includes(id) ? prev : [...prev, id])),
@@ -48,6 +52,10 @@ export function ChatWorkspaceScreen() {
   const handleNewChat = useCallback(() => {
     setNewChatOpen(true);
   }, []);
+
+  const handleNewArtifact = bundle.latestArtifactId
+    ? { id: bundle.latestArtifactId, name: bundle.latestArtifactId }
+    : null;
 
   return (
     <div className="flex h-full w-full overflow-hidden">
@@ -112,39 +120,76 @@ export function ChatWorkspaceScreen() {
       />
 
       {/* Artifact panel — closed by default, desktop only */}
-      {bp === 'desktop' && artifactOpen && artifactId && (
+      {bp === 'desktop' && artifactOpen && (
         <ArtifactViewer
-          artifactId={artifactId}
-          artifactPath={bundle.artifacts.find((a) => a.id === artifactId)?.path ?? null}
-          artifactContent={bundle.artifacts.find((a) => a.id === artifactId)?.content ?? ''}
-          onClose={() => setArtifactOpen(false)}
+          artifact={artifact}
+          autoFollow={false}
+          onPause={() => {}}
+          onResume={() => {}}
+          onOpenLatest={() => {
+            if (bundle.latestArtifactId) {
+              setArtifactId(bundle.latestArtifactId);
+            }
+          }}
+          newArtifact={handleNewArtifact}
+          onKeepPinned={() => {}}
+          timeline={bundle.timeline}
+          onTimelineOpen={(item) => {
+            if (item.artifactId) {
+              setArtifactId(item.artifactId);
+            }
+          }}
+          related={[]}
+          backendOffline={false}
+          onNav={handlers.onNav}
         />
       )}
 
       {/* Artifact overlay — mobile/tablet */}
-      {bp !== 'desktop' && artifactOpen && artifactId && (
+      {bp !== 'desktop' && artifactOpen && (
         <Drawer open onClose={() => setArtifactOpen(false)} side="right">
           <ArtifactViewer
-            artifactId={artifactId}
-            artifactPath={bundle.artifacts.find((a) => a.id === artifactId)?.path ?? null}
-            artifactContent={bundle.artifacts.find((a) => a.id === artifactId)?.content ?? ''}
-            onClose={() => setArtifactOpen(false)}
+            artifact={artifact}
+            autoFollow={false}
+            onPause={() => {}}
+            onResume={() => {}}
+            onOpenLatest={() => {
+              if (bundle.latestArtifactId) {
+                setArtifactId(bundle.latestArtifactId);
+              }
+            }}
+            newArtifact={handleNewArtifact}
+            onKeepPinned={() => {}}
+            timeline={bundle.timeline}
+            onTimelineOpen={(item) => {
+              if (item.artifactId) {
+                setArtifactId(item.artifactId);
+              }
+            }}
+            related={[]}
+            backendOffline={false}
+            onNav={handlers.onNav}
           />
         </Drawer>
       )}
 
       {/* Proposal review overlay */}
       {reviewing && (
-        <ProposalReviewDrawer
-          findings={reviewing.findings}
-          questions={reviewing.questions}
-          proposalStatus={proposalStatus}
-          onClose={() => setReviewing(null)}
-          onConfirmFinding={(p) => handlers.onConfirmFinding(p)}
-          onConfirmQuestion={(p) => handlers.onConfirmQuestion(p)}
-          onRetry={(id) => handlers.onRetryProposal(id)}
-          onAskClaudeToRevise={() => {}}
-        />
+        <Drawer open onClose={() => setReviewing(null)} side="right">
+          <ProposalReviewDrawer
+            set={reviewing}
+            onClose={() => setReviewing(null)}
+            onConfirm={(kind, id) => {
+              if (kind === 'finding') {
+                const p = reviewing.findings.find((f) => f.findingId === id);
+                if (p) handlers.onConfirmFinding(p);
+              } else {
+                const p = reviewing.questions.find((q) => q.questionId === id);
+                if (p) handlers.onConfirmQuestion(p);
+              }
+            }}
+          />
+        </Drawer>
       )}
 
       {/* New chat modal */}
@@ -158,9 +203,6 @@ export function ChatWorkspaceScreen() {
               title: prompt || 'New session',
               status: 'running',
               lastUpdated: 'just now',
-              model: 'claude-sonnet-4-20250514',
-              tokenEstimate: '~2k tokens',
-              tokenEstimateConfidence: 'medium',
             };
             setSession(newSession);
             setAttachedContext(context);
