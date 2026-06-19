@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router';
-import { LayoutGrid, Table2, FlaskConical, Share2, Terminal, MoreHorizontal } from 'lucide-react';
+import { LayoutGrid, Table2, FlaskConical, Share2, MessageSquare, MoreHorizontal } from 'lucide-react';
 import { cn } from '../ui/utils';
 import { NavDrawer } from './NavDrawer';
 
@@ -9,7 +9,7 @@ const PRIMARY = [
   { to: '/findings', label: 'Findings', icon: Table2 },
   { to: '/experiments', label: 'Experiments', icon: FlaskConical },
   { to: '/graph', label: 'Graph', icon: Share2 },
-  { to: '/chat', label: 'Chat', icon: Terminal },
+  { to: '/chat', label: 'Chat', icon: MessageSquare },
 ];
 
 export function BottomNav() {
