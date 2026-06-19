@@ -18,6 +18,14 @@ const RELAY_TEXT: Record<RelayLabel, string> = {
   'not-configured': 'Claude relay not configured',
 };
 
+function formatTime(lastUpdated: string): string {
+  const match = lastUpdated.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}:\d{2})/);
+  if (!match) return lastUpdated;
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[parseInt(match[2], 10) - 1];
+  return `${month} ${parseInt(match[3], 10)} · ${match[4]}`;
+}
+
 export function SessionExplorerPane({
   sessionList,
   activeSessionId,
@@ -43,11 +51,15 @@ export function SessionExplorerPane({
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-r border-border-subtle bg-surface md:w-[280px]">
+      {/* Header with New Chat + relay */}
       <div className="border-b border-border-subtle p-3">
+        <div className="flex items-center justify-between border-b border-border-subtle pb-3">
+          <span className="text-[13px] font-semibold text-text">Quick Agent System</span>
+        </div>
         <button
           type="button"
           onClick={onNewChat}
-          className="flex w-full items-center justify-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-[13px] text-brand transition-colors hover:bg-brand-surface"
+          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-[13px] text-brand transition-colors hover:bg-brand-surface"
         >
           <Plus className="size-4" /> New Chat
         </button>
@@ -62,6 +74,7 @@ export function SessionExplorerPane({
         </div>
       </div>
 
+      {/* Session list */}
       <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
         {groups.map((g) => {
           const rows = sessionList.filter((s) => s.status === g.status);
@@ -89,16 +102,26 @@ function SessionRow({ session, active, onClick }: { session: ChatSession; active
       onClick={onClick}
       aria-label={`${session.title} — ${session.status}`}
       className={cn(
-        'relative mb-1 w-full rounded-sm border px-2.5 py-2 text-left transition-colors',
-        active ? 'border-brand-border bg-brand-muted' : 'border-transparent hover:border-border-subtle hover:bg-surface-2',
+        'group relative mb-0.5 flex min-h-[44px] w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-left transition-colors',
+        active
+          ? 'bg-brand-muted'
+          : 'hover:bg-surface-2',
       )}
     >
-      {active && <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-brand" />}
-      <div className="flex items-center justify-between gap-2">
-        <span className="truncate text-[13px] text-text">{session.title}</span>
-        <StatusBadge value={session.status} tone={STATUS_TONE[session.status]} showDot />
+      {/* Active indicator — subtle left bar */}
+      {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-brand" />}
+      <div className="min-w-0 flex-1">
+        <div className="truncate text-[13px] text-text">{session.title}</div>
+        <div className="font-mono text-[10px] text-text-muted">
+          {session.id} · {formatTime(session.lastUpdated)}
+        </div>
       </div>
-      <div className="mt-0.5 font-mono text-[10px] text-text-muted">{session.id} · {session.lastUpdated}</div>
+      {session.status === 'running' && (
+        <span className="shrink-0 rounded-sm bg-green/15 px-1.5 py-0.5 font-mono text-[9px] uppercase text-green">Live</span>
+      )}
+      {session.status === 'failed' && (
+        <StatusBadge value={session.status} tone={STATUS_TONE[session.status]} showDot />
+      )}
     </button>
   );
 }

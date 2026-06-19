@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation } from 'react-router';
 import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
 import type { ChatEventHandlers, ProposalStatus } from './ChatEvents';
 import { ChatStream } from './ChatStream';
@@ -13,6 +14,7 @@ const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as 
 
 export function ChatWorkspaceScreen() {
   const bp = useBreakpoint();
+  const location = useLocation();
   const [session, setSession] = useState<ChatSession>(sessions[0]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [artifactOpen, setArtifactOpen] = useState(false);
@@ -28,6 +30,11 @@ export function ChatWorkspaceScreen() {
   const bundle = getSessionBundle(session.id) ?? EMPTY_BUNDLE;
 
   const artifact = artifactId ? bundle.artifacts[artifactId] ?? null : null;
+
+  // Close sidebar on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const handlers: ChatEventHandlers = {
     onNav: (id) => setAttachedContext((prev) => (prev.includes(id) ? prev : [...prev, id])),
@@ -59,7 +66,7 @@ export function ChatWorkspaceScreen() {
 
   return (
     <div className="flex h-full w-full overflow-hidden">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — always visible */}
       {bp === 'desktop' && (
         <SessionExplorerPane
           sessionList={sessions}
@@ -77,13 +84,13 @@ export function ChatWorkspaceScreen() {
         />
       )}
 
-      {/* Tablet/mobile sidebar drawer */}
+      {/* Mobile/tablet sidebar — off-canvas drawer */}
       {bp !== 'desktop' && (
         <Drawer
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           side="left"
-          width="w-[300px]"
+          width="w-[min(86vw,320px)]"
         >
           <SessionExplorerPane
             sessionList={sessions}
@@ -120,7 +127,7 @@ export function ChatWorkspaceScreen() {
       />
 
       {/* Artifact panel — closed by default, desktop only */}
-      {bp === 'desktop' && artifactOpen && (
+      {bp === 'desktop' && artifactOpen && artifact && (
         <ArtifactViewer
           artifact={artifact}
           autoFollow={false}
@@ -146,7 +153,7 @@ export function ChatWorkspaceScreen() {
       )}
 
       {/* Artifact overlay — mobile/tablet */}
-      {bp !== 'desktop' && artifactOpen && (
+      {bp !== 'desktop' && artifactOpen && artifact && (
         <Drawer open onClose={() => setArtifactOpen(false)} side="right">
           <ArtifactViewer
             artifact={artifact}

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import {
   Send,
@@ -95,7 +95,7 @@ export function ChatStream({
   const [streaming, setStreaming] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
 
-  // ⌘K → search, ⌘N → new chat (for when TopBar is hidden on mobile)
+  // ⌘K → search, ⌘N → new chat
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -126,14 +126,14 @@ export function ChatStream({
 
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-background">
-      {/* Compact header */}
-      <div className="flex items-center gap-3 border-b border-border-subtle bg-surface px-4 py-2.5 md:px-5">
+      {/* Mobile chat header — sticky, 56px */}
+      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-border-subtle bg-surface px-3 md:h-auto md:gap-3 md:px-5 md:py-2.5">
         {/* Mobile hamburger */}
         {onOpenSidebar && (
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
+            className="flex size-11 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
             aria-label="Open navigation"
           >
             <Menu className="size-5" />
@@ -142,22 +142,22 @@ export function ChatStream({
         <div className="min-w-0 flex-1">
           <div className="truncate text-[14px] font-medium text-text">{session.title}</div>
           <div className="flex items-center gap-2 font-mono text-[11px] text-text-muted">
-            <span>{session.id}</span>
+            <span className="truncate">{session.id}</span>
             <span
               className={cn(
-                'inline-flex items-center gap-1',
+                'inline shrink-0 items-center gap-1',
                 session.status === 'running' ? 'text-brand' : session.status === 'failed' ? 'text-red' : 'text-green',
               )}
             >
-              {session.status === 'running' && <Loader2 className="size-3 animate-spin" />}
-              {session.status}
+              {session.status === 'running' && <Loader2 className="inline size-3 animate-spin" />}
+              {' '}{session.status}
             </span>
           </div>
         </div>
         {/* Overflow menu */}
         <button
           type="button"
-          className="flex size-8 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex size-11 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text md:size-8"
           aria-label="Session options"
         >
           <MoreHorizontal className="size-4" />
@@ -171,7 +171,8 @@ export function ChatStream({
           <span className="font-mono text-[11px] text-text-muted">
             {attachedContext.length} reference{attachedContext.length !== 1 ? 's' : ''} attached
           </span>
-          <div className="ml-auto flex flex-wrap gap-1">
+          {/* Individual chips — hidden on mobile, shown on md+ */}
+          <div className="ml-auto hidden flex-wrap gap-1 md:flex">
             {attachedContext.map((c) => (
               <button
                 key={c}
@@ -212,7 +213,7 @@ export function ChatStream({
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-5 py-5">
+          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5 md:px-5">
             {segments.map((seg, i) => {
               if (seg.type === 'event') return <ChatEventView key={i} event={seg.event} h={h} />;
               if (seg.type === 'activity') return <ActivityGroup key={i} events={seg.events} h={h} />;
@@ -228,7 +229,7 @@ export function ChatStream({
         )}
       </div>
 
-      {/* Composer */}
+      {/* Composer — sticky bottom */}
       <Composer
         draft={draft}
         setDraft={setDraft}
@@ -275,13 +276,13 @@ function Composer({
   };
 
   return (
-    <div className="border-t border-border-subtle bg-surface px-4 py-3 md:px-5">
-      {/* Mode summary + attach */}
+    <div className="shrink-0 border-t border-border-subtle bg-surface px-4 py-3 md:px-5">
+      {/* Mode + attach */}
       <div className="mb-2 flex items-center gap-2">
         <button
           type="button"
           onClick={onAttachContext}
-          className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
+          className="flex min-h-[36px] items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
         >
           <Paperclip className="size-3.5" /> Context{attachedCount > 0 ? ` · ${attachedCount}` : ''}
         </button>
@@ -289,7 +290,7 @@ function Composer({
           <button
             type="button"
             onClick={() => setModeOpen((v) => !v)}
-            className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
+            className="flex min-h-[36px] items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
           >
             Mode: <span className="text-text">{mode}</span>
             <ChevronDown className="size-3" />
@@ -318,9 +319,9 @@ function Composer({
         </div>
       </div>
 
-      {/* Suggested prompts */}
+      {/* Suggested prompts — max 2 visible on mobile + More */}
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        {PRIMARY_PROMPTS.map((a) => (
+        {PRIMARY_PROMPTS.slice(0, 2).map((a) => (
           <button
             key={a}
             type="button"
@@ -340,7 +341,7 @@ function Composer({
           </button>
           {moreOpen && (
             <div className="absolute bottom-full z-20 mb-1 w-60 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
-              {MORE_PROMPTS.map((a) => (
+              {[...PRIMARY_PROMPTS.slice(2), ...MORE_PROMPTS].map((a) => (
                 <button
                   key={a}
                   type="button"
@@ -377,7 +378,7 @@ function Composer({
               <button
                 type="button"
                 onClick={onStop}
-                className="flex items-center gap-1.5 rounded-sm border border-red/40 bg-red/10 px-3 py-1.5 text-[12px] text-red hover:bg-red/15"
+                className="flex min-h-[36px] items-center gap-1.5 rounded-sm border border-red/40 bg-red/10 px-3 py-1.5 text-[12px] text-red hover:bg-red/15"
               >
                 <Square className="size-3.5" /> Stop
               </button>
@@ -387,7 +388,7 @@ function Composer({
                 onClick={onSend}
                 disabled={!draft.trim()}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] transition-colors',
+                  'flex min-h-[36px] items-center gap-1.5 rounded-sm px-3 py-1.5 text-[12px] transition-colors',
                   draft.trim()
                     ? 'border border-brand-border bg-brand text-primary-foreground hover:bg-brand-hover'
                     : 'cursor-not-allowed border border-border-subtle bg-surface text-text-muted',
