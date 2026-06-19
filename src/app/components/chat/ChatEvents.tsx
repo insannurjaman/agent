@@ -157,6 +157,8 @@ export function ActivityGroup({ events, h }: { events: OpEvent[]; h: ChatEventHa
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-label={`${events.length} actions completed. ${open ? 'Hide' : 'View'} activity.`}
         className="flex w-full items-center gap-2 px-3 py-2 text-left"
       >
         <ActivityIcon className="size-3.5 shrink-0 text-text-muted" />

@@ -87,6 +87,7 @@ function SessionRow({ session, active, onClick }: { session: ChatSession; active
     <button
       type="button"
       onClick={onClick}
+      aria-label={`${session.title} — ${session.status}`}
       className={cn(
         'relative mb-1 w-full rounded-sm border px-2.5 py-2 text-left transition-colors',
         active ? 'border-brand-border bg-brand-muted' : 'border-transparent hover:border-border-subtle hover:bg-surface-2',

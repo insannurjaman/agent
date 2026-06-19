@@ -133,10 +133,10 @@ export function ChatStream({
           <button
             type="button"
             onClick={onOpenSidebar}
-            className="flex size-8 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
-            aria-label="Open sidebar"
+            className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
+            aria-label="Open navigation"
           >
-            <Menu className="size-4" />
+            <Menu className="size-5" />
           </button>
         )}
         <div className="min-w-0 flex-1">
@@ -158,7 +158,7 @@ export function ChatStream({
         <button
           type="button"
           className="flex size-8 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="More options"
+          aria-label="Session options"
         >
           <MoreHorizontal className="size-4" />
         </button>
@@ -265,8 +265,14 @@ function Composer({
   onAttachContext: () => void;
   attachedCount: number;
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [modeOpen, setModeOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const selectPrompt = (text: string) => {
+    setDraft(text);
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  };
 
   return (
     <div className="border-t border-border-subtle bg-surface px-4 py-3 md:px-5">
@@ -318,7 +324,7 @@ function Composer({
           <button
             key={a}
             type="button"
-            onClick={() => setDraft(a)}
+            onClick={() => selectPrompt(a)}
             className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary transition-colors hover:border-brand-border hover:text-text"
           >
             {a}
@@ -339,7 +345,7 @@ function Composer({
                   key={a}
                   type="button"
                   onClick={() => {
-                    setDraft(a);
+                    selectPrompt(a);
                     setMoreOpen(false);
                   }}
                   className="block w-full px-2.5 py-1.5 text-left font-mono text-[11px] text-text-secondary hover:bg-surface-2 hover:text-text"
@@ -355,6 +361,7 @@ function Composer({
       {/* Input */}
       <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-brand-border">
         <textarea
+          ref={textareaRef}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {

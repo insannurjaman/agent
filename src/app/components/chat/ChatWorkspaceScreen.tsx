@@ -75,7 +75,7 @@ export function ChatWorkspaceScreen() {
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           side="left"
-          width={300}
+          width="w-[300px]"
         >
           <SessionExplorerPane
             sessionList={sessions}

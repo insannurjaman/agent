@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { cn } from '../ui/utils';
 
 // Slide-over drawer used for tablet inspectors and the Chat sessions/files pane.
@@ -13,6 +13,14 @@ export function Drawer({
   onClose: () => void;
   children: ReactNode;
 }) {
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
+
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <button type="button" aria-label="Close drawer" className="absolute inset-0 bg-black/60" />
