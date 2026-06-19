@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Search, Settings } from 'lucide-react';
 import { BackendStatusPill } from './BackendStatusPill';
 import { CommandSheet } from './CommandSheet';
@@ -19,7 +20,40 @@ function SystemLogo() {
 }
 
 export function TopBar() {
+  const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // ⌘K / Ctrl+K to focus search
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (window.innerWidth >= 768) {
+          inputRef.current?.focus();
+        } else {
+          setSearchOpen(true);
+        }
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        inputRef.current?.blur();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (q) {
+      navigate(`/search?q=${encodeURIComponent(q)}`);
+    } else {
+      navigate('/search');
+    }
+  }
 
   return (
     <header className="flex h-14 items-center gap-2 border-b border-border-subtle bg-surface px-3 sm:gap-3 sm:px-4">
@@ -37,14 +71,19 @@ export function TopBar() {
       </div>
 
       {/* Desktop / tablet search input */}
-      <div className="group mx-auto hidden min-w-0 max-w-xl flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 transition-colors hover:border-border-strong focus-within:border-brand-border focus-within:bg-code-surface focus-within:ring-2 focus-within:ring-brand-ring md:flex">
-        <Search className="size-4 shrink-0 text-text-muted" />
-        <input
-          className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
-          placeholder="Search findings, open questions, experiments, reports…"
-        />
-        <kbd className="hidden rounded-sm border border-border-strong px-1 font-mono text-[10px] text-text-muted lg:inline">⌘K</kbd>
-      </div>
+      <form onSubmit={handleSubmit} className="group mx-auto hidden min-w-0 max-w-xl flex-1 md:block">
+        <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 transition-colors hover:border-border-strong focus-within:border-brand-border focus-within:bg-code-surface focus-within:ring-2 focus-within:ring-brand-ring">
+          <Search className="size-4 shrink-0 text-text-muted" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
+            placeholder="Search findings, open questions, experiments, reports…"
+          />
+          <kbd className="hidden rounded-sm border border-border-strong px-1 font-mono text-[10px] text-text-muted lg:inline">⌘K</kbd>
+        </div>
+      </form>
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         {/* Mobile search icon */}

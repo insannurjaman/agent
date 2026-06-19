@@ -1,14 +1,32 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Search, X } from 'lucide-react';
 
 // Full-screen mobile search overlay.
 export function CommandSheet({ onClose }: { onClose: () => void }) {
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    onClose();
+    if (q) {
+      navigate(`/search?q=${encodeURIComponent(q)}`);
+    } else {
+      navigate('/search');
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background pt-[env(safe-area-inset-top)]">
-      <div className="flex items-center gap-2 border-b border-border-subtle bg-surface px-3 py-3">
+      <form onSubmit={handleSubmit} className="flex items-center gap-2 border-b border-border-subtle bg-surface px-3 py-3">
         <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2 focus-within:border-brand-border">
           <Search className="size-4 shrink-0 text-text-muted" />
           <input
             autoFocus
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             className="w-full bg-transparent text-[14px] text-text outline-none placeholder:text-text-muted"
             placeholder="Search findings, questions, experiments, reports…"
           />
@@ -21,7 +39,7 @@ export function CommandSheet({ onClose }: { onClose: () => void }) {
         >
           <X className="size-4" />
         </button>
-      </div>
+      </form>
       <div className="flex-1 px-4 py-6">
         <p className="font-mono text-[12px] text-text-muted">
           Type to search across findings, open questions, experiments, and reports.

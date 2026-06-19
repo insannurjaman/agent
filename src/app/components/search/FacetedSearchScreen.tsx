@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { Search, X, ChevronDown, FileText, Share2, GitBranch } from 'lucide-react';
 import {
   findings,
@@ -38,8 +38,9 @@ function experimentFacets(e: Experiment): string[] {
 
 export function FacetedSearchScreen() {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [mode, setMode] = useState<Mode>('facet');
-  const [topic, setTopic] = useState('');
+  const [topic, setTopic] = useState(() => params.get('q') ?? '');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
 
