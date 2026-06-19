@@ -17,10 +17,10 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { to: '/overview', label: 'Overview', icon: LayoutGrid },
+  { to: '/chat', label: 'Chat Workspace', icon: Terminal },
   { to: '/findings', label: 'Findings & Questions', icon: Table2 },
   { to: '/experiments', label: 'Experiments & Reports', icon: FlaskConical },
   { to: '/search', label: 'Faceted Search', icon: SlidersHorizontal },
   { to: '/graph', label: 'Knowledge Graph', icon: Share2 },
   { to: '/lineage', label: 'Lineage', icon: GitBranch },
-  { to: '/chat', label: 'Chat Workspace', icon: Terminal },
 ];

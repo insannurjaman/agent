@@ -9,8 +9,7 @@ const STORAGE_KEY = 'qas.navrail.expanded';
 
 // Group the flat nav into scannable sections (referenced by route).
 const GROUPS: { label: string; routes: string[] }[] = [
-  { label: 'Knowledge', routes: ['/overview', '/findings', '/experiments', '/search', '/graph', '/lineage'] },
-  { label: 'Workspace', routes: ['/chat'] },
+  { label: 'Knowledge', routes: ['/overview', '/chat', '/findings', '/experiments', '/search', '/graph', '/lineage'] },
 ];
 
 const byRoute = new Map(navItems.map((i) => [i.to, i]));
