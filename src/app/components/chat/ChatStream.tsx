@@ -1,5 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Square, Paperclip, X, Loader2, Link2, MessageSquareDashed, ChevronDown, MoreHorizontal } from 'lucide-react';
+import {
+  Send,
+  Square,
+  Paperclip,
+  X,
+  Loader2,
+  Menu,
+  MoreHorizontal,
+  ChevronDown,
+  MessageSquareDashed,
+} from 'lucide-react';
 import {
   composerModes,
   composerModeDescriptions,
@@ -68,6 +78,7 @@ export function ChatStream({
   onRemoveContext,
   onAttachContext,
   h,
+  onOpenSidebar,
 }: {
   session: ChatSession;
   transcript: ChatEvent[];
@@ -75,6 +86,7 @@ export function ChatStream({
   onRemoveContext: (id: string) => void;
   onAttachContext: () => void;
   h: ChatEventHandlers;
+  onOpenSidebar?: () => void;
 }) {
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<ComposerMode>('Investigate');
@@ -92,54 +104,68 @@ export function ChatStream({
     setTimeout(() => setStreaming(false), 2600);
   };
 
-  const primary = attachedContext.find((c) => c.startsWith('F-')) ?? attachedContext.find((c) => c.startsWith('Q-'));
-  const placeholder = primary ? `Ask Claude about ${primary}…` : 'Ask Claude about the selected context…';
   const segments = buildSegments(transcript);
 
   return (
     <div className="flex min-w-0 flex-1 flex-col bg-background">
-      {/* Compact active chat header */}
-      <div className="border-b border-border-subtle bg-surface px-5 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Active Chat</span>
-          <span className="font-mono text-[12px] text-brand">{session.id}</span>
-          <span className="text-[13px] text-text">· {session.title}</span>
-          <span
-            className={cn(
-              'ml-auto inline-flex items-center gap-1.5 font-mono text-[11px] uppercase',
-              session.status === 'running' ? 'text-brand' : session.status === 'failed' ? 'text-red' : 'text-green',
-            )}
+      {/* Compact header */}
+      <div className="flex items-center gap-3 border-b border-border-subtle bg-surface px-4 py-2.5 md:px-5">
+        {/* Mobile hamburger */}
+        {onOpenSidebar && (
+          <button
+            type="button"
+            onClick={onOpenSidebar}
+            className="flex size-8 items-center justify-center rounded-sm text-text-muted hover:text-text md:hidden"
+            aria-label="Open sidebar"
           >
-            {session.status === 'running' && <Loader2 className="size-3 animate-spin" />}
-            {session.status}
-          </span>
+            <Menu className="size-4" />
+          </button>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-[14px] font-medium text-text">{session.title}</div>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-text-muted">
+            <span>{session.id}</span>
+            <span
+              className={cn(
+                'inline-flex items-center gap-1',
+                session.status === 'running' ? 'text-brand' : session.status === 'failed' ? 'text-red' : 'text-green',
+              )}
+            >
+              {session.status === 'running' && <Loader2 className="size-3 animate-spin" />}
+              {session.status}
+            </span>
+          </div>
         </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-mono text-[11px] text-text-muted">
-          <span>
-            Experiment: <span className="text-info">{session.slug}</span>
-          </span>
-          <span>· working dir fixed</span>
-          <span className="inline-flex items-center gap-1 text-green">
-            <Link2 className="size-3" /> Session linked
-          </span>
-        </div>
+        {/* Overflow menu */}
+        <button
+          type="button"
+          className="flex size-8 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          aria-label="More options"
+        >
+          <MoreHorizontal className="size-4" />
+        </button>
       </div>
 
-      {/* Context strip */}
-      <div className="flex flex-wrap items-center gap-1.5 border-b border-border-subtle bg-surface px-5 py-2">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Context</span>
-        {attachedContext.length === 0 && <span className="font-mono text-[11px] text-text-muted">none</span>}
-        {attachedContext.map((c) => (
-          <ContextChip key={c} id={c} onRemove={() => onRemoveContext(c)} onClick={() => h.onNav(c)} />
-        ))}
-      </div>
-
-      {/* Trace mode notice */}
-      {h.density === 'trace' && transcript.length > 0 && (
-        <div className="border-b border-border-subtle bg-surface px-5 py-1.5">
+      {/* Context summary — compact */}
+      {attachedContext.length > 0 && (
+        <div className="flex items-center gap-2 border-b border-border-subtle bg-surface px-4 py-1.5 md:px-5">
+          <Paperclip className="size-3 text-text-muted" />
           <span className="font-mono text-[11px] text-text-muted">
-            Trace Mode shows Claude tool events, commands, and generated files.
+            {attachedContext.length} reference{attachedContext.length !== 1 ? 's' : ''} attached
           </span>
+          <div className="ml-auto flex flex-wrap gap-1">
+            {attachedContext.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => onRemoveContext(c)}
+                className="group flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-text-secondary hover:border-border-strong hover:text-text"
+              >
+                {c}
+                <X className="size-3 text-text-muted opacity-0 group-hover:opacity-100" />
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -150,13 +176,25 @@ export function ChatStream({
             <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
               <MessageSquareDashed className="size-5 text-text-muted" />
             </div>
-            <div className="text-[14px] text-text-secondary">No conversation yet</div>
+            <div className="text-[15px] font-medium text-text">What would you like to investigate?</div>
             <div className="mt-1 max-w-sm text-[13px] text-text-muted">
-              Attach a finding, question, report, or graph node to ask Claude with context.
+              Ask Claude anything about your findings, experiments, or knowledge base.
+            </div>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {PRIMARY_PROMPTS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setDraft(p)}
+                  className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary transition-colors hover:border-brand-border hover:text-text"
+                >
+                  {p}
+                </button>
+              ))}
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-6 py-5">
+          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-5 py-5">
             {segments.map((seg, i) => {
               if (seg.type === 'event') return <ChatEventView key={i} event={seg.event} h={h} />;
               if (seg.type === 'activity') return <ActivityGroup key={i} events={seg.events} h={h} />;
@@ -172,6 +210,7 @@ export function ChatStream({
         )}
       </div>
 
+      {/* Composer */}
       <Composer
         draft={draft}
         setDraft={setDraft}
@@ -182,27 +221,8 @@ export function ChatStream({
         onStop={() => setStreaming(false)}
         onAttachContext={onAttachContext}
         attachedCount={attachedContext.length}
-        placeholder={placeholder}
       />
     </div>
-  );
-}
-
-function ContextChip({ id, onRemove, onClick }: { id: string; onRemove: () => void; onClick: () => void }) {
-  const color = id.startsWith('F-')
-    ? 'text-brand border-brand-border'
-    : id.startsWith('Q-')
-      ? 'text-amber border-amber/30'
-      : 'text-brand border-brand-border';
-  return (
-    <span className={cn('flex items-center gap-1 rounded-sm border bg-surface-2 px-1.5 py-0.5', color)}>
-      <button type="button" onClick={onClick} className="font-mono text-[11px] hover:underline">
-        {id.replace('experiments/', 'experiment:')}
-      </button>
-      <button type="button" onClick={onRemove} className="text-text-muted hover:text-text">
-        <X className="size-3" />
-      </button>
-    </span>
   );
 }
 
@@ -216,7 +236,6 @@ function Composer({
   onStop,
   onAttachContext,
   attachedCount,
-  placeholder,
 }: {
   draft: string;
   setDraft: (v: string) => void;
@@ -227,14 +246,55 @@ function Composer({
   onStop: () => void;
   onAttachContext: () => void;
   attachedCount: number;
-  placeholder: string;
 }) {
   const [modeOpen, setModeOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
   return (
-    <div className="border-t border-border-subtle bg-surface px-5 py-3">
-      {/* Suggested prompts: 3 primary + More */}
+    <div className="border-t border-border-subtle bg-surface px-4 py-3 md:px-5">
+      {/* Mode summary + attach */}
+      <div className="mb-2 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onAttachContext}
+          className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
+        >
+          <Paperclip className="size-3.5" /> Context{attachedCount > 0 ? ` · ${attachedCount}` : ''}
+        </button>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setModeOpen((v) => !v)}
+            className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
+          >
+            Mode: <span className="text-text">{mode}</span>
+            <ChevronDown className="size-3" />
+          </button>
+          {modeOpen && (
+            <div className="absolute bottom-full z-20 mb-1 w-44 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
+              {composerModes.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => {
+                    setMode(m);
+                    setModeOpen(false);
+                  }}
+                  title={composerModeDescriptions[m]}
+                  className={cn(
+                    'block w-full px-2.5 py-1.5 text-left font-mono text-[11px] hover:bg-surface-2',
+                    m === mode ? 'text-text' : 'text-text-secondary',
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Suggested prompts */}
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         {PRIMARY_PROMPTS.map((a) => (
           <button
@@ -252,7 +312,7 @@ function Composer({
             onClick={() => setMoreOpen((v) => !v)}
             className="flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-muted hover:text-text"
           >
-            <MoreHorizontal className="size-3.5" /> More actions
+            <MoreHorizontal className="size-3.5" /> More
           </button>
           {moreOpen && (
             <div className="absolute bottom-full z-20 mb-1 w-60 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
@@ -274,6 +334,7 @@ function Composer({
         </div>
       </div>
 
+      {/* Input */}
       <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-brand-border">
         <textarea
           value={draft}
@@ -282,57 +343,10 @@ function Composer({
             if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) onSend();
           }}
           rows={2}
-          placeholder={placeholder}
+          placeholder="Ask Claude about anything…"
           className="w-full resize-none bg-transparent px-3 py-2.5 text-[14px] text-text outline-none placeholder:text-text-muted"
         />
-
-        <div className="border-t border-border-subtle px-3 py-1 font-mono text-[11px] text-text-muted">
-          {composerModeDescriptions[mode]}
-        </div>
-
         <div className="flex items-center gap-2 border-t border-border-subtle px-2 py-1.5">
-          <button
-            type="button"
-            onClick={onAttachContext}
-            className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
-          >
-            <Paperclip className="size-3.5" /> Attach context
-            {attachedCount > 0 && <span className="text-text-muted">· {attachedCount}</span>}
-          </button>
-
-          {/* Mode dropdown */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setModeOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface px-2 py-1 font-mono text-[11px] text-text-secondary hover:text-text"
-            >
-              Mode: <span className="text-text">{mode}</span>
-              <ChevronDown className="size-3" />
-            </button>
-            {modeOpen && (
-              <div className="absolute bottom-full z-20 mb-1 w-44 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
-                {composerModes.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => {
-                      setMode(m);
-                      setModeOpen(false);
-                    }}
-                    title={composerModeDescriptions[m]}
-                    className={cn(
-                      'block w-full px-2.5 py-1.5 text-left font-mono text-[11px] hover:bg-surface-2',
-                      m === mode ? 'text-text' : 'text-text-secondary',
-                    )}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <div className="ml-auto">
             {streaming ? (
               <button

@@ -7,17 +7,6 @@ import { navItems, type NavItem } from './navItems';
 
 const STORAGE_KEY = 'qas.navrail.expanded';
 
-// Group the flat nav into scannable sections (referenced by route).
-const GROUPS: { label: string; routes: string[] }[] = [
-  { label: 'Knowledge', routes: ['/overview', '/chat', '/findings', '/experiments', '/search', '/graph', '/lineage'] },
-];
-
-const byRoute = new Map(navItems.map((i) => [i.to, i]));
-const SECTIONS = GROUPS.map((g) => ({
-  label: g.label,
-  items: g.routes.map((r) => byRoute.get(r)).filter(Boolean) as NavItem[],
-}));
-
 export function NavRail() {
   const [expanded, setExpanded] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -37,23 +26,8 @@ export function NavRail() {
     >
       <TooltipProvider delayDuration={150}>
         <div className="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
-          {SECTIONS.map((section, si) => (
-            <div key={section.label} className={cn(si > 0 && 'mt-2')}>
-              {/* Section header (expanded) / divider (collapsed) */}
-              {expanded ? (
-                <div className="px-2 pb-1 pt-2 font-mono text-[10px] uppercase tracking-wider text-text-muted">
-                  {section.label}
-                </div>
-              ) : (
-                si > 0 && <div className="mx-2 my-1.5 border-t border-border-subtle" />
-              )}
-
-              <div className="flex flex-col gap-0.5">
-                {section.items.map((item) => (
-                  <RailItem key={item.to} item={item} expanded={expanded} />
-                ))}
-              </div>
-            </div>
+          {navItems.map((item) => (
+            <RailItem key={item.to} item={item} expanded={expanded} />
           ))}
         </div>
 
