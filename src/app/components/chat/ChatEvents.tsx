@@ -118,9 +118,7 @@ export function ChatEventView({ event, h }: { event: ChatEvent; h: ChatEventHand
             </div>
             <div className="mt-1 font-mono text-[12px] text-red">stderr: {event.reason}</div>
             <div className="mt-2.5 flex flex-wrap gap-2">
-              <UtilityBtn onClick={h.onOpenLog}>Open run.log</UtilityBtn>
-              <UtilityBtn>Ask Claude to inspect</UtilityBtn>
-              <UtilityBtn>Retry</UtilityBtn>
+              <UtilityBtn onClick={h.onOpenLog}>View execution details</UtilityBtn>
             </div>
           </div>
         </div>
@@ -216,16 +214,12 @@ function ActivityRow({ ev, h }: { ev: OpEvent; h: ChatEventHandlers }) {
             {ev.command}
           </div>
           {ev.resultIds && ev.resultIds.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {ev.resultIds.map((id) => (
                 <IdLink key={id} id={id} onNav={h.onNav} />
               ))}
             </div>
           )}
-          <div className="mt-2 flex flex-wrap gap-2">
-            <UtilityBtn onClick={() => ev.resultIds && h.onAttachResults(ev.resultIds)}>Attach results</UtilityBtn>
-            <UtilityBtn onClick={h.onOpenFacetedSearch}>Search</UtilityBtn>
-          </div>
         </div>
       )}
     </div>
@@ -293,8 +287,7 @@ function ProposalSummary({
 
         {status === 'idle' && (
           <div className="mt-2.5 flex flex-wrap gap-2">
-            <UtilityBtn onClick={() => h.onReview(findings, questions)}>Review</UtilityBtn>
-            <UtilityBtn>Revise</UtilityBtn>
+            <ClaudeBtn onClick={() => h.onReview(findings, questions)}>Review proposal</ClaudeBtn>
           </div>
         )}
         {status === 'pending' && (

@@ -1,21 +1,23 @@
-import { Plus } from 'lucide-react';
-import { type ChatSession, type SessionStatus } from '../../data/chat';
-import { StatusBadge } from '../common/StatusBadge';
+import { useState } from 'react';
+import { Folder, FileText, ImageIcon, Code, File, ChevronRight, ChevronDown, Plus, Search } from 'lucide-react';
+import { type ChatSession, type FileNode, type SessionStatus, type Artifact } from '../../data/chat';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { cn } from '../ui/utils';
 
 type RelayLabel = 'connected' | 'connecting' | 'disconnected' | 'not-configured';
 
-const STATUS_TONE: Record<SessionStatus, 'green' | 'teal' | 'red'> = {
-  running: 'teal',
-  completed: 'green',
-  failed: 'red',
+const STATUS_TONE: Record<SessionStatus, string> = {
+  running: 'bg-green',
+  completed: 'bg-text-muted',
+  failed: 'bg-red',
 };
 
-const RELAY_TEXT: Record<RelayLabel, string> = {
-  connected: 'Claude relay connected',
-  connecting: 'Connecting to Claude relay…',
-  disconnected: 'Claude disconnected',
-  'not-configured': 'Claude relay not configured',
+const FILE_ICONS: Record<string, typeof FileText> = {
+  png: ImageIcon,
+  json: Code,
+  html: FileText,
+  markdown: FileText,
+  log: File,
 };
 
 function formatTime(lastUpdated: string): string {
@@ -32,96 +34,247 @@ export function SessionExplorerPane({
   onSelectSession,
   onNewChat,
   relay,
+  tree,
+  artifacts,
+  onSelectArtifact,
+  context,
 }: {
   sessionList: ChatSession[];
   activeSessionId: string;
   onSelectSession: (id: string) => void;
   onNewChat: () => void;
   relay: RelayLabel;
-  currentSlug?: string;
-  tree?: unknown[];
-  activeFilePath?: string | null;
-  onSelectFile?: (node: unknown) => void;
+  tree?: FileNode[];
+  artifacts?: Record<string, Artifact>;
+  onSelectArtifact?: (id: string) => void;
+  context?: string[];
 }) {
-  const groups: { status: SessionStatus; label: string }[] = [
-    { status: 'running', label: 'Running' },
-    { status: 'completed', label: 'Completed' },
-    { status: 'failed', label: 'Failed' },
-  ];
+  const [tab, setTab] = useState<'chats' | 'explorer'>('chats');
+
+  const unique = dedup(sessionList);
+  const running = unique.filter((s) => s.status === 'running');
+  const completed = unique.filter((s) => s.status === 'completed');
+  const failed = unique.filter((s) => s.status === 'failed');
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-r border-border-subtle bg-surface md:w-[280px]">
-      {/* Header with New Chat + relay */}
-      <div className="border-b border-border-subtle p-3">
-        <div className="flex items-center justify-between border-b border-border-subtle pb-3">
-          <span className="text-[13px] font-semibold text-text">Quick Agent System</span>
-        </div>
-        <button
-          type="button"
-          onClick={onNewChat}
-          className="mt-3 flex w-full min-h-[44px] items-center justify-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-[13px] text-brand transition-colors hover:bg-brand-surface"
-        >
-          <Plus className="size-4" /> New Chat
-        </button>
-        <div className="mt-2.5 flex items-center gap-2">
-          <span
-            className={cn(
-              'size-2 rounded-full',
-              relay === 'connected' ? 'bg-green' : relay === 'connecting' ? 'bg-amber' : relay === 'disconnected' ? 'bg-red' : 'bg-text-muted',
-            )}
-          />
-          <span className="font-mono text-[11px] text-text-secondary">{RELAY_TEXT[relay]}</span>
-        </div>
+    <div className="flex h-full w-[280px] shrink-0 flex-col border-r border-border-subtle bg-surface">
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2.5">
+        <span className="text-[13px] font-semibold text-text">Workspace</span>
       </div>
 
-      {/* Session list */}
-      <div className="min-h-0 flex-1 overflow-auto px-2 py-2">
-        {groups.map((g) => {
-          const rows = sessionList.filter((s) => s.status === g.status);
-          if (rows.length === 0) return null;
-          return (
-            <div key={g.status} className="mb-2 last:mb-0">
-              <div className="px-1 pb-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">
-                {g.label} · {rows.length}
+      {/* Tabs */}
+      <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex min-h-0 flex-1 flex-col">
+        <TabsList className="mx-2 mt-2 shrink-0">
+          <TabsTrigger value="chats" className="flex-1 text-[11px]">Chats</TabsTrigger>
+          <TabsTrigger value="explorer" className="flex-1 text-[11px]">Explorer</TabsTrigger>
+        </TabsList>
+
+        {/* Chats tab */}
+        <TabsContent value="chats" className="min-h-0 flex-1 overflow-auto p-2">
+          {/* New Chat */}
+          <button
+            type="button"
+            onClick={onNewChat}
+            className="mb-2 flex min-h-[36px] w-full items-center justify-center gap-1.5 rounded-sm bg-brand px-3 py-1.5 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-brand-hover"
+          >
+            <Plus className="size-3.5" />
+            New Chat
+          </button>
+
+          {/* Relay status */}
+          <div className="mb-2 flex items-center gap-2 px-1">
+            <span className={cn('size-1.5 rounded-full', relay === 'connected' ? 'bg-green' : relay === 'connecting' ? 'bg-amber' : 'bg-red')} />
+            <span className="font-mono text-[10px] text-text-muted">
+              {relay === 'connected' ? 'Claude relay connected' : relay}
+            </span>
+          </div>
+
+          {/* Session groups */}
+          {running.length > 0 && (
+            <SessionGroup label="Running" sessions={running} activeId={activeSessionId} onSelect={onSelectSession} />
+          )}
+          {completed.length > 0 && (
+            <SessionGroup label="Completed" sessions={completed} activeId={activeSessionId} onSelect={onSelectSession} />
+          )}
+          {failed.length > 0 && (
+            <SessionGroup label="Failed" sessions={failed} activeId={activeSessionId} onSelect={onSelectSession} />
+          )}
+        </TabsContent>
+
+        {/* Explorer tab */}
+        <TabsContent value="explorer" className="min-h-0 flex-1 overflow-auto p-2">
+          {/* Context chips */}
+          {context && context.length > 0 && (
+            <div className="mb-3">
+              <div className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">
+                Attached context
               </div>
-              {rows.map((s) => (
-                <SessionRow key={s.id} session={s} active={s.id === activeSessionId} onClick={() => onSelectSession(s.id)} />
+              <div className="flex flex-wrap gap-1">
+                {context.map((id) => (
+                  <span key={id} className="rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-text-secondary">
+                    {id}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* File tree */}
+          {tree && tree.length > 0 ? (
+            <div className="space-y-0.5">
+              {tree.map((node) => (
+                <FileNodeRow
+                  key={node.path}
+                  node={node}
+                  depth={0}
+                  artifacts={artifacts}
+                  onSelectArtifact={onSelectArtifact}
+                />
               ))}
             </div>
-          );
-        })}
-      </div>
-    </aside>
+          ) : (
+            <div className="flex flex-col items-center justify-center px-4 py-8 text-center">
+              <Folder className="mb-2 size-6 text-text-muted" />
+              <div className="text-[11px] text-text-muted">No files in workspace</div>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
-function SessionRow({ session, active, onClick }: { session: ChatSession; active: boolean; onClick: () => void }) {
+function SessionGroup({
+  label,
+  sessions: groupSessions,
+  activeId,
+  onSelect,
+}: {
+  label: string;
+  sessions: ChatSession[];
+  activeId: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="mb-2 last:mb-0">
+      <div className="mb-1 px-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">
+        {label} · {groupSessions.length}
+      </div>
+      <div className="flex flex-col gap-0.5">
+        {groupSessions.map((s) => (
+          <SessionRow key={s.id} session={s} isActive={s.id === activeId} onSelect={onSelect} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SessionRow({
+  session,
+  isActive,
+  onSelect,
+}: {
+  session: ChatSession;
+  isActive: boolean;
+  onSelect: (id: string) => void;
+}) {
   return (
     <button
       type="button"
-      onClick={onClick}
-      aria-label={`${session.title} — ${session.status}`}
+      onClick={() => onSelect(session.id)}
       className={cn(
-        'group relative mb-0.5 flex min-h-[44px] w-full items-center gap-2.5 rounded-sm px-2.5 py-2 text-left transition-colors',
-        active
-          ? 'bg-brand-muted'
+        'flex min-h-[40px] w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition-colors',
+        isActive
+          ? 'bg-brand-muted border-l-2 border-brand pl-1.5'
           : 'hover:bg-surface-2',
       )}
     >
-      {/* Active indicator — subtle left bar */}
-      {active && <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-brand" />}
+      <span className={cn('size-1.5 shrink-0 rounded-full', STATUS_TONE[session.status])} />
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[13px] text-text">{session.title}</div>
-        <div className="font-mono text-[10px] text-text-muted">
-          {session.id} · {formatTime(session.lastUpdated)}
-        </div>
+        <div className="truncate text-[12px] text-text-secondary">{session.title}</div>
+        <div className="font-mono text-[10px] text-text-muted">{formatTime(session.lastUpdated)}</div>
       </div>
       {session.status === 'running' && (
-        <span className="shrink-0 rounded-sm bg-green/15 px-1.5 py-0.5 font-mono text-[9px] uppercase text-green">Live</span>
-      )}
-      {session.status === 'failed' && (
-        <StatusBadge value={session.status} tone={STATUS_TONE[session.status]} showDot />
+        <span className="shrink-0 rounded-sm bg-green/15 px-1 py-0.5 font-mono text-[9px] uppercase text-green">Live</span>
       )}
     </button>
   );
+}
+
+function FileNodeRow({
+  node,
+  depth,
+  artifacts,
+  onSelectArtifact,
+}: {
+  node: FileNode;
+  depth: number;
+  artifacts?: Record<string, Artifact>;
+  onSelectArtifact?: (id: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(depth < 1);
+  const isDir = node.kind === 'dir';
+  const Icon = node.type ? (FILE_ICONS[node.type] ?? File) : isDir ? Folder : File;
+  const isArtifact = node.type && node.generated;
+  const artifactData = artifacts?.[node.name];
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => {
+          if (isDir) {
+            setExpanded(!expanded);
+          } else if (isArtifact && artifactData && onSelectArtifact) {
+            onSelectArtifact(artifactData.id);
+          }
+        }}
+        className={cn(
+          'flex min-h-[32px] w-full items-center gap-1.5 rounded-sm px-1.5 py-1 text-left transition-colors hover:bg-surface-2',
+          isArtifact && 'text-brand',
+        )}
+        style={{ paddingLeft: `${depth * 12 + 6}px` }}
+      >
+        {isDir ? (
+          expanded ? (
+            <ChevronDown className="size-3 shrink-0 text-text-muted" />
+          ) : (
+            <ChevronRight className="size-3 shrink-0 text-text-muted" />
+          )
+        ) : (
+          <span className="w-3" />
+        )}
+        <Icon className={cn('size-3.5 shrink-0', isArtifact ? 'text-brand' : 'text-text-muted')} />
+        <span className={cn('truncate text-[11px]', isArtifact ? 'text-brand' : 'text-text-secondary')}>
+          {node.name}
+        </span>
+        {isArtifact && node.generatedAt && (
+          <span className="ml-auto shrink-0 font-mono text-[9px] text-text-muted">{node.generatedAt}</span>
+        )}
+      </button>
+      {isDir && expanded && node.children && (
+        <div>
+          {node.children.map((child) => (
+            <FileNodeRow
+              key={child.path}
+              node={child}
+              depth={depth + 1}
+              artifacts={artifacts}
+              onSelectArtifact={onSelectArtifact}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function dedup(list: ChatSession[]): ChatSession[] {
+  const seen = new Set<string>();
+  return list.filter((s) => {
+    if (seen.has(s.id)) return false;
+    seen.add(s.id);
+    return true;
+  });
 }

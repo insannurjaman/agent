@@ -1,5 +1,6 @@
 import { createHashRouter, Navigate, RouterProvider } from 'react-router';
 import { ThemeProvider } from 'next-themes';
+import { AuthProvider } from './data/auth';
 import { AppShell } from './components/shell/AppShell';
 import { FindingsScreen } from './components/findings/FindingsScreen';
 import { ExperimentsScreen } from './components/experiments/ExperimentsScreen';
@@ -32,7 +33,9 @@ const router = createHashRouter([
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </ThemeProvider>
   );
 }
