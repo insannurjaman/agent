@@ -40,7 +40,7 @@ export function TopBar() {
           QAS
         </span>
         <span className="hidden rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-text-muted xl:inline">
-          v0.1.0
+          v1.0
         </span>
       </div>
 
