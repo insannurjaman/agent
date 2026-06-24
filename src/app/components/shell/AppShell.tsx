@@ -4,6 +4,7 @@ import { NavRail } from './NavRail';
 import { TopBar } from './TopBar';
 import { NavDrawer } from './NavDrawer';
 import { NavContext, type DrawerTab } from './NavContext';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
 
 export function AppShell() {
   const location = useLocation();
@@ -63,7 +64,9 @@ export function AppShell() {
             <NavRail />
           </div>
           <main ref={mainRef} id="main-content" className="min-h-0 min-w-0 flex-1 overflow-hidden">
-            <Outlet />
+            <RouteErrorBoundary routeKey={location.pathname}>
+              <Outlet />
+            </RouteErrorBoundary>
           </main>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { X, ShieldCheck } from 'lucide-react';
 import type { FindingProposal, QuestionProposal } from '../../data/chat';
 import { StatusBadge } from '../common/StatusBadge';
@@ -46,6 +47,7 @@ export function ProposalReviewDrawer({
   ];
   const [active, setActive] = useState(tabs[0]?.key);
   const tab = tabs.find((t) => t.key === active) ?? tabs[0];
+  const navigate = useNavigate();
   if (!tab) return null;
   const isFinding = tab.kind === 'finding';
 
@@ -133,7 +135,14 @@ export function ProposalReviewDrawer({
         <button type="button" onClick={onClose} className="rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text">
           Cancel
         </button>
-        <button type="button" className="rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text">
+        <button
+          type="button"
+          onClick={() => {
+            const id = isFinding ? tab.finding!.findingId : tab.question!.questionId;
+            navigate(`/chat?ctx=${id}`);
+          }}
+          className="rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text"
+        >
           Ask Claude to revise
         </button>
         <button

@@ -240,34 +240,13 @@ function ArtifactBody({ artifact }: { artifact: Artifact }) {
 }
 
 function PngPreview({ artifact }: { artifact: Artifact }) {
-  // Render a simplified SVG chart placeholder for PNG artifacts
   return (
-    <div className="overflow-hidden rounded-sm border border-border-subtle bg-elevated">
-      <svg viewBox="0 0 400 240" className="h-48 w-full" aria-label={`Chart: ${artifact.name}`}>
-        <rect width="400" height="240" fill="var(--surface-2)" />
-        {/* Y-axis */}
-        <line x1="40" y1="20" x2="40" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
-        {/* X-axis */}
-        <line x1="40" y1="200" x2="380" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
-        {/* Bars */}
-        {[60, 110, 160, 210, 260, 310, 360].map((x, i) => {
-          const h = [120, 80, 140, 60, 100, 90, 110][i];
-          return (
-            <rect
-              key={x}
-              x={x - 15}
-              y={200 - h}
-              width="30"
-              height={h}
-              fill={i === 2 ? 'var(--brand-primary)' : 'var(--border-strong)'}
-              rx="2"
-            />
-          );
-        })}
-        <text x="210" y="230" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontFamily="monospace">
-          {artifact.name}
-        </text>
-      </svg>
+    <div className="flex h-48 items-center justify-center overflow-hidden rounded-sm border border-border-subtle bg-elevated">
+      <div className="text-center">
+        <ImageIcon className="mx-auto size-8 text-text-muted" />
+        <p className="mt-2 text-[12px] text-text-muted">{artifact.name}</p>
+        <p className="text-[11px] text-text-muted">PNG image — preview not available in prototype</p>
+      </div>
     </div>
   );
 }

@@ -25,6 +25,15 @@ export function extractHeadings(md: string): Heading[] {
   return out;
 }
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 // Inline parser: bold, code, links, and F-/Q-ID auto-links.
 function renderInline(text: string, navigate: (to: string) => void, keyBase: string): ReactNode[] {
   // Split on the union of patterns, keeping delimiters.
@@ -49,12 +58,23 @@ function renderInline(text: string, navigate: (to: string) => void, keyBase: str
         </code>
       );
     const link = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-    if (link)
+    if (link) {
+      const href = link[2];
+      const isExternal = /^https?:\/\//.test(href);
+      if (isExternal && !isSafeUrl(href)) {
+        return <span key={key} className="text-text-muted">{link[1]}</span>;
+      }
       return (
-        <a key={key} href={link[2]} className="text-brand hover:underline">
+        <a
+          key={key}
+          href={href}
+          className="text-brand hover:underline"
+          {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+        >
           {link[1]}
         </a>
       );
+    }
     if (/^F-\d{4}$/.test(p))
       return (
         <button

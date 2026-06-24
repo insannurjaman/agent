@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
 import type { ChatEventHandlers, ProposalStatus } from './ChatEvents';
 import { ChatStream } from './ChatStream';
@@ -14,6 +15,7 @@ const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as 
 
 export function ChatWorkspaceScreen() {
   const bp = useBreakpoint();
+  const navigate = useNavigate();
   const [session, setSession] = useState<ChatSession>(sessions[0]);
   const [artifactOpen, setArtifactOpen] = useState(false);
   const [artifactId, setArtifactId] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function ChatWorkspaceScreen() {
     },
     onAttachResults: (ids) =>
       setAttachedContext((prev) => [...new Set([...prev, ...ids])]),
-    onOpenFacetedSearch: () => {},
+    onOpenFacetedSearch: () => navigate('/search'),
     onReview: (findings, questions) => setReviewing({ findings, questions }),
     onConfirmFinding: (p) =>
       setProposalStatus((prev) => ({ ...prev, [p.findingId]: 'pending' })),
@@ -45,7 +47,7 @@ export function ChatWorkspaceScreen() {
       setProposalStatus((prev) => ({ ...prev, [p.questionId]: 'pending' })),
     onRetryProposal: (id) =>
       setProposalStatus((prev) => ({ ...prev, [id]: 'pending' })),
-    onOpenLog: () => {},
+    onOpenLog: () => {}, // Log viewer not in V1 scope
     density: 'focus' as const,
   };
 

@@ -198,13 +198,6 @@ export function ChatStream({
             Artifact
           </button>
         )}
-        <button
-          type="button"
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Session options"
-        >
-          <MoreHorizontal className="size-4" />
-        </button>
       </div>
 
       {/* Mobile header */}

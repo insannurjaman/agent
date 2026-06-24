@@ -1,5 +1,5 @@
-import { useMemo, useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { ChevronRight, Search, MoreHorizontal, ArrowUpRight } from 'lucide-react';
 import { findings as allFindings, openQuestions as allQuestions } from '../../data';
 import type { Finding, OpenQuestion } from '../../data';
@@ -481,7 +481,7 @@ function FindingRow({
           <span className="font-mono text-[12px] text-text-muted">{f.date}</span>
         </td>
         <td className="px-1">
-          <RowMenu />
+          <RowMenu id={f.id} />
         </td>
       </tr>
       {expanded && (
@@ -572,7 +572,7 @@ function QuestionRow({
           <span className="font-mono text-[12px] text-text-muted">{q.raisedDate}</span>
         </td>
         <td className="px-1">
-          <RowMenu isQuestion />
+          <RowMenu id={q.id} isQuestion />
         </td>
       </tr>
       {expanded && (
@@ -589,7 +589,12 @@ function QuestionRow({
   );
 }
 
-function RowMenu({ isQuestion }: { isQuestion?: boolean }) {
+function RowMenu({ id, isQuestion }: { id: string; isQuestion?: boolean }) {
+  const navigate = useNavigate();
+  const copyId = useCallback(async () => {
+    try { await navigator.clipboard.writeText(id); } catch { /* ok */ }
+  }, [id]);
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -603,10 +608,10 @@ function RowMenu({ isQuestion }: { isQuestion?: boolean }) {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="font-mono text-[12px]">
-        <DropdownMenuItem>View in Graph</DropdownMenuItem>
-        <DropdownMenuItem>View Lineage</DropdownMenuItem>
-        <DropdownMenuItem>Copy ID</DropdownMenuItem>
-        <DropdownMenuItem className="text-brand">
+        <DropdownMenuItem onClick={() => navigate(`/graph?focus=${id}`)}>View in Graph</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/lineage?focus=${id}`)}>View Lineage</DropdownMenuItem>
+        <DropdownMenuItem onClick={copyId}>Copy ID</DropdownMenuItem>
+        <DropdownMenuItem className="text-brand" onClick={() => navigate(`/chat?ctx=${id}`)}>
           {isQuestion ? 'Ask Claude to resolve' : 'Ask Claude about this'}
         </DropdownMenuItem>
       </DropdownMenuContent>
