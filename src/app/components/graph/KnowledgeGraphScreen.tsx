@@ -416,7 +416,7 @@ export function KnowledgeGraphScreen() {
             {filtered.nodeIds.size === 0 ? <EmptyState title="No nodes match current filters" hint="Search for a node or adjust filters to display the graph." /> : (
               <svg className="absolute inset-0 size-full" role="img" aria-label="Knowledge graph visualization">
                 <defs>{edgeTypes.map((t) => (<marker key={t} id={`arrow-${t}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill={EDGE_COLOR[t]} /></marker>))}</defs>
-                <g transform={`translate(${view.x},${view.y}) scale(${view.scale})`}>
+                <g className="transition-transform duration-150 ease-out" transform={`translate(${view.x},${view.y}) scale(${view.scale})`}>
                   {/* ── Global & 3-hop clusters ── */}
                   {!exploredCluster && scope === 'global' && zoomLevel < 0.4 && (globalClusters as (GraphCluster & { x: number; y: number })[]).map((c) => (
                     <g key={c.id} transform={`translate(${c.x},${c.y})`} opacity={0.9} className="cursor-pointer" role="button" tabIndex={0}
@@ -438,46 +438,76 @@ export function KnowledgeGraphScreen() {
                     </g>
                   ))}
 
-                  {/* ── Aggregate boundary edges ── */}
-                  {selectedCluster && boundaryEdges.map((ae) => {
-                    const extPos = layout.get(ae.targetId);
-                    const cPos = { x: (selectedCluster as GraphCluster & { x?: number }).x ?? 0, y: (selectedCluster as GraphCluster & { y?: number }).y ?? 0 };
-                    if (!extPos) return null;
-                    const gc = ae.group === 'evidence' ? 'var(--brand-primary)' : ae.group === 'resolution' ? 'var(--green)' : ae.group === 'conflict' ? 'var(--error)' : 'var(--text-muted)';
-                    return (<g key={ae.id} opacity={0.45} className="cursor-pointer" role="button" tabIndex={0}
-                      aria-label={`${ae.count} ${ae.group} ${ae.direction} ${ae.externalNodeLabel || ae.targetId}`}>
-                      <line x1={cPos.x} y1={cPos.y} x2={extPos.x} y2={extPos.y}
-                        stroke={gc} strokeWidth={Math.min(ae.count * 0.3 + 0.5, ZOOM.maxBoundaryEdgeWidth)} strokeDasharray={ae.direction === 'mixed' ? '4 3' : ae.direction === 'inbound' ? '2 4' : undefined} />
-                      {(zoomLevel > 0.5 || ae.count > 5) && (
-                        <text x={(cPos.x + extPos.x) / 2} y={(cPos.y + extPos.y) / 2 - 4} textAnchor="middle" fontSize="6" fontFamily="JetBrains Mono, monospace" fill={gc} opacity={0.8}>{ae.group} · {ae.count}</text>
-                      )}
-                    </g>);
-                  })}
+                  {/* ── Aggregate boundary edges with collision-free labels ── */}
+                  {selectedCluster && (() => {
+                    const usedLabelPositions: { x: number; y: number }[] = [];
+                    const MIN_LABEL_DIST = 40;
+                    return boundaryEdges.map((ae) => {
+                      const extPos = layout.get(ae.targetId);
+                      const cPos = { x: (selectedCluster as GraphCluster & { x?: number }).x ?? 0, y: (selectedCluster as GraphCluster & { y?: number }).y ?? 0 };
+                      if (!extPos) return null;
+                      const gc = ae.group === 'evidence' ? 'var(--brand-primary)' : ae.group === 'resolution' ? 'var(--green)' : ae.group === 'conflict' ? 'var(--error)' : 'var(--text-muted)';
+                      const showLabel = (zoomLevel > 0.5 || ae.count > 5);
+                      const lx = (cPos.x + extPos.x) / 2;
+                      const ly = (cPos.y + extPos.y) / 2 - 4;
+                      const labelCollides = showLabel && usedLabelPositions.some((u) => Math.abs(u.x - lx) < MIN_LABEL_DIST && Math.abs(u.y - ly) < MIN_LABEL_DIST);
+                      if (showLabel && !labelCollides) usedLabelPositions.push({ x: lx, y: ly });
+                      return (<g key={ae.id} opacity={0.45} className="cursor-pointer" role="button" tabIndex={0}
+                        aria-label={`${ae.count} ${ae.group} ${ae.direction} ${ae.externalNodeLabel || ae.targetId}`}>
+                        <line x1={cPos.x} y1={cPos.y} x2={extPos.x} y2={extPos.y}
+                          stroke={gc} strokeWidth={Math.min(ae.count * 0.3 + 0.5, ZOOM.maxBoundaryEdgeWidth)} strokeDasharray={ae.direction === 'mixed' ? '4 3' : ae.direction === 'inbound' ? '2 4' : undefined} />
+                        {showLabel && !labelCollides && (
+                          <text x={lx} y={ly} textAnchor="middle" fontSize="6" fontFamily="JetBrains Mono, monospace" fill={gc} opacity={0.8}>{ae.group} · {ae.count}</text>
+                        )}
+                      </g>);
+                    });
+                  })()}
 
                   {/* ── Regular edges ── */}
-                  {(scope !== 'global' || zoomLevel >= 0.4 || exploredCluster) && filtered.edges.map((e, i) => {
-                    const a = layout.get(e.src); const b = layout.get(e.dst); if (!a || !b) return null;
-                    const sd = sub.dist.get(e.src) ?? 0; const dd = sub.dist.get(e.dst) ?? 0;
-                    const isAdj = adjacent && adjacent.has(e.src) && adjacent.has(e.dst);
-                    const isSelPath = adjacent && adjacent.has(e.src) && adjacent.has(e.dst) && selectedId && (e.src === selectedId || e.dst === selectedId);
-                    if (zoomLevel < 0.3 && !isSelPath && !exploredCluster) return null;
-                    const emphatic = e.edgeType === 'supersedes' || e.edgeType === 'conflict-suspected';
-                    const opacity = exploredCluster ? 0.55 : getEdgeOpacity(depth, sd, dd, isSelPath, !!isAdj);
-                    if (opacity < 0.05) return null;
-                    return (<g key={i} opacity={opacity}>
-                      <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={EDGE_COLOR[e.edgeType]}
-                        strokeWidth={isSelPath ? ZOOM.maxSelectedEdgeWidth : emphatic ? 1.5 : 0.8}
-                        strokeDasharray={e.edgeType === 'conflict-suspected' ? '5 4' : undefined} markerEnd={zoomLevel >= 0.35 && isSelPath && e.src === selectedId ? `url(#arrow-${e.edgeType})` : zoomLevel >= 0.35 && !isSelPath ? `url(#arrow-${e.edgeType})` : undefined} />
-                      {zoomLevel > 0.7 && isSelPath && (
-                        // Limit edge labels: only show for nearest edges to selected node
-                        filtered.edges.filter((ex) => adjacent && adjacent.has(ex.src) && adjacent.has(ex.dst) && selectedId && (ex.src === selectedId || ex.dst === selectedId))
-                          .slice(0, ZOOM.maxSelectedEdgeLabels).map((ex, j) => ex === e ? (
-                            <text key={j} x={(a.x + b.x) / 2} y={(a.y + b.y) / 2 - 3} textAnchor="middle" fontSize="7"
-                              fontFamily="JetBrains Mono, monospace" fill={EDGE_COLOR[e.edgeType]} opacity={0.85}>{e.edgeType}</text>
-                          ) : null).filter(Boolean).slice(0, 1) // only render matching label
-                      )}
-                    </g>);
-                  })}
+                  {(scope !== 'global' || zoomLevel >= 0.4 || exploredCluster) && (() => {
+                    const MAX_LABELS = ZOOM.maxSelectedEdgeLabels;
+                    const MIN_LABEL_DIST = 50;
+                    const selPathEdges: { e: typeof filtered.edges[0]; a: Pos; b: Pos; idx: number }[] = [];
+                    const edgeEls: React.ReactNode[] = [];
+
+                    filtered.edges.forEach((e, i) => {
+                      const a = layout.get(e.src); const b = layout.get(e.dst); if (!a || !b) return;
+                      const sd = sub.dist.get(e.src) ?? 0; const dd = sub.dist.get(e.dst) ?? 0;
+                      const isAdj = adjacent && adjacent.has(e.src) && adjacent.has(e.dst);
+                      const isSelPath = adjacent && adjacent.has(e.src) && adjacent.has(e.dst) && selectedId && (e.src === selectedId || e.dst === selectedId);
+                      if (zoomLevel < 0.3 && !isSelPath && !exploredCluster) return;
+                      const emphatic = e.edgeType === 'supersedes' || e.edgeType === 'conflict-suspected';
+                      const opacity = exploredCluster ? 0.55 : getEdgeOpacity(depth, sd, dd, isSelPath, !!isAdj);
+                      if (opacity < 0.05) return;
+                      if (isSelPath && zoomLevel > 0.7) selPathEdges.push({ e, a, b, idx: i });
+                      edgeEls.push(<g key={i} opacity={opacity}>
+                        <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke={EDGE_COLOR[e.edgeType]}
+                          strokeWidth={isSelPath ? ZOOM.maxSelectedEdgeWidth : emphatic ? 1.5 : 0.8}
+                          strokeDasharray={e.edgeType === 'conflict-suspected' ? '5 4' : undefined}
+                          markerEnd={zoomLevel >= 0.35 ? `url(#arrow-${e.edgeType})` : undefined} />
+                      </g>);
+                    });
+
+                    // Render selected-path labels with collision avoidance
+                    const usedLabelPos: { x: number; y: number }[] = [];
+                    const sortedLabels = selPathEdges.sort((a, b) => {
+                      const da = Math.abs(a.a.x - a.b.x) + Math.abs(a.a.y - a.b.y);
+                      const db = Math.abs(b.a.x - b.b.x) + Math.abs(b.a.y - b.b.y);
+                      return da - db;
+                    });
+                    sortedLabels.slice(0, MAX_LABELS).forEach(({ e, a, b }) => {
+                      const lx = (a.x + b.x) / 2; const ly = (a.y + b.y) / 2 - 3;
+                      const collides = usedLabelPos.some((u) => Math.abs(u.x - lx) < MIN_LABEL_DIST && Math.abs(u.y - ly) < MIN_LABEL_DIST);
+                      if (!collides) {
+                        usedLabelPos.push({ x: lx, y: ly });
+                        edgeEls.push(<g key={`label-${e.src}-${e.dst}`} opacity={0.85}>
+                          <text x={lx} y={ly} textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono, monospace" fill={EDGE_COLOR[e.edgeType]}>{e.edgeType}</text>
+                        </g>);
+                      }
+                    });
+
+                    return edgeEls;
+                  })()}
 
                   {/* ── Nodes ── */}
                   {(scope !== 'global' || zoomLevel >= 0.4 || exploredCluster) && [...filtered.nodeIds].map((id) => {
