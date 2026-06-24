@@ -27,6 +27,7 @@ import {
 import { ChatEventView, ActivityGroup, ProposalGroup, type ChatEventHandlers } from './ChatEvents';
 import { cn } from '../ui/utils';
 import { useNavContext } from '../shell/NavContext';
+import { EmptyState } from '../common/EmptyState';
 
 const PRIMARY_PROMPTS = ['Explain this finding', 'Create follow-up experiment'];
 const MORE_PROMPTS = [
@@ -244,15 +245,12 @@ export function ChatStream({
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="h-full overflow-auto">
           {transcript.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-              <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
-                <MessageSquareDashed className="size-5 text-text-muted" />
-              </div>
-              <div className="text-[15px] font-medium text-text">What would you like to investigate?</div>
-              <div className="mt-1 max-w-sm text-[13px] text-text-muted">
-                Ask Claude anything about your findings, experiments, or knowledge base.
-              </div>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <EmptyState
+              icon={MessageSquareDashed}
+              title="What would you like to investigate?"
+              hint="Ask Claude anything about your findings, experiments, or knowledge base."
+            >
+              <div className="flex flex-wrap justify-center gap-2">
                 {PRIMARY_PROMPTS.map((p) => (
                   <button
                     key={p}
@@ -264,7 +262,7 @@ export function ChatStream({
                   </button>
                 ))}
               </div>
-            </div>
+            </EmptyState>
           ) : (
             <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5">
               {segments.map((seg, i) => {

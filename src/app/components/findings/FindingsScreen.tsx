@@ -250,11 +250,11 @@ export function FindingsScreen() {
           {totalRows === 0 ? (
             <EmptyState
               icon={Search}
-              title={query ? 'No matching filters' : 'No findings found'}
+              title={query ? 'No results match filters' : 'No findings yet'}
               hint={
                 query
-                  ? 'No findings, open questions match the current search and filters.'
-                  : 'Adjust filters to see accumulated knowledge.'
+                  ? 'Adjust search terms or clear filters to view all findings.'
+                  : 'Findings are registered through Claude-mediated knowledge workflows.'
               }
             />
           ) : (

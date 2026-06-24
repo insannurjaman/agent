@@ -234,9 +234,9 @@ export function FacetedSearchScreen() {
               </NavActionButton>
             </EmptyState>
           ) : !hasInput ? (
-            <EmptyState icon={Search} title="Select facets or enter a topic to search knowledge." />
+            <EmptyState icon={Search} title="No facets or topic selected" hint="Choose filters or type a topic to search knowledge." />
           ) : total === 0 ? (
-            <EmptyState title="No matching findings, open questions, or experiments." />
+            <EmptyState title="No results match current filters" hint="Adjust facets or broaden your search terms." />
           ) : (
             <div className="space-y-6">
               {results.findings.length > 0 && (

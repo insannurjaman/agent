@@ -71,7 +71,7 @@ export function ExperimentsScreen() {
             onBack={() => navigate('/experiments')}
           />
         ) : (
-          <EmptyState title="Select an experiment" />
+          <EmptyState title="Select an experiment" hint="Choose an experiment from the list to view its report." />
         )}
       </div>
     </div>

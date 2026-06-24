@@ -375,8 +375,8 @@ export function KnowledgeGraphScreen() {
         >
           {filtered.nodeIds.size === 0 ? (
             <EmptyState
-              title="No node selected"
-              hint="Search a node or pick a different filter set. Too many edges? Narrow by edge type."
+              title="No nodes match current filters"
+              hint="Search for a node or adjust filters to display the graph."
             />
           ) : (
             <svg className="absolute inset-0 size-full" role="img" aria-label="Knowledge graph visualization">
@@ -516,7 +516,7 @@ export function KnowledgeGraphScreen() {
         <div className="min-h-0 flex-1 overflow-auto" role="region" aria-label="Relationship list">
           {filtered.nodeIds.size === 0 ? (
             <EmptyState
-              title="No nodes match filters"
+              title="No nodes match current filters"
               hint="Adjust node or edge type filters to see relationships."
             />
           ) : (

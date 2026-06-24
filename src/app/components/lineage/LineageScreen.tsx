@@ -110,7 +110,7 @@ export function LineageScreen() {
         />
         <div className="min-h-0 flex-1 overflow-auto px-6 py-6">
           {chain.length === 0 ? (
-            <EmptyState icon={GitBranch} title="No lineage found" hint="This finding has no supersedes relationships." />
+            <EmptyState icon={GitBranch} title="No lineage found" hint="This finding has no supersedes relationships in the knowledge graph." />
           ) : (
             <div className="mx-auto max-w-2xl">
               {chain.map((id, i) => {
