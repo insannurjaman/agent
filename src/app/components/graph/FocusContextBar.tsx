@@ -1,7 +1,6 @@
 import { ChevronLeft, X } from 'lucide-react';
-import type { GraphNode, NodeKind } from '../../data';
+import type { GraphNode } from '../../data';
 import { KIND_COLOR } from './graphConstants';
-import { cn } from '../ui/utils';
 
 export function FocusContextBar({
   focusId,
@@ -10,7 +9,6 @@ export function FocusContextBar({
   nodeCount,
   edgeCount,
   canGoBack,
-  onChangeDepth,
   onBack,
   onClear,
 }: {
@@ -20,7 +18,6 @@ export function FocusContextBar({
   nodeCount: number;
   edgeCount: number;
   canGoBack: boolean;
-  onChangeDepth: (d: number) => void;
   onBack: () => void;
   onClear: () => void;
 }) {
@@ -41,18 +38,8 @@ export function FocusContextBar({
         {focusId.replace('experiments/', '')}
       </span>
       <span className="truncate text-[13px] text-text-secondary min-w-0">{focusNode.label}</span>
-      <select
-        value={String(hopDepth)}
-        onChange={(e) => onChangeDepth(Number(e.target.value))}
-        className="shrink-0 rounded-sm border border-border-subtle bg-surface-2 px-1.5 py-0.5 font-mono text-[10px] text-text-muted outline-none cursor-pointer"
-        aria-label="Hop depth"
-      >
-        <option value="1">1-hop</option>
-        <option value="2">2-hop</option>
-        <option value="3">3-hop</option>
-      </select>
       <span className="shrink-0 font-mono text-[10px] text-text-muted tabular-nums">
-        {nodeCount} nodes · {edgeCount} edges
+        {hopDepth}-hop · {nodeCount} nodes · {edgeCount} edges
       </span>
       <button
         type="button"
