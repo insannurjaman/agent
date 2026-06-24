@@ -1,6 +1,7 @@
 import { AlertTriangle, Flag, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { cn } from '../ui/utils';
 import type { Finding, OpenQuestion } from '../../data';
+import { countThisWeek } from '../findings/dateUtils';
 
 export function SummaryMetrics({
   findings,
@@ -13,16 +14,10 @@ export function SummaryMetrics({
   activeMetricId?: string | null;
   onMetricClick?: (id: string) => void;
 }) {
-  const now = new Date();
-  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
   const actionRequired = findings.filter((f) => f.actionable).length;
   const highConfidence = findings.filter((f) => ['high', 'medium-high'].includes(f.confidence)).length;
   const highPriority = questions.filter((q) => q.priority === 'high').length;
-  const newThisWeek = [
-    ...findings.filter((f) => new Date(f.date) >= weekAgo),
-    ...questions.filter((q) => new Date(q.raisedDate) >= weekAgo),
-  ].length;
+  const newThisWeek = countThisWeek(findings, questions);
   const recentlyResolved = questions.filter((q) => q.status === 'resolved').length;
 
   interface Metric {
