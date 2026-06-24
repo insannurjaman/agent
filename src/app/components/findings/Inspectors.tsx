@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Share2, GitBranch, ArrowUpRight, ChevronRight, Clock, Activity, Zap } from 'lucide-react';
+import { FileText, Share2, GitBranch, ArrowUpRight, Clock, Activity, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import type { Finding, OpenQuestion } from '../../data';
 import { getLatestVersion } from '../../data';
@@ -12,25 +12,21 @@ import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { InspectorFrame } from '../common/InspectorFrame';
 import { cn } from '../ui/utils';
 
-type FindingTab = 'overview' | 'evidence' | 'lineage' | 'related' | 'activity' | 'agent';
-type QuestionTab = 'overview' | 'detail' | 'history' | 'related' | 'activity' | 'actions';
+type FindingTab = 'overview' | 'evidence' | 'lineage' | 'related';
+type QuestionTab = 'overview' | 'detail' | 'related' | 'activity';
 
 const FINDING_TABS: { id: FindingTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <FileText className="size-3.5" /> },
   { id: 'evidence', label: 'Evidence', icon: <Activity className="size-3.5" /> },
   { id: 'lineage', label: 'Lineage', icon: <GitBranch className="size-3.5" /> },
   { id: 'related', label: 'Related', icon: <Share2 className="size-3.5" /> },
-  { id: 'activity', label: 'Activity', icon: <Clock className="size-3.5" /> },
-  { id: 'agent', label: 'Agent', icon: <Zap className="size-3.5" /> },
 ];
 
 const QUESTION_TABS: { id: QuestionTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <FileText className="size-3.5" /> },
   { id: 'detail', label: 'Detail', icon: <Activity className="size-3.5" /> },
-  { id: 'history', label: 'History', icon: <Clock className="size-3.5" /> },
   { id: 'related', label: 'Related', icon: <Share2 className="size-3.5" /> },
-  { id: 'activity', label: 'Activity', icon: <Activity className="size-3.5" /> },
-  { id: 'actions', label: 'Actions', icon: <Zap className="size-3.5" /> },
+  { id: 'activity', label: 'Activity', icon: <Clock className="size-3.5" /> },
 ];
 
 function Tags({ items }: { items: string[] }) {
@@ -76,7 +72,6 @@ function RelationshipChip({
     >
       <span className="font-medium">{count}</span>
       <span className="text-text-muted">{label}</span>
-      {onClick && <ChevronRight className="size-3 text-text-muted" />}
     </button>
   );
 }
@@ -91,8 +86,10 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
 
   return (
     <InspectorFrame kicker="FINDING" id={finding.id} onClose={onClose}>
-      {/* Title and metadata */}
+      {/* Title */}
       <h3 className="text-[15px] leading-snug text-text">{finding.title}</h3>
+
+      {/* Badges */}
       <div className="mt-3 flex flex-wrap gap-1.5">
         <StatusBadge value={finding.category} />
         {finding.confidence === 'superseded' ? (
@@ -124,7 +121,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
       )}
 
       {/* Tab navigation */}
-      <div className="mt-4 flex overflow-x-auto border-b border-border-subtle" role="tablist" aria-label="Finding sections">
+      <div className="mt-4 flex border-b border-border-subtle" role="tablist" aria-label="Finding sections">
         {FINDING_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -133,6 +130,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
               type="button"
               role="tab"
               aria-selected={isActive}
+              aria-controls={`finding-tabpanel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[11px] transition-colors whitespace-nowrap',
@@ -154,7 +152,12 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
       {/* Tab content */}
       <div className="mt-4">
         {activeTab === 'overview' && (
-          <>
+          <div role="tabpanel" id="finding-tabpanel-overview" aria-labelledby="finding-tab-overview">
+            {/* Summary — primary content, shown first */}
+            <SectionLabel>Summary</SectionLabel>
+            <p className="text-[13px] leading-relaxed text-text-secondary">{finding.summary}</p>
+
+            {/* Metadata */}
             <SectionLabel>Metadata</SectionLabel>
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
               <MetaRow label="Category">{finding.category}</MetaRow>
@@ -162,22 +165,39 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
               <MetaRow label="Date">
                 <MonoId>{finding.date}</MonoId>
               </MetaRow>
-              <MetaRow label="Actionable">{finding.actionable ? 'Yes' : 'No'}</MetaRow>
+              <MetaRow label="Action status">{finding.actionable ? 'Action required' : 'No action'}</MetaRow>
             </div>
 
-            <SectionLabel>Summary</SectionLabel>
-            <p className="text-[13px] leading-relaxed text-text-secondary">{finding.summary}</p>
-
+            {/* Tags */}
             <SectionLabel>Tags</SectionLabel>
             <Tags items={finding.tags} />
 
+            {/* Facets */}
             <SectionLabel>Facets</SectionLabel>
             <Tags items={finding.facets} />
-          </>
+
+            {/* Activity note */}
+            <SectionLabel>Activity</SectionLabel>
+            <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2">
+              <p className="text-[12px] text-text-muted">Activity tracking available in production.</p>
+            </div>
+
+            {/* Agent action */}
+            <SectionLabel>Agent Actions</SectionLabel>
+            <AskClaudeButton
+              onClick={() =>
+                navigate(
+                  `/chat?ctx=${[finding.id, finding.evidence, ...(finding.relatedQuestions ?? [])].join(',')}`,
+                )
+              }
+            >
+              <Zap className="size-3.5" /> Ask Claude about this finding
+            </AskClaudeButton>
+          </div>
         )}
 
         {activeTab === 'evidence' && (
-          <>
+          <div role="tabpanel" id="finding-tabpanel-evidence" aria-labelledby="finding-tab-evidence">
             <SectionLabel>Evidence Source</SectionLabel>
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2">
               <MonoId className="text-info">{finding.evidence}</MonoId>
@@ -185,11 +205,11 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
             <NavActionButton onClick={() => navigate(`/experiments/${finding.evidence}`)}>
               <FileText className="size-3.5" /> View Evidence Report
             </NavActionButton>
-          </>
+          </div>
         )}
 
         {activeTab === 'lineage' && (
-          <>
+          <div role="tabpanel" id="finding-tabpanel-lineage" aria-labelledby="finding-tab-lineage">
             {finding.supersedes && (
               <>
                 <SectionLabel>Supersedes</SectionLabel>
@@ -217,11 +237,11 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
             <NavActionButton onClick={() => navigate('/lineage')}>
               <GitBranch className="size-3.5" /> View Full Lineage
             </NavActionButton>
-          </>
+          </div>
         )}
 
         {activeTab === 'related' && (
-          <>
+          <div role="tabpanel" id="finding-tabpanel-related" aria-labelledby="finding-tab-related">
             <SectionLabel>Related Open Questions ({relatedQuestionCount})</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {relatedQuestionCount > 0 ? (
@@ -237,38 +257,13 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
                 <p className="text-[13px] text-text-muted">No related questions</p>
               )}
             </div>
-          </>
-        )}
-
-        {activeTab === 'activity' && (
-          <>
-            <SectionLabel>Activity History</SectionLabel>
-            <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2">
-              <p className="text-[12px] text-text-muted">Activity tracking available in production.</p>
-            </div>
-          </>
-        )}
-
-        {activeTab === 'agent' && (
-          <>
-            <SectionLabel>Agent Actions</SectionLabel>
-            <AskClaudeButton
-              onClick={() =>
-                navigate(
-                  `/chat?ctx=${[finding.id, finding.evidence, ...(finding.relatedQuestions ?? [])].join(',')}`,
-                )
-              }
-            >
-              Ask Claude about this finding
-            </AskClaudeButton>
-          </>
+          </div>
         )}
       </div>
     </InspectorFrame>
   );
 }
 
-// Parse "| Date: YYYY-MM-DD — text" update-history segments from detail.
 function parseHistory(detail: string) {
   const parts = detail.split('| Date:').map((s) => s.trim());
   const lead = parts.shift() ?? '';
@@ -287,15 +282,17 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
 
   return (
     <InspectorFrame kicker="OPEN QUESTION" id={question.id} onClose={onClose}>
-      {/* Title and metadata */}
+      {/* Title */}
       <h3 className="text-[15px] leading-snug text-text">{question.title}</h3>
+
+      {/* Badges */}
       <div className="mt-3 flex flex-wrap gap-1.5">
         <StatusBadge value={question.status} />
         <PriorityBadge priority={question.priority as 'critical' | 'high' | 'medium' | 'low'} />
       </div>
 
       {/* Tab navigation */}
-      <div className="mt-4 flex overflow-x-auto border-b border-border-subtle" role="tablist" aria-label="Question sections">
+      <div className="mt-4 flex border-b border-border-subtle" role="tablist" aria-label="Question sections">
         {QUESTION_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
@@ -304,6 +301,7 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
               type="button"
               role="tab"
               aria-selected={isActive}
+              aria-controls={`question-tabpanel-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
                 'flex items-center gap-1.5 border-b-2 px-3 py-2 font-mono text-[11px] transition-colors whitespace-nowrap',
@@ -325,34 +323,41 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
       {/* Tab content */}
       <div className="mt-4">
         {activeTab === 'overview' && (
-          <>
+          <div role="tabpanel" id="question-tabpanel-overview" aria-labelledby="question-tab-overview">
+            {/* Detail — primary content */}
+            <SectionLabel>Detail</SectionLabel>
+            <p className="text-[13px] leading-relaxed text-text-secondary">{lead}</p>
+
+            {/* Raised by */}
+            <SectionLabel>Raised By</SectionLabel>
+            <MonoId>{question.raisedBy}</MonoId>
+
+            {/* Metadata */}
             <SectionLabel>Metadata</SectionLabel>
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
               <MetaRow label="Status">{question.status}</MetaRow>
               <MetaRow label="Priority">{question.priority}</MetaRow>
               <MetaRow label="Area">{question.area}</MetaRow>
-              <MetaRow label="Raised By">
-                <MonoId>{question.raisedBy}</MonoId>
-              </MetaRow>
               <MetaRow label="Raised Date">
                 <MonoId>{question.raisedDate}</MonoId>
               </MetaRow>
             </div>
-          </>
+
+            {/* Agent action */}
+            <SectionLabel>Actions</SectionLabel>
+            <AskClaudeButton
+              onClick={() => navigate(`/chat?ctx=${[question.id, ...question.related].join(',')}`)}
+            >
+              <Zap className="size-3.5" /> Ask Claude about this question
+            </AskClaudeButton>
+          </div>
         )}
 
         {activeTab === 'detail' && (
-          <>
-            <SectionLabel>Detail</SectionLabel>
-            <p className="text-[13px] leading-relaxed text-text-secondary">{lead}</p>
-
+          <div role="tabpanel" id="question-tabpanel-detail" aria-labelledby="question-tab-detail">
             <SectionLabel>Facets</SectionLabel>
             <Tags items={question.facets} />
-          </>
-        )}
 
-        {activeTab === 'history' && (
-          <>
             {events.length > 0 ? (
               <>
                 <SectionLabel>Update History</SectionLabel>
@@ -369,11 +374,11 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
             ) : (
               <p className="text-[13px] text-text-muted">No history available.</p>
             )}
-          </>
+          </div>
         )}
 
         {activeTab === 'related' && (
-          <>
+          <div role="tabpanel" id="question-tabpanel-related" aria-labelledby="question-tab-related">
             <SectionLabel>Related Findings / Experiments ({relatedCount})</SectionLabel>
             <div className="flex flex-wrap gap-2">
               {relatedCount > 0 ? (
@@ -391,32 +396,16 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
                 <p className="text-[13px] text-text-muted">No related items</p>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === 'activity' && (
-          <>
+          <div role="tabpanel" id="question-tabpanel-activity" aria-labelledby="question-tab-activity">
             <SectionLabel>Activity History</SectionLabel>
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2">
               <p className="text-[12px] text-text-muted">Activity tracking available in production.</p>
             </div>
-          </>
-        )}
-
-        {activeTab === 'actions' && (
-          <>
-            <SectionLabel>Actions</SectionLabel>
-            <div className="flex flex-col gap-2">
-              <NavActionButton onClick={() => navigate('/graph')}>
-                <Share2 className="size-3.5" /> View Node in Graph
-              </NavActionButton>
-              <AskClaudeButton
-                onClick={() => navigate(`/chat?ctx=${[question.id, ...question.related].join(',')}`)}
-              >
-                Ask Claude about this open question
-              </AskClaudeButton>
-            </div>
-          </>
+          </div>
         )}
       </div>
     </InspectorFrame>

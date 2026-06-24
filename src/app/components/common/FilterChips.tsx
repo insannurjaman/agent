@@ -13,7 +13,10 @@ const FILTER_CONFIGS: FilterChipConfig[] = [
   { key: 'conf', label: 'Confidence', param: 'conf', value: '' },
   { key: 'status', label: 'Status', param: 'status', value: '' },
   { key: 'priority', label: 'Priority', param: 'priority', value: '' },
-  { key: 'actionable', label: 'Actionable', param: 'actionable', value: 'true' },
+  { key: 'category', label: 'Category', param: 'category', value: '' },
+  { key: 'area', label: 'Area', param: 'area', value: '' },
+  { key: 'action', label: 'Action', param: 'action', value: '' },
+  { key: 'actionable', label: 'Action', param: 'actionable', value: 'true' },
   { key: 'sort', label: 'Sort', param: 'sort', value: '' },
 ];
 
@@ -22,7 +25,10 @@ function getFilterLabel(param: string, value: string): string {
     conf: { high: 'High', 'medium-high': 'Med-High', medium: 'Medium', low: 'Low', superseded: 'Superseded' },
     status: { open: 'Open', 'in-progress': 'In Progress', 'partial-progress': 'Partial', resolved: 'Resolved' },
     priority: { high: 'High', medium: 'Medium', low: 'Low' },
-    actionable: { true: 'Yes' },
+    category: { factor: 'Factor', schema: 'Schema', 'data-quality': 'Data Quality', process: 'Process', hypothesis: 'Hypothesis', 'anomaly-pattern': 'Anomaly', method: 'Method' },
+    area: { rolling: 'Rolling', 'data-quality': 'Data Quality', 'surface-quality': 'Surface Quality' },
+    action: { 'action-required': 'Action Required', 'review-recommended': 'Review', 'no-action': 'No Action', blocked: 'Blocked' },
+    actionable: { true: 'Action Required' },
     sort: { date: 'Date', confidence: 'Confidence', priority: 'Priority' },
   };
   return labels[param]?.[value] ?? value;

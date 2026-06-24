@@ -15,7 +15,7 @@ export function InspectorFrame({
   children: ReactNode;
 }) {
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col border-l border-border-subtle bg-surface lg:w-[380px]">
+    <aside className="flex h-full w-full shrink-0 flex-col bg-surface">
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{kicker}</span>

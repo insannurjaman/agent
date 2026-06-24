@@ -1,53 +1,70 @@
 import { useRef, useEffect, type ReactNode } from 'react';
+import { cn } from '../ui/utils';
 
 export function ResponsiveInspectorOverlay({
   children,
   onDismiss,
-  showBackdrop = false,
+  isOpen,
 }: {
   children: ReactNode;
   onDismiss?: () => void;
-  showBackdrop?: boolean;
+  isOpen: boolean;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    previousFocus.current = document.activeElement as HTMLElement;
+    if (isOpen) {
+      previousFocus.current = document.activeElement as HTMLElement;
+      requestAnimationFrame(() => {
+        panelRef.current?.focus();
+      });
+    }
     return () => {
-      previousFocus.current?.focus();
+      if (!isOpen && previousFocus.current) {
+        previousFocus.current.focus();
+        previousFocus.current = null;
+      }
     };
-  }, []);
+  }, [isOpen]);
 
-  // Escape key closes on mobile overlay
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape' && onDismiss) {
+      if (e.key === 'Escape' && onDismiss && isOpen) {
         e.preventDefault();
         onDismiss();
       }
     }
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onDismiss]);
+  }, [onDismiss, isOpen]);
+
+  if (!isOpen) return null;
 
   return (
-    <div
-      ref={containerRef}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Inspector"
-      className="fixed inset-0 z-50 lg:static lg:inset-auto lg:z-auto lg:flex"
-    >
-      {showBackdrop && (
-        <button
-          type="button"
-          aria-label="Close inspector"
-          className="absolute inset-0 bg-black/50 lg:hidden"
-          onClick={onDismiss}
-        />
-      )}
-      {children}
-    </div>
+    <>
+      {/* Backdrop for overlay modes (lg only, not xl) */}
+      <div
+        className="fixed inset-0 z-30 bg-black/50 xl:hidden"
+        onClick={onDismiss}
+        aria-hidden="true"
+      />
+
+      {/* Panel */}
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Inspector"
+        tabIndex={-1}
+        className={cn(
+          'fixed inset-0 z-40 flex flex-col bg-surface',
+          'lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[420px] lg:border-l lg:border-border-subtle lg:shadow-2xl',
+          'xl:static xl:inset-auto xl:z-auto xl:w-auto xl:shadow-none xl:border-l xl:border-border-subtle',
+        )}
+      >
+        {children}
+      </div>
+    </>
   );
 }
