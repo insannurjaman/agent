@@ -33,7 +33,7 @@ export function FindingRow({ f, selected, density, onSelect }: FindingRowProps) 
         'cursor-pointer border-b border-border-subtle transition-colors',
         rowHeight,
         'hover:bg-surface-2',
-        selected && 'bg-brand-muted/30',
+        selected && 'border-l-2 border-brand bg-surface-hover',
         isSuperseded && 'opacity-55',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
       )}
@@ -41,7 +41,7 @@ export function FindingRow({ f, selected, density, onSelect }: FindingRowProps) 
       <td className="px-3 py-2">
         <span className="font-mono text-[13px] text-text whitespace-nowrap">{f.id}</span>
       </td>
-      <td className="px-3 py-2 text-text min-w-[320px]">
+      <td className={cn('px-3 py-2 text-text min-w-[200px] xl:min-w-[320px]', selected && 'font-medium')}>
         <div className="flex items-center gap-2 min-w-0">
           <span className="line-clamp-2 min-w-0">{f.title}</span>
           {isSuperseded && <StatusBadge value="superseded" showDot={false} />}

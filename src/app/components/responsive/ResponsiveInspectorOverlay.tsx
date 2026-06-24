@@ -59,8 +59,8 @@ export function ResponsiveInspectorOverlay({
         tabIndex={-1}
         className={cn(
           'fixed inset-0 z-40 flex flex-col bg-surface',
-          'lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[420px] lg:border-l lg:border-border-subtle lg:shadow-2xl',
-          'xl:static xl:inset-auto xl:z-auto xl:w-auto xl:shadow-none xl:border-l xl:border-border-subtle',
+          'lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[480px] lg:border-l lg:border-border-subtle lg:shadow-2xl',
+          'xl:static xl:inset-auto xl:z-auto xl:w-[480px] xl:shadow-none xl:border-l xl:border-border-subtle',
         )}
       >
         {children}

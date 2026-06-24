@@ -32,14 +32,14 @@ export function QuestionRow({ q, selected, density, onSelect }: QuestionRowProps
         'cursor-pointer border-b border-border-subtle transition-colors',
         rowHeight,
         'hover:bg-surface-2',
-        selected && 'bg-brand-muted/30',
+        selected && 'border-l-2 border-brand bg-surface-hover',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
       )}
     >
       <td className="px-3 py-2">
         <span className="font-mono text-[13px] text-amber whitespace-nowrap">{q.id}</span>
       </td>
-      <td className="px-3 py-2 text-text min-w-[320px]">
+      <td className={cn('px-3 py-2 text-text min-w-[200px] xl:min-w-[320px]', selected && 'font-medium')}>
         <span className="line-clamp-2">{q.title}</span>
       </td>
       <td className="px-3 py-2">

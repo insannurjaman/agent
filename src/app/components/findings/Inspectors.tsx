@@ -13,7 +13,7 @@ import { InspectorFrame } from '../common/InspectorFrame';
 import { cn } from '../ui/utils';
 
 type FindingTab = 'overview' | 'evidence' | 'lineage' | 'related';
-type QuestionTab = 'overview' | 'detail' | 'related' | 'activity';
+type QuestionTab = 'overview' | 'context' | 'related' | 'activity';
 
 const FINDING_TABS: { id: FindingTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <FileText className="size-3.5" /> },
@@ -24,7 +24,7 @@ const FINDING_TABS: { id: FindingTab; label: string; icon: React.ReactNode }[] =
 
 const QUESTION_TABS: { id: QuestionTab; label: string; icon: React.ReactNode }[] = [
   { id: 'overview', label: 'Overview', icon: <FileText className="size-3.5" /> },
-  { id: 'detail', label: 'Detail', icon: <Activity className="size-3.5" /> },
+  { id: 'context', label: 'Context', icon: <Activity className="size-3.5" /> },
   { id: 'related', label: 'Related', icon: <Share2 className="size-3.5" /> },
   { id: 'activity', label: 'Activity', icon: <Clock className="size-3.5" /> },
 ];
@@ -353,8 +353,8 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
           </div>
         )}
 
-        {activeTab === 'detail' && (
-          <div role="tabpanel" id="question-tabpanel-detail" aria-labelledby="question-tab-detail">
+        {activeTab === 'context' && (
+          <div role="tabpanel" id="question-tabpanel-context" aria-labelledby="question-tab-context">
             <SectionLabel>Facets</SectionLabel>
             <Tags items={question.facets} />
 
