@@ -4,7 +4,6 @@ import { cn } from '../ui/utils';
 import type { OpenQuestion } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge'
-import { FacetPopover } from '../common/FacetPopover';
 import { RowMenu } from './RowMenu';
 
 interface QuestionRowProps {
@@ -63,7 +62,7 @@ export function QuestionRow({
           </button>
         </td>
         <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-amber">{q.id}</span>
+          <span className="font-mono text-[13px] text-amber whitespace-nowrap">{q.id}</span>
         </td>
         <td className="px-3 py-2 text-text min-w-[320px]">
           <span className="line-clamp-2">{q.title}</span>
@@ -78,10 +77,7 @@ export function QuestionRow({
           <span className="font-mono text-[12px] text-text-secondary">{q.area}</span>
         </td>
         <td className="px-3 py-2">
-          <FacetPopover facets={q.facets} maxVisible={2} />
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-muted">{q.raisedDate}</span>
+          <span className="font-mono text-[12px] text-text-muted whitespace-nowrap">{q.raisedDate}</span>
         </td>
         <td className="px-1">
           <RowMenu id={q.id} isQuestion />
@@ -90,7 +86,7 @@ export function QuestionRow({
       {expanded && (
         <tr className="border-b border-border-subtle bg-surface">
           <td />
-          <td colSpan={9} className="px-3 pb-3 pt-1">
+          <td colSpan={8} className="px-3 pb-3 pt-1">
             <p className="max-w-3xl text-[13px] leading-relaxed text-text-secondary">
               {q.detail.split('| Date:')[0].trim()}
             </p>

@@ -41,7 +41,7 @@ export function ScreenHeader({
   return (
     <div className="flex items-start justify-between border-b border-border-subtle px-6 py-4 bg-surface">
       <div>
-        <h1 className="text-text" style={{ fontSize: '18px' }}>
+        <h1 className="text-text" style={{ fontSize: '22px' }}>
           {title}
         </h1>
         {subtitle && <p className="mt-0.5 text-[13px] text-text-secondary">{subtitle}</p>}

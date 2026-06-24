@@ -1,4 +1,4 @@
-import { ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { cn } from '../ui/utils';
 import type { Finding } from '../../data';
@@ -6,7 +6,6 @@ import { getLatestVersion } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { ActionStateBadge, mapActionableToState } from '../common/ActionStateBadge';
-import { FacetPopover } from '../common/FacetPopover';
 import { RowMenu } from './RowMenu';
 
 interface FindingRowProps {
@@ -70,7 +69,7 @@ export function FindingRow({
           </button>
         </td>
         <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-text">{f.id}</span>
+          <span className="font-mono text-[13px] text-text whitespace-nowrap">{f.id}</span>
         </td>
         <td className="px-3 py-2 text-text min-w-[320px]">
           <div className="flex items-center gap-2 min-w-0">
@@ -89,13 +88,10 @@ export function FindingRow({
           )}
         </td>
         <td className="px-3 py-2">
-          <FacetPopover facets={f.facets} maxVisible={2} />
-        </td>
-        <td className="px-3 py-2">
           <ActionStateBadge state={actionState} showDot={false} />
         </td>
         <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-muted">{f.date}</span>
+          <span className="font-mono text-[12px] text-text-muted whitespace-nowrap">{f.date}</span>
         </td>
         <td className="px-1">
           <RowMenu id={f.id} />
@@ -104,7 +100,7 @@ export function FindingRow({
       {expanded && (
         <tr className={cn('border-b border-border-subtle bg-surface', isSuperseded && 'opacity-70')}>
           <td />
-          <td colSpan={9} className="px-3 pb-3 pt-1">
+          <td colSpan={8} className="px-3 pb-3 pt-1">
             <p className="max-w-3xl text-[13px] leading-relaxed text-text-secondary">{f.summary}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">Evidence:</span>

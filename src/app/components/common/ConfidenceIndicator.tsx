@@ -4,10 +4,10 @@ import { cn } from '../ui/utils';
 export type ConfidenceLevel = 'high' | 'medium-high' | 'medium' | 'low';
 
 const CONFIDENCE_STYLE: Record<ConfidenceLevel, { color: string; emptyColor: string; label: string; bars: number; percent: string }> = {
-  high: { color: 'bg-confidence-high', emptyColor: 'bg-border-subtle', label: 'HIGH', bars: 4, percent: '92%' },
-  'medium-high': { color: 'bg-confidence-medium-high', emptyColor: 'bg-border-subtle', label: 'MED-HIGH', bars: 3, percent: '78%' },
-  medium: { color: 'bg-confidence-medium', emptyColor: 'bg-border-subtle', label: 'MEDIUM', bars: 2, percent: '62%' },
-  low: { color: 'bg-confidence-low', emptyColor: 'bg-border-subtle', label: 'LOW', bars: 1, percent: '40%' },
+  high: { color: 'bg-confidence-high', emptyColor: 'bg-border-subtle', label: 'High', bars: 4, percent: '92%' },
+  'medium-high': { color: 'bg-confidence-medium-high', emptyColor: 'bg-border-subtle', label: 'Med-high', bars: 3, percent: '78%' },
+  medium: { color: 'bg-confidence-medium', emptyColor: 'bg-border-subtle', label: 'Medium', bars: 2, percent: '62%' },
+  low: { color: 'bg-confidence-low', emptyColor: 'bg-border-subtle', label: 'Low', bars: 1, percent: '40%' },
 };
 
 const CONFIDENCE_EXPLANATIONS: Record<ConfidenceLevel, string> = {
@@ -62,7 +62,7 @@ export function ConfidenceIndicator({
           {indicator}
         </TooltipTrigger>
         <TooltipContent side="top" align="center" className="max-w-xs">
-          <div className="font-mono text-[11px] font-medium text-text">{s.label} Confidence ({s.percent})</div>
+          <div className="text-[12px] font-medium text-text">{s.label} confidence ({s.percent})</div>
           <div className="mt-1 text-[12px] text-text-secondary">{CONFIDENCE_EXPLANATIONS[level]}</div>
         </TooltipContent>
       </Tooltip>

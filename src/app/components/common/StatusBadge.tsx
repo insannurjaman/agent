@@ -39,13 +39,13 @@ const TONE: Record<StatusTone, { text: string; border: string; bg: string; dot: 
 };
 
 const VALUE_TONE: Record<string, StatusTone> = {
-  // finding category — reduced saturation
-  factor: 'info',
+  // finding category — neutral, quieter style
+  factor: 'neutral',
   schema: 'neutral',
-  'data-quality': 'warning',
-  process: 'info',
-  hypothesis: 'purple',
-  'anomaly-pattern': 'warning',
+  'data-quality': 'neutral',
+  process: 'neutral',
+  hypothesis: 'neutral',
+  'anomaly-pattern': 'neutral',
   method: 'neutral',
   // confidence
   high: 'brand',

@@ -1,6 +1,6 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Search, X, Loader2 } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { findings as allFindings, openQuestions as allQuestions } from '../../data';
 import type { Finding, OpenQuestion } from '../../data';
 import { ScreenHeader } from '../common/primitives';
@@ -222,6 +222,13 @@ export function FindingsScreen() {
     { id: 'questions', label: 'Open Questions', count: allQuestions.length },
   ];
 
+  // In All view, limit rows per section
+  const ALL_VIEW_LIMIT = 6;
+  const displayFindings = tab === 'all' ? visibleFindings.slice(0, ALL_VIEW_LIMIT) : visibleFindings;
+  const displayQuestions = tab === 'all' ? visibleQuestions.slice(0, ALL_VIEW_LIMIT) : visibleQuestions;
+  const hasMoreFindings = tab === 'all' && visibleFindings.length > ALL_VIEW_LIMIT;
+  const hasMoreQuestions = tab === 'all' && visibleQuestions.length > ALL_VIEW_LIMIT;
+
   return (
     <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
@@ -396,15 +403,26 @@ export function FindingsScreen() {
                   {totalRows} result{totalRows !== 1 ? 's' : ''} found
                 </caption>
                 {/* FINDINGS */}
-                {visibleFindings.length > 0 && (
+                {displayFindings.length > 0 && (
                   <>
                     {tab === 'all' && (
                       <thead className="sticky top-0 z-10 bg-surface">
                         <tr>
-                          <Th colSpan={9} className="py-2">
-                            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
-                              Findings · {visibleFindings.length}
-                            </span>
+                          <Th colSpan={8} className="py-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-[12px] font-semibold uppercase tracking-wider text-text">
+                                Findings · {visibleFindings.length}
+                              </span>
+                              {hasMoreFindings && (
+                                <button
+                                  type="button"
+                                  onClick={() => setTab('findings')}
+                                  className="font-mono text-[11px] text-brand hover:underline"
+                                >
+                                  View all {visibleFindings.length} findings →
+                                </button>
+                              )}
+                            </div>
                           </Th>
                         </tr>
                       </thead>
@@ -416,14 +434,13 @@ export function FindingsScreen() {
                         <Th className="min-w-[320px]">Title</Th>
                         <Th>Category</Th>
                         <Th>Confidence</Th>
-                        <Th>Facets</Th>
                         <Th>Action</Th>
                         <Th>Date</Th>
                         <Th className="w-10" />
                       </tr>
                     </thead>
                     <tbody>
-                      {visibleFindings.map((f) => (
+                      {displayFindings.map((f) => (
                         <FindingRow
                           key={f.id}
                           f={f}
@@ -440,24 +457,35 @@ export function FindingsScreen() {
                 )}
 
                 {/* Separator between groups in All view */}
-                {tab === 'all' && visibleFindings.length > 0 && visibleQuestions.length > 0 && (
+                {tab === 'all' && displayFindings.length > 0 && displayQuestions.length > 0 && (
                   <tbody>
                     <tr>
-                      <td colSpan={9} className="border-b-2 border-border-strong" />
+                      <td colSpan={8} className="border-b-2 border-border-strong" />
                     </tr>
                   </tbody>
                 )}
 
                 {/* OPEN QUESTIONS */}
-                {visibleQuestions.length > 0 && (
+                {displayQuestions.length > 0 && (
                   <>
                     {tab === 'all' && (
                       <thead className="sticky top-0 z-10 bg-surface">
                         <tr>
-                          <Th colSpan={9} className="py-2">
-                            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
-                              Open Questions · {visibleQuestions.length}
-                            </span>
+                          <Th colSpan={8} className="py-2">
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-[12px] font-semibold uppercase tracking-wider text-text">
+                                Open Questions · {visibleQuestions.length}
+                              </span>
+                              {hasMoreQuestions && (
+                                <button
+                                  type="button"
+                                  onClick={() => setTab('questions')}
+                                  className="font-mono text-[11px] text-brand hover:underline"
+                                >
+                                  View all {visibleQuestions.length} questions →
+                                </button>
+                              )}
+                            </div>
                           </Th>
                         </tr>
                       </thead>
@@ -475,7 +503,7 @@ export function FindingsScreen() {
                       </tr>
                     </thead>
                     <tbody>
-                      {visibleQuestions.map((q) => (
+                      {displayQuestions.map((q) => (
                         <QuestionRow
                           key={q.id}
                           q={q}
