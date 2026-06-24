@@ -9,6 +9,7 @@ export function FilterChip({
   color,
   children,
   className,
+  compact,
 }: {
   selected: boolean;
   onToggle: () => void;
@@ -17,6 +18,7 @@ export function FilterChip({
   color?: string;
   children?: ReactNode;
   className?: string;
+  compact?: boolean;
 }) {
   return (
     <button
@@ -25,8 +27,9 @@ export function FilterChip({
       aria-checked={selected}
       onClick={onToggle}
       className={cn(
-        'inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[11px] font-medium transition-colors',
+        'inline-flex items-center gap-1.5 rounded-sm border font-mono font-medium transition-colors',
         'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        compact ? 'min-h-8 px-1.5 py-0.5 text-[10px]' : 'min-h-11 px-2.5 py-1 text-[11px]',
         selected
           ? 'border-brand-border bg-brand-muted text-brand'
           : 'border-border-strong bg-surface-2 text-text-muted hover:border-brand-border hover:text-text',

@@ -43,9 +43,9 @@ export function ResponsiveInspectorOverlay({
 
   return (
     <>
-      {/* Backdrop for overlay modes (lg only, not xl) */}
+      {/* Backdrop for overlay modes (lg only, not 2xl) */}
       <div
-        className="fixed inset-0 z-30 bg-black/50 xl:hidden"
+        className="fixed inset-0 z-30 bg-black/50 2xl:hidden"
         onClick={onDismiss}
         aria-hidden="true"
       />
@@ -59,8 +59,8 @@ export function ResponsiveInspectorOverlay({
         tabIndex={-1}
         className={cn(
           'fixed inset-0 z-40 flex flex-col bg-surface',
-          'lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[480px] lg:border-l lg:border-border-subtle lg:shadow-2xl',
-          'xl:static xl:inset-auto xl:z-auto xl:w-[480px] xl:shadow-none xl:border-l xl:border-border-subtle',
+          'lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[440px] lg:border-l lg:border-border-subtle lg:shadow-2xl',
+          '2xl:static 2xl:inset-auto 2xl:z-auto 2xl:w-[440px] 2xl:shadow-none 2xl:border-l 2xl:border-border-subtle',
         )}
       >
         {children}

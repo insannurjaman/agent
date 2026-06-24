@@ -33,3 +33,13 @@ export function getEdgeGroup(type: EdgeType): EdgeGroup {
 export function getGroupEdgeTypes(group: EdgeGroup): EdgeType[] {
   return EDGE_GROUPS[group].types;
 }
+
+export type GroupSelection = 'all' | 'partial' | 'none';
+
+export function getGroupSelection(group: EdgeGroup, activeTypes: Set<EdgeType>): GroupSelection {
+  const types = getGroupEdgeTypes(group);
+  const active = types.filter((t) => activeTypes.has(t)).length;
+  if (active === 0) return 'none';
+  if (active === types.length) return 'all';
+  return 'partial';
+}
