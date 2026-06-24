@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
+import { PriorityBadge } from '../common/PriorityBadge';
 import { cn } from '../ui/utils';
 
 interface LoopNode {
@@ -267,10 +268,10 @@ function ActionLink({ children, onClick, claude }: { children: React.ReactNode; 
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-sm border px-2 py-1 min-h-11 font-mono text-[11px] transition-colors',
+        'flex min-h-11 items-center rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors',
         claude
-          ? 'border-brand-border bg-brand-muted text-brand hover:bg-brand-surface'
-          : 'border-border-strong bg-surface-2 text-text-secondary hover:text-text',
+          ? 'bg-brand text-primary-foreground hover:bg-brand-hover'
+          : 'border border-border-strong bg-surface-2 text-text-secondary hover:text-text',
       )}
     >
       {children}
@@ -316,21 +317,42 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
 
         {/* Open Question */}
         <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Open Question</span>
-            <span className="ml-auto"><StatusBadge value="High" tone="red" showDot={false} /></span>
+          {/* Header row */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Open Question</span>
+              <span className="text-text-muted">·</span>
+              <MonoId className="text-amber">Q-0014</MonoId>
+            </div>
+            <PriorityBadge priority="high" />
           </div>
-          <div className="mt-1 flex items-center gap-2">
-            <MonoId className="text-amber">Q-0014</MonoId>
-            <span className="text-[13px] text-text">Does entry temperature interact with roll-gap setpoint?</span>
+
+          {/* Title — strongest text */}
+          <div className="mt-2 text-[14px] font-medium leading-snug text-text">
+            Does entry temperature interact with roll-gap setpoint?
           </div>
-          <div className="mt-1.5 flex items-center gap-2 font-mono text-[10px] text-text-muted">
-            <StatusBadge value="open" />
-            <span>Related finding: <span className="text-brand">F-0050</span></span>
+
+          {/* Secondary meta */}
+          <div className="mt-1.5 font-mono text-[11px] text-text-muted">
+            Related finding: <span className="text-brand">F-0050</span>
           </div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            <ActionLink onClick={() => navigate('/findings?tab=questions&focus=Q-0014')}>Open Question</ActionLink>
-            <ActionLink claude onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}>Ask Claude to Investigate</ActionLink>
+
+          {/* Action row — clear hierarchy */}
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}
+              className="flex min-h-11 items-center gap-1.5 rounded-sm bg-brand px-3 py-1.5 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-brand-hover"
+            >
+              Ask Claude to investigate
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/findings?tab=questions&focus=Q-0014')}
+              className="flex min-h-11 items-center rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary transition-colors hover:text-text"
+            >
+              View question
+            </button>
           </div>
         </div>
 

@@ -10,7 +10,7 @@ export function FilterSelect({
   options: readonly string[];
 }) {
   return (
-    <label className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1">
+    <label className="flex h-11 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5">
       <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{label}</span>
       <select
         aria-label={label}

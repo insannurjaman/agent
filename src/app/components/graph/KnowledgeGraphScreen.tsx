@@ -15,6 +15,7 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { SegmentedControl } from '../common/SegmentedControl';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 import { forceLayout, radialLayout, type Pos } from './layout';
@@ -202,7 +203,7 @@ export function KnowledgeGraphScreen() {
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
           {/* Node search */}
           <div className="relative">
-            <div className="flex w-60 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
+            <div className="flex h-11 w-60 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 focus-within:border-brand-border">
               <Search className="size-3.5 shrink-0 text-text-muted" />
               <input
                 value={nodeSearch}
@@ -233,14 +234,14 @@ export function KnowledgeGraphScreen() {
           </div>
 
           {/* Mode toggle */}
-          <div className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
-            <ModeBtn active={mode === 'neighborhood'} onClick={() => setMode('neighborhood')} icon={Crosshair} title="Focus on one node and its 1–2 hop relationships">
-              Neighborhood
-            </ModeBtn>
-            <ModeBtn active={mode === 'global'} onClick={() => setMode('global')} icon={Globe} title="Show all graph edges (dense)">
-              Global
-            </ModeBtn>
-          </div>
+          <SegmentedControl
+            segments={[
+              { id: 'neighborhood', label: 'Neighborhood', icon: <Crosshair className="size-3.5" /> },
+              { id: 'global', label: 'Global', icon: <Globe className="size-3.5" /> },
+            ]}
+            value={mode}
+            onChange={(m) => setMode(m as 'neighborhood' | 'global')}
+          />
 
           {/* Global helper */}
           {mode === 'global' && (
@@ -251,55 +252,27 @@ export function KnowledgeGraphScreen() {
 
           {/* Depth */}
           {mode === 'neighborhood' && (
-            <div className="flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-1 py-0.5">
-              <span className="px-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">Depth</span>
-              {[1, 2, 3].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setDepth(d)}
-                  aria-pressed={depth === d}
-                  className={cn(
-                    'rounded-sm px-2.5 py-1 min-h-11 font-mono text-[12px]',
-                    depth === d ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-                  )}
-                >
-                  {d}-hop
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              segments={[
+                { id: '1', label: '1-hop' },
+                { id: '2', label: '2-hop' },
+                { id: '3', label: '3-hop' },
+              ]}
+              value={String(depth)}
+              onChange={(d) => setDepth(Number(d))}
+            />
           )}
 
           <div className="ml-auto flex items-center gap-1">
             {/* View switcher */}
-            <div className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
-              <button
-                type="button"
-                onClick={() => setViewMode('graph')}
-                aria-pressed={viewMode === 'graph'}
-                aria-label="Visual graph view"
-                className={cn(
-                  'flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
-                  viewMode === 'graph' ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-                )}
-              >
-                <Crosshair className="size-3.5" />
-                <span className="hidden sm:inline">Graph</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                aria-pressed={viewMode === 'list'}
-                aria-label="Relationship list view"
-                className={cn(
-                  'flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
-                  viewMode === 'list' ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-                )}
-              >
-                <List className="size-3.5" />
-                <span className="hidden sm:inline">List</span>
-              </button>
-            </div>
+            <SegmentedControl
+              segments={[
+                { id: 'graph', label: 'Graph', icon: <Crosshair className="size-3.5" /> },
+                { id: 'list', label: 'List', icon: <List className="size-3.5" /> },
+              ]}
+              value={viewMode}
+              onChange={(v) => setViewMode(v as 'graph' | 'list')}
+            />
             <IconBtn onClick={() => zoom(1)} label="Zoom in">
               <Plus className="size-4" />
             </IconBtn>
@@ -593,35 +566,6 @@ function truncate(s: string, n: number) {
   return s.length > n ? s.slice(0, n - 1) + '…' : s;
 }
 
-function ModeBtn({
-  active,
-  onClick,
-  icon: Icon,
-  children,
-  title,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: typeof Crosshair;
-  children: React.ReactNode;
-  title?: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      aria-pressed={active}
-      className={cn(
-        'flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 min-h-11 text-[12px] transition-colors',
-        active ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-      )}
-    >
-      <Icon className="size-3.5" />
-      {children}
-    </button>
-  );
-}
 
 function IconBtn({
   onClick,

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router';
 import type { Finding, OpenQuestion } from '../../data';
 import { getLatestVersion } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
+import { PriorityBadge } from '../common/PriorityBadge';
+import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { MetaRow, MonoId } from '../common/primitives';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { InspectorFrame } from '../common/InspectorFrame';
@@ -40,7 +42,11 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
       <h3 className="text-[15px] leading-snug text-text">{finding.title}</h3>
       <div className="mt-3 flex flex-wrap gap-1.5">
         <StatusBadge value={finding.category} />
-        <StatusBadge value={finding.confidence} />
+        {finding.confidence === 'superseded' ? (
+          <StatusBadge value="superseded" />
+        ) : (
+          <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+        )}
         {finding.actionable && <StatusBadge value="actionable" tone="brand" />}
       </div>
 
@@ -159,7 +165,7 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
       <h3 className="text-[15px] leading-snug text-text">{question.title}</h3>
       <div className="mt-3 flex flex-wrap gap-1.5">
         <StatusBadge value={question.status} />
-        <StatusBadge value={question.priority} />
+        <PriorityBadge priority={question.priority as 'critical' | 'high' | 'medium' | 'low'} />
       </div>
 
       <SectionLabel>Metadata</SectionLabel>

@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { Button } from './Button';
 import { cn } from '../ui/utils';
 
 // Read-only product rule: knowledge is mutated through Claude chat, never via
@@ -7,14 +8,10 @@ import { cn } from '../ui/utils';
 
 export function AskClaudeButton({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex min-h-10 w-full items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-left text-[13px] text-brand outline-none transition-colors hover:bg-brand-surface focus-visible:ring-2 focus-visible:ring-brand-ring disabled:pointer-events-none disabled:opacity-50"
-    >
+    <Button variant="ghost" size="md" onClick={onClick} className="w-full justify-start gap-2">
       <Sparkles className="size-3.5 shrink-0" />
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -28,15 +25,8 @@ export function NavActionButton({
   className?: string;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        'flex min-h-10 w-full items-center gap-2 rounded-sm border border-border-strong bg-surface-2 px-3 py-2 text-left text-[13px] text-text-secondary outline-none transition-colors hover:border-brand-border hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring disabled:pointer-events-none disabled:opacity-50',
-        className,
-      )}
-    >
+    <Button variant="secondary" size="md" onClick={onClick} className={cn('w-full justify-start gap-2', className)}>
       {children}
-    </button>
+    </Button>
   );
 }

@@ -6,6 +6,8 @@ import type { Finding, OpenQuestion } from '../../data';
 import { getLatestVersion } from '../../data';
 import { ScreenHeader } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
+import { PriorityBadge } from '../common/PriorityBadge';
+import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { EmptyState } from '../common/EmptyState';
 import { FilterSelect } from '../common/FilterSelect';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
@@ -142,7 +144,7 @@ export function FindingsScreen() {
 
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
-          <div className="flex w-64 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
+          <div className="flex h-11 w-64 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               value={query}
@@ -156,7 +158,7 @@ export function FindingsScreen() {
           <div
             role="tablist"
             aria-label="Findings tabs"
-            className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5"
+            className="flex h-11 rounded-sm border border-border-subtle bg-surface-2 p-0.5"
             onKeyDown={(e) => {
               const idx = tabs.findIndex((t) => t.id === tab);
               if (idx === -1) return;
@@ -184,12 +186,12 @@ export function FindingsScreen() {
                 tabIndex={tab === t.id ? 0 : -1}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 min-h-11 text-[12px] transition-colors',
+                  'flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
                   tab === t.id ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
                 {t.label}
-                <span className="font-mono text-[10px] text-text-muted">{t.count}</span>
+                <span className="font-mono text-[10px] text-text-muted opacity-70">{t.count}</span>
               </button>
             ))}
           </div>
@@ -222,7 +224,7 @@ export function FindingsScreen() {
               onClick={() => setActionableOnly((v) => !v)}
               aria-pressed={actionableOnly}
               className={cn(
-                'rounded-sm border px-2 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
+                'flex h-11 items-center rounded-sm border px-2.5 font-mono text-[11px] uppercase tracking-wide transition-colors',
                 actionableOnly
                   ? 'border-brand-border bg-brand-muted text-brand'
                   : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
@@ -373,7 +375,11 @@ function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
       </div>
       <div className="mt-1 text-[14px] leading-snug text-text">{f.title}</div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <StatusBadge value={f.confidence} />
+        {f.confidence === 'superseded' ? (
+          <StatusBadge value="superseded" />
+        ) : (
+          <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+        )}
         <StatusBadge value={f.category} showDot={false} />
         {f.actionable && <span className="font-mono text-[10px] text-brand">actionable</span>}
       </div>
@@ -395,7 +401,7 @@ function QuestionCard({ q, onSelect }: { q: OpenQuestion; onSelect: () => void }
       <div className="mt-1 text-[14px] leading-snug text-text">{q.title}</div>
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <StatusBadge value={q.status} />
-        <StatusBadge value={q.priority} showDot={false} />
+        <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />
         <span className="font-mono text-[10px] text-text-muted">{q.area}</span>
       </div>
     </button>
@@ -455,7 +461,11 @@ function FindingRow({
           <StatusBadge value={f.category} showDot={false} />
         </td>
         <td className="px-3 py-2">
-          <StatusBadge value={f.confidence} />
+          {f.confidence === 'superseded' ? (
+            <StatusBadge value="superseded" />
+          ) : (
+            <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+          )}
         </td>
         <td className="px-3 py-2">
           <FacetCells facets={f.facets} />
@@ -554,7 +564,7 @@ function QuestionRow({
           <StatusBadge value={q.status} />
         </td>
         <td className="px-3 py-2">
-          <StatusBadge value={q.priority} showDot={false} />
+          <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />
         </td>
         <td className="px-3 py-2">
           <span className="font-mono text-[12px] text-text-secondary">{q.area}</span>

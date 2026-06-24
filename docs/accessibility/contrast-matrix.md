@@ -42,6 +42,15 @@ WCAG 2.2 AA requires **4.5:1** for normal text and **3:1** for large text (≥18
 | `#fbbf24` (warning) | `#11161f` (background) | 11.2:1 | ✅ | ✅ | Warning states |
 | `#f87171` (error) | `#11161f` (background) | 5.6:1 | ✅ | ✅ | Error states |
 
+## Confidence Tokens (Dark Theme)
+
+| Token | Color | On Background | Ratio | AA Large | Notes |
+|-------|-------|---------------|-------|----------|-------|
+| `--confidence-high` | `#ff3e01` | `#080a0b` | 5.1:1 | ✅ | High confidence — orange |
+| `--confidence-medium-high` | `#f3c969` | `#080a0b` | 13.4:1 | ✅ | Medium-high — amber |
+| `--confidence-medium` | `#c9a227` | `#080a0b` | 9.8:1 | ✅ | Medium — ochre |
+| `--confidence-low` | `#6f7a76` | `#080a0b` | 4.2:1 | ✅ | Low — gray (decorative only) |
+
 ## Focus Indicator
 
 | Element | Ratio | Notes |

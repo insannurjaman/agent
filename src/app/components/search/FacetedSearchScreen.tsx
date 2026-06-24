@@ -13,6 +13,8 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { SegmentedControl } from '../common/SegmentedControl';
+import { FacetTag } from '../common/FacetTag';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { Drawer } from '../responsive/Drawer';
 import { cn } from '../ui/utils';
@@ -161,7 +163,7 @@ export function FacetedSearchScreen() {
             <SlidersHorizontal className="size-4" />
             Filters{selected.size > 0 && ` (${selected.size})`}
           </button>
-          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
+          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 h-11 px-2.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               aria-label="Search by topic"
@@ -174,7 +176,7 @@ export function FacetedSearchScreen() {
         </div>
         {/* Desktop search bar + mode selector */}
         <div className="hidden flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5 lg:flex">
-          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
+          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 h-11 px-2.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               aria-label="Search by topic"
@@ -184,22 +186,16 @@ export function FacetedSearchScreen() {
               className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
             />
           </div>
-          <div className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
-            {(['topic', 'facet', 'neighbors', 'experiment'] as Mode[]).map((m) => (
-              <button
-                key={m}
-                type="button"
-                aria-pressed={mode === m}
-                onClick={() => setMode(m)}
-                className={cn(
-                  'rounded-sm px-2.5 py-1.5 min-h-11 font-mono text-[12px] capitalize transition-colors',
-                  mode === m ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-                )}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            segments={[
+              { id: 'topic', label: 'Topic' },
+              { id: 'facet', label: 'Facet' },
+              { id: 'neighbors', label: 'Neighbors' },
+              { id: 'experiment', label: 'Experiment' },
+            ]}
+            value={mode}
+            onChange={(m) => setMode(m as Mode)}
+          />
         </div>
 
         {/* Selected facet summary */}
@@ -209,15 +205,13 @@ export function FacetedSearchScreen() {
               {selected.size} facets
             </span>
             {[...selected].map((k) => (
-              <button
+              <FacetTag
                 key={k}
-                type="button"
-                onClick={() => toggleFacet(k)}
-                className="flex items-center gap-1 rounded-sm border border-brand-border bg-brand-muted px-1.5 py-0.5 font-mono text-[11px] text-brand hover:bg-brand-surface"
-              >
-                {k}
-                <X className="size-3" />
-              </button>
+                field="facet"
+                value={k}
+                removable
+                onRemove={() => toggleFacet(k)}
+              />
             ))}
           </div>
         )}

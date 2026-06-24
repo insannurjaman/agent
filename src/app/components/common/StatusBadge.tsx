@@ -17,7 +17,8 @@ export type StatusTone =
   | 'red'
   | 'blue'
   | 'purple'
-  | 'muted';
+  | 'muted'
+  | 'ochre';
 
 const TONE: Record<StatusTone, { text: string; border: string; bg: string; dot: string }> = {
   brand: { text: 'text-brand', border: 'border-brand-border', bg: 'bg-brand-muted', dot: 'bg-brand' },
@@ -34,6 +35,7 @@ const TONE: Record<StatusTone, { text: string; border: string; bg: string; dot: 
   blue: { text: 'text-blue', border: 'border-blue/30', bg: 'bg-blue/10', dot: 'bg-blue' },
   purple: { text: 'text-purple', border: 'border-purple/30', bg: 'bg-purple/10', dot: 'bg-purple' },
   muted: { text: 'text-text-muted', border: 'border-border-strong', bg: 'bg-surface-2', dot: 'bg-text-muted' },
+  ochre: { text: 'text-confidence-medium', border: 'border-confidence-medium/30', bg: 'bg-confidence-medium/10', dot: 'bg-confidence-medium' },
 };
 
 const VALUE_TONE: Record<string, StatusTone> = {
@@ -46,11 +48,11 @@ const VALUE_TONE: Record<string, StatusTone> = {
   'anomaly-pattern': 'error',
   method: 'info',
   // confidence
-  high: 'success',
-  'medium-high': 'success',
-  medium: 'warning',
-  low: 'neutral',
-  superseded: 'neutral',
+  high: 'brand',
+  'medium-high': 'amber',
+  medium: 'ochre',
+  low: 'muted',
+  superseded: 'muted',
   // question status
   open: 'blue',
   resolved: 'success',

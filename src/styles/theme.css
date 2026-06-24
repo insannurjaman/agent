@@ -69,6 +69,10 @@
   --info: #0e7490;
   --warning: #b45309;
   --lineage: #6d28d9;
+  --confidence-high: #d43600;
+  --confidence-medium-high: #b45309;
+  --confidence-medium: #92710c;
+  --confidence-low: #8a9590;
 
   /* Re-map shadcn semantic tokens for light Oxide */
   --background: #ffffff;
@@ -98,6 +102,27 @@
   --chart-4: var(--lineage);
   --chart-5: var(--error);
   --radius: 0.25rem;
+
+  /* Action tokens — ghost canonical */
+  --action-brand-bg: var(--brand-primary-muted);
+  --action-brand-fg: var(--brand-primary);
+  --action-brand-hover: rgba(212, 54, 0, 0.14);
+
+  /* Touch targets */
+  --tap-sm: 36px;
+  --tap-md: 40px;
+  --tap-lg: 48px;
+
+  /* Semantic spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
   --sidebar: #f8f9fa;
   --sidebar-foreground: #5f6b66;
@@ -142,6 +167,10 @@
   --warning: #f3c969;
   --error: #ff6b6b;
   --lineage: #8b7cf6;
+  --confidence-high: #ff3e01;
+  --confidence-medium-high: #f3c969;
+  --confidence-medium: #c9a227;
+  --confidence-low: #6f7a76;
 
   /* Re-map shadcn semantic tokens onto the Oxide palette */
   --background: #080a0b;
@@ -171,6 +200,27 @@
   --chart-4: var(--lineage);
   --chart-5: var(--error);
   --radius: 0.25rem;
+
+  /* Action tokens — ghost canonical */
+  --action-brand-bg: rgba(255, 62, 1, 0.1);
+  --action-brand-fg: #ff3e01;
+  --action-brand-hover: rgba(255, 62, 1, 0.16);
+
+  /* Touch targets */
+  --tap-sm: 36px;
+  --tap-md: 40px;
+  --tap-lg: 48px;
+
+  /* Semantic spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
   --sidebar: #0d1012;
   --sidebar-foreground: #a9b2af;
@@ -211,6 +261,16 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
   --color-lineage: var(--lineage);
+  --color-confidence-high: var(--confidence-high);
+  --color-confidence-medium-high: var(--confidence-medium-high);
+  --color-confidence-medium: var(--confidence-medium);
+  --color-confidence-low: var(--confidence-low);
+  --color-action-brand-bg: var(--action-brand-bg);
+  --color-action-brand-fg: var(--action-brand-fg);
+  --color-action-brand-hover: var(--action-brand-hover);
+  --color-tap-sm: var(--tap-sm);
+  --color-tap-md: var(--tap-md);
+  --color-tap-lg: var(--tap-lg);
 }
 
 @theme inline {
