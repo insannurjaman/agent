@@ -253,7 +253,7 @@ export function ChatStream({
 
       {/* Transcript */}
       <div className="relative min-h-0 flex-1 overflow-hidden">
-        <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="h-full overflow-auto">
+        <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="size-full overflow-auto">
           {transcript.length === 0 ? (
             <EmptyState
               icon={MessageSquareDashed}

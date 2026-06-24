@@ -67,7 +67,7 @@ export function ArtifactViewer({
 
   if (!artifact) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center border-l border-border-subtle bg-surface px-6 text-center md:w-[360px] xl:w-[420px]">
+      <div className="flex h-full w-full flex-col items-center justify-center border-l border-border-subtle bg-surface px-6 text-center">
         <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
           <ImageIcon className="size-5 text-text-muted" />
         </div>
@@ -79,7 +79,7 @@ export function ArtifactViewer({
   const Icon = TYPE_ICONS[artifact.type];
 
   return (
-    <aside aria-label="Artifact viewer" className="flex h-full min-h-0 w-full flex-col overflow-hidden border-l border-border-subtle bg-surface md:w-[360px] xl:w-[420px]">
+    <aside aria-label="Artifact viewer" className="flex h-full min-h-0 w-full flex-col overflow-hidden border-l border-border-subtle bg-surface">
       {/* Header */}
       <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-3 py-2.5">
         <Icon className="size-4 shrink-0 text-text-muted" />
@@ -240,13 +240,38 @@ function ArtifactBody({ artifact }: { artifact: Artifact }) {
 }
 
 function PngPreview({ artifact }: { artifact: Artifact }) {
+  // Render a simplified SVG chart placeholder for PNG artifacts
   return (
-    <div className="flex h-48 items-center justify-center overflow-hidden rounded-sm border border-border-subtle bg-elevated">
-      <div className="text-center">
-        <ImageIcon className="mx-auto size-8 text-text-muted" />
-        <p className="mt-2 text-[12px] text-text-muted">{artifact.name}</p>
-        <p className="text-[11px] text-text-muted">PNG image — preview not available in prototype</p>
-      </div>
+    <div className="overflow-hidden rounded-sm border border-border-subtle bg-elevated">
+      <svg viewBox="0 0 400 240" className="h-48 w-full" aria-label={`Chart: ${artifact.name}`}>
+        <rect width="400" height="240" fill="var(--surface-2)" />
+        {/* Y-axis */}
+        <line x1="40" y1="20" x2="40" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
+        {/* X-axis */}
+        <line x1="40" y1="200" x2="380" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
+        {/* Y-axis ticks */}
+        {[40, 80, 120, 160].map((y) => (
+          <line key={y} x1="36" y1={y} x2="40" y2={y} stroke="var(--border-strong)" strokeWidth="1" />
+        ))}
+        {/* Bars */}
+        {[60, 110, 160, 210, 260, 310, 360].map((x, i) => {
+          const h = [120, 80, 140, 60, 100, 90, 110][i];
+          return (
+            <rect
+              key={x}
+              x={x - 15}
+              y={200 - h}
+              width="30"
+              height={h}
+              fill={i === 2 ? 'var(--brand-primary)' : 'var(--border-strong)'}
+              rx="2"
+            />
+          );
+        })}
+        <text x="210" y="230" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontFamily="monospace">
+          {artifact.name}
+        </text>
+      </svg>
     </div>
   );
 }

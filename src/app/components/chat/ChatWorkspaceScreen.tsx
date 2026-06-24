@@ -69,63 +69,59 @@ export function ChatWorkspaceScreen() {
   if (bp === 'desktop') {
     return (
       <div className="flex h-full min-h-0 w-full overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full min-h-0">
-          {/* Left Panel — Chats/Explorer */}
-          <ResizablePanel defaultSize={22} minSize={18} maxSize={30}>
-            <SessionExplorerPane
-              sessionList={sessions}
-              activeSessionId={session.id}
-              onSelectSession={(id) => {
-                const s = sessions.find((x) => x.id === id);
-                if (s) setSession(s);
-              }}
-              onNewChat={handleNewChat}
-              relay="connected"
-              tree={bundle.tree}
-              artifacts={bundle.artifacts}
-              onSelectArtifact={handleOpenArtifact}
-              context={attachedContext}
-            />
-          </ResizablePanel>
+        {/* Left Panel — Chats/Explorer (fixed width) */}
+        <div className="hidden w-[280px] shrink-0 border-r border-border-subtle md:block">
+          <SessionExplorerPane
+            sessionList={sessions}
+            activeSessionId={session.id}
+            onSelectSession={(id) => {
+              const s = sessions.find((x) => x.id === id);
+              if (s) setSession(s);
+            }}
+            onNewChat={handleNewChat}
+            relay="connected"
+            tree={bundle.tree}
+            artifacts={bundle.artifacts}
+            onSelectArtifact={handleOpenArtifact}
+            context={attachedContext}
+          />
+        </div>
 
-          <ResizableHandle withHandle />
+        {/* Main Chat */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <ChatStream
+            session={session}
+            transcript={bundle.transcript}
+            attachedContext={attachedContext}
+            onRemoveContext={(id) => setAttachedContext((prev) => prev.filter((x) => x !== id))}
+            onAttachContext={() => {}}
+            h={handlers}
+            onToggleArtifact={() => setArtifactOpen(!artifactOpen)}
+            hasArtifact={bundle.latestArtifactId !== null}
+          />
+        </div>
 
-          {/* Main Chat */}
-          <ResizablePanel defaultSize={artifactOpen ? 48 : 78} minSize={40}>
-            <ChatStream
-              session={session}
-              transcript={bundle.transcript}
-              attachedContext={attachedContext}
-              onRemoveContext={(id) => setAttachedContext((prev) => prev.filter((x) => x !== id))}
-              onAttachContext={() => {}}
-              h={handlers}
-              onToggleArtifact={() => setArtifactOpen(!artifactOpen)}
-              hasArtifact={bundle.latestArtifactId !== null}
-            />
-          </ResizablePanel>
-
-          {/* Artifact Viewer — collapsible */}
-          {artifactOpen && (
-            <>
-              <ResizableHandle withHandle />
-              <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
-                <ArtifactViewer
-                  artifact={artifact}
-                  onClose={() => setArtifactOpen(false)}
-                  newArtifact={handleNewArtifact}
-                  timeline={bundle.timeline}
-                  onTimelineOpen={(item) => {
-                    if (item.artifactId) {
-                      setArtifactId(item.artifactId);
-                    }
-                  }}
-                  related={[]}
-                  onNav={handlers.onNav}
-                />
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+        {/* Artifact Viewer — resizable */}
+        {artifactOpen && (
+          <ResizablePanelGroup direction="horizontal" className="h-full min-h-0 w-[360px] xl:w-[420px] shrink-0">
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={100} minSize={20}>
+              <ArtifactViewer
+                artifact={artifact}
+                onClose={() => setArtifactOpen(false)}
+                newArtifact={handleNewArtifact}
+                timeline={bundle.timeline}
+                onTimelineOpen={(item) => {
+                  if (item.artifactId) {
+                    setArtifactId(item.artifactId);
+                  }
+                }}
+                related={[]}
+                onNav={handlers.onNav}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
 
         {/* Overlays */}
         {reviewing && (
