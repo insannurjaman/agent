@@ -55,7 +55,7 @@ export function AppShell() {
       >
         Skip to main content
       </a>
-      <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-text">
+      <div className="flex h-dvh w-full flex-col overflow-hidden bg-background text-text">
         <TopBar />
         <div className="flex min-h-0 flex-1">
           {/* Icon rail on tablet/desktop only */}

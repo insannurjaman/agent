@@ -65,8 +65,8 @@ export function ChatWorkspaceScreen() {
   // Desktop: ResizablePanelGroup layout
   if (bp === 'desktop') {
     return (
-      <div className="flex h-full w-full overflow-hidden">
-        <ResizablePanelGroup direction="horizontal" className="h-full">
+      <div className="flex h-full min-h-0 w-full overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="h-full min-h-0">
           {/* Left Panel — Chats/Explorer */}
           <ResizablePanel defaultSize={22} minSize={18} maxSize={30}>
             <SessionExplorerPane
@@ -166,7 +166,7 @@ export function ChatWorkspaceScreen() {
 
   // Tablet: Chat full-width, panels open as drawers
   return (
-    <div className="flex h-full w-full overflow-hidden">
+    <div className="flex h-full min-h-0 w-full overflow-hidden">
       {/* Left Panel drawer */}
       <Drawer open={panelOpen} onClose={() => setPanelOpen(false)} side="left" width="w-[min(86vw,320px)]" ariaLabel="Session explorer">
         <SessionExplorerPane

@@ -109,7 +109,9 @@ export function ChatStream({
   const [draft, setDraft] = useState('');
   const [mode, setMode] = useState<ComposerMode>('Investigate');
   const [streaming, setStreaming] = useState(false);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const jumpBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -122,9 +124,40 @@ export function ChatStream({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [openNav]);
 
+  // Auto-scroll: only if user is near bottom (within 100px)
   useEffect(() => {
-    bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight });
+    const el = bodyRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distFromBottom < 100) {
+      el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+      setShowJumpToLatest(false);
+    } else {
+      setShowJumpToLatest(true);
+    }
   }, [streaming, transcript]);
+
+  // Track scroll position to show/hide jump-to-latest
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    function onScroll() {
+      const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distFromBottom < 100) {
+        setShowJumpToLatest(false);
+      }
+    }
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const scrollToBottom = () => {
+    const el = bodyRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setShowJumpToLatest(false);
+    jumpBtnRef.current?.focus();
+  };
 
   const send = () => {
     if (!draft.trim() || streaming) return;
@@ -136,7 +169,7 @@ export function ChatStream({
   const segments = buildSegments(transcript);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col bg-background">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-background">
       {/* Chat header — compact, desktop only */}
       <div className="hidden shrink-0 items-center gap-2 border-b border-border-subtle bg-surface px-4 py-2 md:flex">
         <div className="min-w-0 flex-1">
@@ -215,44 +248,58 @@ export function ChatStream({
       )}
 
       {/* Transcript */}
-      <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="min-h-0 flex-1 overflow-auto">
-        {transcript.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-            <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
-              <MessageSquareDashed className="size-5 text-text-muted" />
-            </div>
-            <div className="text-[15px] font-medium text-text">What would you like to investigate?</div>
-            <div className="mt-1 max-w-sm text-[13px] text-text-muted">
-              Ask Claude anything about your findings, experiments, or knowledge base.
-            </div>
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              {PRIMARY_PROMPTS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setDraft(p)}
-                  className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary transition-colors hover:border-brand-border hover:text-text"
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5">
-            {segments.map((seg, i) => {
-              if (seg.type === 'artifact') return <ArtifactItem key={i} event={seg.event} h={h} />;
-              if (seg.type === 'event') return <ChatEventView key={i} event={seg.event} h={h} />;
-              if (seg.type === 'activity') return <ActivityGroup key={i} events={seg.events} h={h} />;
-              return <ProposalGroup key={i} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
-            })}
-            {streaming && (
-              <div role="status" aria-live="polite" className="flex items-center gap-2 text-[13px] text-brand">
-                <Loader2 className="size-3.5 animate-spin" />
-                <span>Claude is working…</span>
+      <div className="relative min-h-0 flex-1 overflow-hidden">
+        <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="h-full overflow-auto">
+          {transcript.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center px-6 text-center">
+              <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
+                <MessageSquareDashed className="size-5 text-text-muted" />
               </div>
-            )}
-          </div>
+              <div className="text-[15px] font-medium text-text">What would you like to investigate?</div>
+              <div className="mt-1 max-w-sm text-[13px] text-text-muted">
+                Ask Claude anything about your findings, experiments, or knowledge base.
+              </div>
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {PRIMARY_PROMPTS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setDraft(p)}
+                    className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary transition-colors hover:border-brand-border hover:text-text"
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5">
+              {segments.map((seg, i) => {
+                if (seg.type === 'artifact') return <ArtifactItem key={i} event={seg.event} h={h} />;
+                if (seg.type === 'event') return <ChatEventView key={i} event={seg.event} h={h} />;
+                if (seg.type === 'activity') return <ActivityGroup key={i} events={seg.events} h={h} />;
+                return <ProposalGroup key={i} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
+              })}
+              {streaming && (
+                <div role="status" aria-live="polite" className="flex items-center gap-2 text-[13px] text-brand">
+                  <Loader2 className="size-3.5 animate-spin" />
+                  <span>Claude is working…</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Jump to latest */}
+        {showJumpToLatest && (
+          <button
+            ref={jumpBtnRef}
+            type="button"
+            onClick={scrollToBottom}
+            className="absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded-sm border border-border-strong bg-surface px-3 py-1.5 text-[12px] text-text-secondary shadow-md transition-colors hover:bg-surface-2 hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring"
+          >
+            Jump to latest
+          </button>
         )}
       </div>
 
