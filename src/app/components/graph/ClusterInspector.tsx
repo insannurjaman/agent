@@ -46,7 +46,7 @@ export function ClusterInspector({
     : KIND_COLOR.experiment;
 
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col bg-surface lg:w-[480px]">
+    <aside className="flex h-full w-full shrink-0 flex-col bg-surface">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-2">
