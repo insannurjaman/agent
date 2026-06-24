@@ -122,7 +122,31 @@ export function SessionExplorerPane({
 
           {/* File tree */}
           {tree && tree.length > 0 ? (
-            <div role="tree" aria-label="Workspace files" className="space-y-0.5">
+            <div
+              role="tree"
+              aria-label="Workspace files"
+              className="space-y-0.5"
+              onKeyDown={(e) => {
+                const focusable = Array.from(
+                  (e.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('[role="treeitem"] > button'),
+                );
+                const idx = focusable.indexOf(document.activeElement as HTMLElement);
+                if (idx === -1) return;
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  focusable[Math.min(idx + 1, focusable.length - 1)]?.focus();
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  focusable[Math.max(idx - 1, 0)]?.focus();
+                } else if (e.key === 'Home') {
+                  e.preventDefault();
+                  focusable[0]?.focus();
+                } else if (e.key === 'End') {
+                  e.preventDefault();
+                  focusable[focusable.length - 1]?.focus();
+                }
+              }}
+            >
               {tree.map((node) => (
                 <FileNodeRow
                   key={node.path}
@@ -220,9 +244,10 @@ function FileNodeRow({
   const artifactData = artifacts?.[node.name];
 
   return (
-    <div>
+    <div role="treeitem" aria-level={depth + 1} aria-expanded={isDir ? expanded : undefined}>
       <button
         type="button"
+        tabIndex={depth === 0 ? 0 : -1}
         onClick={() => {
           if (isDir) {
             setExpanded(!expanded);
@@ -230,7 +255,6 @@ function FileNodeRow({
             onSelectArtifact(artifactData.id);
           }
         }}
-        aria-expanded={isDir ? expanded : undefined}
         className={cn(
           'flex min-h-[32px] w-full items-center gap-1.5 rounded-sm px-1.5 py-1 text-left transition-colors hover:bg-surface-2',
           isArtifact && 'text-brand',

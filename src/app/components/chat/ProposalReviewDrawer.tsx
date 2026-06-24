@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { X, ShieldCheck } from 'lucide-react';
 import type { FindingProposal, QuestionProposal } from '../../data/chat';
 import { StatusBadge } from '../common/StatusBadge';
@@ -49,6 +49,27 @@ export function ProposalReviewDrawer({
   if (!tab) return null;
   const isFinding = tab.kind === 'finding';
 
+  const handleTabKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const idx = tabs.findIndex((t) => t.key === active);
+      if (idx === -1) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setActive(tabs[(idx + 1) % tabs.length].key);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setActive(tabs[(idx - 1 + tabs.length) % tabs.length].key);
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        setActive(tabs[0].key);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        setActive(tabs[tabs.length - 1].key);
+      }
+    },
+    [tabs, active],
+  );
+
   return (
     <aside className="flex h-full w-full shrink-0 flex-col border-l border-border-subtle bg-surface md:w-[360px] xl:w-[420px]">
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
@@ -62,11 +83,16 @@ export function ProposalReviewDrawer({
 
       {/* Tabs */}
       {tabs.length > 1 && (
-        <div className="flex gap-0.5 border-b border-border-subtle bg-surface px-2 py-1.5">
+        <div role="tablist" aria-label="Proposals" className="flex gap-0.5 border-b border-border-subtle bg-surface px-2 py-1.5" onKeyDown={handleTabKeyDown}>
           {tabs.map((t) => (
             <button
               key={t.key}
               type="button"
+              role="tab"
+              id={`proposal-tab-${t.key}`}
+              aria-selected={t.key === active}
+              aria-controls={`proposal-panel-${t.key}`}
+              tabIndex={t.key === active ? 0 : -1}
               onClick={() => setActive(t.key)}
               className={cn(
                 'rounded-sm px-2.5 py-1 font-mono text-[11px] transition-colors',
@@ -81,7 +107,12 @@ export function ProposalReviewDrawer({
 
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
         <SectionLabel>Proposed fields</SectionLabel>
-        <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
+        <div
+          role="tabpanel"
+          id={`proposal-panel-${tab.key}`}
+          aria-labelledby={`proposal-tab-${tab.key}`}
+          className="rounded-sm border border-border-subtle bg-surface-2 px-3"
+        >
           {isFinding && tab.finding ? <FindingFields p={tab.finding} /> : tab.question ? <QuestionFields p={tab.question} /> : null}
         </div>
 

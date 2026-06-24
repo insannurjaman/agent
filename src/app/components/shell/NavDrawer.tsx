@@ -234,6 +234,7 @@ function NavigationTab({ onNavigate }: { onNavigate: (to: string) => void }) {
             key={to}
             to={to}
             onClick={() => onNavigate(to)}
+            aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
             className={({ isActive }) =>
               cn(
                 'flex min-h-[44px] items-center gap-2.5 rounded-sm px-2.5 text-[13px] transition-colors',

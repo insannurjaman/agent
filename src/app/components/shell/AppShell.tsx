@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { NavRail } from './NavRail';
 import { TopBar } from './TopBar';
@@ -9,6 +9,8 @@ export function AppShell() {
   const location = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>('navigation');
+  const mainRef = useRef<HTMLElement>(null);
+  const prevPathname = useRef(location.pathname);
 
   const openNav = useCallback((tab?: DrawerTab) => {
     if (tab) setDrawerTab(tab);
@@ -22,6 +24,27 @@ export function AppShell() {
   // Close drawer on route change
   useEffect(() => {
     setMobileNavOpen(false);
+  }, [location.pathname]);
+
+  // Route focus management: move focus to main content after route changes
+  useEffect(() => {
+    if (location.pathname !== prevPathname.current) {
+      prevPathname.current = location.pathname;
+      requestAnimationFrame(() => {
+        if (!mainRef.current) return;
+        // Try to focus the first heading in the new route
+        const heading = mainRef.current.querySelector<HTMLElement>('h1, h2, [role="heading"]');
+        if (heading) {
+          heading.setAttribute('tabindex', '-1');
+          heading.focus();
+          heading.addEventListener('blur', () => heading.removeAttribute('tabindex'), { once: true });
+        } else {
+          mainRef.current.setAttribute('tabindex', '-1');
+          mainRef.current.focus();
+          mainRef.current.addEventListener('blur', () => mainRef.current?.removeAttribute('tabindex'), { once: true });
+        }
+      });
+    }
   }, [location.pathname]);
 
   return (
@@ -39,7 +62,7 @@ export function AppShell() {
           <div className="hidden md:flex">
             <NavRail />
           </div>
-          <main id="main-content" className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          <main ref={mainRef} id="main-content" className="min-h-0 min-w-0 flex-1 overflow-hidden">
             <Outlet />
           </main>
         </div>

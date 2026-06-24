@@ -292,17 +292,17 @@ function ProposalSummary({
           </div>
         )}
         {status === 'pending' && (
-          <div className="mt-2.5 flex items-center gap-2 text-[12px] text-text-muted">
+          <div role="status" aria-live="polite" className="mt-2.5 flex items-center gap-2 text-[12px] text-text-muted">
             <Loader2 className="size-3.5 animate-spin" /> Registering…
           </div>
         )}
         {status === 'completed' && (
-          <div className="mt-2.5 flex items-center gap-2 text-[12px] text-green">
+          <div role="status" aria-live="polite" className="mt-2.5 flex items-center gap-2 text-[12px] text-green">
             <CheckCircle2 className="size-3.5" /> Registered
           </div>
         )}
         {status === 'failed' && (
-          <div className="mt-2.5 flex items-center gap-2">
+          <div role="alert" className="mt-2.5 flex items-center gap-2">
             <span className="flex items-center gap-1.5 text-[12px] text-red">
               <AlertTriangle className="size-3.5" /> Failed
             </span>

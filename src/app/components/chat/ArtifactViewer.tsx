@@ -79,7 +79,7 @@ export function ArtifactViewer({
   const Icon = TYPE_ICONS[artifact.type];
 
   return (
-    <div className="flex h-full w-full flex-col border-l border-border-subtle bg-surface md:w-[360px] xl:w-[420px]">
+    <aside aria-label="Artifact viewer" className="flex h-full w-full flex-col border-l border-border-subtle bg-surface md:w-[360px] xl:w-[420px]">
       {/* Header */}
       <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-3 py-2.5">
         <Icon className="size-4 shrink-0 text-text-muted" />
@@ -186,7 +186,7 @@ export function ArtifactViewer({
           </div>
         </TabsContent>
       </Tabs>
-    </div>
+    </aside>
   );
 }
 

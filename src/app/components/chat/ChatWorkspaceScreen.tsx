@@ -126,7 +126,7 @@ export function ChatWorkspaceScreen() {
 
         {/* Overlays */}
         {reviewing && (
-          <Drawer open onClose={() => setReviewing(null)} side="right">
+          <Drawer open onClose={() => setReviewing(null)} side="right" ariaLabel="Proposal review">
             <ProposalReviewDrawer
               set={reviewing}
               onClose={() => setReviewing(null)}
@@ -168,7 +168,7 @@ export function ChatWorkspaceScreen() {
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Left Panel drawer */}
-      <Drawer open={panelOpen} onClose={() => setPanelOpen(false)} side="left" width="w-[min(86vw,320px)]">
+      <Drawer open={panelOpen} onClose={() => setPanelOpen(false)} side="left" width="w-[min(86vw,320px)]" ariaLabel="Session explorer">
         <SessionExplorerPane
           sessionList={sessions}
           activeSessionId={session.id}
@@ -195,7 +195,7 @@ export function ChatWorkspaceScreen() {
       </Drawer>
 
       {/* Artifact Viewer drawer */}
-      <Drawer open={artifactOpen} onClose={() => setArtifactOpen(false)} side="right" width="w-[min(86vw,400px)]">
+      <Drawer open={artifactOpen} onClose={() => setArtifactOpen(false)} side="right" width="w-[min(86vw,400px)]" ariaLabel="Artifact viewer">
         <ArtifactViewer
           artifact={artifact}
           onClose={() => setArtifactOpen(false)}
@@ -226,7 +226,7 @@ export function ChatWorkspaceScreen() {
 
       {/* Proposal review */}
       {reviewing && (
-        <Drawer open onClose={() => setReviewing(null)} side="right">
+        <Drawer open onClose={() => setReviewing(null)} side="right" ariaLabel="Proposal review">
           <ProposalReviewDrawer
             set={reviewing}
             onClose={() => setReviewing(null)}

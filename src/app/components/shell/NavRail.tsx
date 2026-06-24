@@ -65,6 +65,7 @@ function RailItem({ item, expanded }: { item: NavItem; expanded: boolean }) {
   const link = (
     <NavLink
       to={to}
+      aria-current={({ isActive }) => (isActive ? 'page' : undefined)}
       className={({ isActive }) =>
         cn(
           'group relative flex h-11 items-center rounded-md outline-none transition-colors focus-visible:ring-1 focus-visible:ring-brand-ring',
