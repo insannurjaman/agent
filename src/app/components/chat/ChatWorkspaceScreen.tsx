@@ -9,7 +9,6 @@ import { ProposalReviewDrawer } from './ProposalReviewDrawer';
 import { NewChatModal } from './NewChatModal';
 import { useBreakpoint } from '../responsive/useBreakpoint';
 import { Drawer } from '../responsive/Drawer';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '../ui/resizable';
 
 const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as TimelineItem[], context: [], latestArtifactId: null };
 
@@ -65,47 +64,49 @@ export function ChatWorkspaceScreen() {
     ? { id: bundle.latestArtifactId, name: bundle.latestArtifactId }
     : null;
 
-  // Desktop: ResizablePanelGroup layout
+  // Desktop: CSS Grid layout — explicit columns prevent content from pushing siblings
   if (bp === 'desktop') {
     return (
-      <div className="flex h-full min-h-0 w-full overflow-hidden">
-        {/* Left Panel — Chats/Explorer (fixed width) */}
-        <div className="hidden w-[280px] shrink-0 border-r border-border-subtle md:block">
-          <SessionExplorerPane
-            sessionList={sessions}
-            activeSessionId={session.id}
-            onSelectSession={(id) => {
-              const s = sessions.find((x) => x.id === id);
-              if (s) setSession(s);
-            }}
-            onNewChat={handleNewChat}
-            relay="connected"
-            tree={bundle.tree}
-            artifacts={bundle.artifacts}
-            onSelectArtifact={handleOpenArtifact}
-            context={attachedContext}
-          />
-        </div>
+      <>
+        <div
+          className="grid h-full min-h-0 w-full overflow-hidden"
+          style={{ gridTemplateColumns: artifactOpen ? '280px minmax(0,1fr) 380px' : '280px minmax(0,1fr)' }}
+        >
+          {/* Left Panel — Chats/Explorer (fixed width) */}
+          <div className="hidden border-r border-border-subtle md:block">
+            <SessionExplorerPane
+              sessionList={sessions}
+              activeSessionId={session.id}
+              onSelectSession={(id) => {
+                const s = sessions.find((x) => x.id === id);
+                if (s) setSession(s);
+              }}
+              onNewChat={handleNewChat}
+              relay="connected"
+              tree={bundle.tree}
+              artifacts={bundle.artifacts}
+              onSelectArtifact={handleOpenArtifact}
+              context={attachedContext}
+            />
+          </div>
 
-        {/* Main Chat */}
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <ChatStream
-            session={session}
-            transcript={bundle.transcript}
-            attachedContext={attachedContext}
-            onRemoveContext={(id) => setAttachedContext((prev) => prev.filter((x) => x !== id))}
-            onAttachContext={() => {}}
-            h={handlers}
-            onToggleArtifact={() => setArtifactOpen(!artifactOpen)}
-            hasArtifact={bundle.latestArtifactId !== null}
-          />
-        </div>
+          {/* Main Chat */}
+          <div className="flex min-h-0 min-w-0 flex-col">
+            <ChatStream
+              session={session}
+              transcript={bundle.transcript}
+              attachedContext={attachedContext}
+              onRemoveContext={(id) => setAttachedContext((prev) => prev.filter((x) => x !== id))}
+              onAttachContext={() => {}}
+              h={handlers}
+              onToggleArtifact={() => setArtifactOpen(!artifactOpen)}
+              hasArtifact={bundle.latestArtifactId !== null}
+            />
+          </div>
 
-        {/* Artifact Viewer — resizable */}
-        {artifactOpen && (
-          <ResizablePanelGroup direction="horizontal" className="h-full min-h-0 w-[360px] xl:w-[420px] shrink-0">
-            <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={100} minSize={20}>
+          {/* Artifact Viewer — fixed-width side panel, stretches to fill grid cell */}
+          {artifactOpen && (
+            <div className="h-full min-h-0 overflow-hidden border-l border-border-subtle">
               <ArtifactViewer
                 artifact={artifact}
                 onClose={() => setArtifactOpen(false)}
@@ -119,11 +120,11 @@ export function ChatWorkspaceScreen() {
                 related={[]}
                 onNav={handlers.onNav}
               />
-            </ResizablePanel>
-          </ResizablePanelGroup>
-        )}
+            </div>
+          )}
+        </div>
 
-        {/* Overlays */}
+        {/* Overlays — rendered outside grid so they don't affect column sizing */}
         {reviewing && (
           <Drawer open onClose={() => setReviewing(null)} side="right" ariaLabel="Proposal review">
             <ProposalReviewDrawer
@@ -159,7 +160,7 @@ export function ChatWorkspaceScreen() {
             }}
           />
         )}
-      </div>
+      </>
     );
   }
 

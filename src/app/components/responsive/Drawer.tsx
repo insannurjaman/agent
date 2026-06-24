@@ -96,15 +96,8 @@ export function Drawer({
     [],
   );
 
-  // Close on viewport resize above 768px
-  useEffect(() => {
-    if (!open) return;
-    function onResize() {
-      if (window.innerWidth >= 768) onClose();
-    }
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [open, onClose]);
+  // No auto-close on resize — breakpoints handle layout switching
+  // The Drawer stays open until the user or parent component closes it
 
   if (!open) return null;
 
