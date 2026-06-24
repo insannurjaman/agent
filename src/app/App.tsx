@@ -3,6 +3,7 @@ import { createHashRouter, Navigate, RouterProvider } from 'react-router';
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from './data/auth';
 import { AppShell } from './components/shell/AppShell';
+import { RouteErrorBoundary } from './components/shell/RouteErrorBoundary';
 import { ChatWorkspaceScreen } from './components/chat/ChatWorkspaceScreen';
 import { FindingsScreen } from './components/findings/FindingsScreen';
 import { OverviewScreen } from './components/overview/OverviewScreen';
@@ -63,6 +64,7 @@ const router = createHashRouter([
   {
     path: '/',
     element: <AppShell />,
+    errorElement: <RouteErrorBoundary routeKey="root" />,
     children,
   },
 ]);

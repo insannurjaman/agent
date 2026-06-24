@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { X, Plus } from 'lucide-react';
 import { navItems } from './navItems';
@@ -43,9 +43,9 @@ export function NavDrawer({
   const [tab, setTab] = useState<DrawerTab>(initialTab);
 
   // Sync tab when drawer opens with a new initialTab
-  if (open) {
-    // Use initialTab when opening
-  }
+  useEffect(() => {
+    if (open) setTab(initialTab);
+  }, [open, initialTab]);
 
   const unique = uniqueSessions(sessions);
   const running = unique.filter((s) => s.status === 'running');

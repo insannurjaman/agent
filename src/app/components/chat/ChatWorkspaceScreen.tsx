@@ -48,6 +48,7 @@ export function ChatWorkspaceScreen() {
     onRetryProposal: (id) =>
       setProposalStatus((prev) => ({ ...prev, [id]: 'pending' })),
     onOpenLog: () => {}, // Log viewer not in V1 scope
+    proposalStatus,
     density: 'focus' as const,
   };
 

@@ -206,6 +206,16 @@ export function ChatStream({
         <div className="min-w-0 flex-1">
           <div className="truncate text-[13px] font-medium text-text">{session.title}</div>
         </div>
+        {onOpenPanel && (
+          <button
+            type="button"
+            onClick={onOpenPanel}
+            className="flex size-9 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted hover:text-text"
+            aria-label="Open session explorer"
+          >
+            <MoreHorizontal className="size-4" />
+          </button>
+        )}
         {hasArtifact && onToggleArtifact && (
           <button
             type="button"
