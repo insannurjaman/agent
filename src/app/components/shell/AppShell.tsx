@@ -26,6 +26,12 @@ export function AppShell() {
 
   return (
     <NavContext.Provider value={{ openNav, closeNav }}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-2 focus:top-2 focus:z-[100] focus:rounded-sm focus:bg-brand focus:px-3 focus:py-2 focus:text-[13px] focus:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-brand-ring focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
       <div className="flex h-screen w-full flex-col overflow-hidden bg-background text-text">
         <TopBar />
         <div className="flex min-h-0 flex-1">
@@ -33,7 +39,7 @@ export function AppShell() {
           <div className="hidden md:flex">
             <NavRail />
           </div>
-          <main className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          <main id="main-content" className="min-h-0 min-w-0 flex-1 overflow-hidden">
             <Outlet />
           </main>
         </div>

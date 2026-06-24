@@ -15,6 +15,7 @@ export function ProfileMenu() {
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-haspopup="true"
           className="flex size-11 items-center justify-center rounded-sm transition-colors hover:bg-surface-2 md:size-9"
           aria-label="Open profile menu"
         >

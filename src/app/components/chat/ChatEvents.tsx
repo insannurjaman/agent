@@ -106,7 +106,7 @@ export function ChatEventView({ event, h }: { event: ChatEvent; h: ChatEventHand
 
     case 'error':
       return (
-        <div className="rounded-sm border border-red/30 bg-red/[0.06]">
+        <div role="alert" className="rounded-sm border border-red/30 bg-red/[0.06]">
           <div className="flex items-center gap-1.5 border-b border-red/20 px-3 py-1.5">
             <AlertTriangle className="size-3.5 text-red" />
             <span className="font-mono text-[11px] uppercase tracking-wider text-red">Tool Error</span>
@@ -201,6 +201,7 @@ function ActivityRow({ ev, h }: { ev: OpEvent; h: ChatEventHandlers }) {
           else if (ev.kind === 'report') h.onOpenArtifact('REPORT.md');
           else if (expandable) setOpen((v) => !v);
         }}
+        aria-expanded={expandable ? open : undefined}
         className="flex w-full items-center gap-2 px-3 py-1.5 text-left"
       >
         <Icon className="size-3.5 shrink-0 text-text-muted" />

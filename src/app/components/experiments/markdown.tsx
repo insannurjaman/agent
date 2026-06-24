@@ -224,6 +224,7 @@ export function Markdown({ source, suppressTitle = false }: { source: string; su
                 {header.map((c, ci) => (
                   <th
                     key={ci}
+                    scope="col"
                     className="border-b border-border-strong px-3 py-2 text-left font-mono text-[10px] uppercase tracking-[0.12em] text-text-muted"
                   >
                     {c}

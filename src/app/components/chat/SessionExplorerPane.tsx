@@ -122,7 +122,7 @@ export function SessionExplorerPane({
 
           {/* File tree */}
           {tree && tree.length > 0 ? (
-            <div className="space-y-0.5">
+            <div role="tree" aria-label="Workspace files" className="space-y-0.5">
               {tree.map((node) => (
                 <FileNodeRow
                   key={node.path}
@@ -230,6 +230,7 @@ function FileNodeRow({
             onSelectArtifact(artifactData.id);
           }
         }}
+        aria-expanded={isDir ? expanded : undefined}
         className={cn(
           'flex min-h-[32px] w-full items-center gap-1.5 rounded-sm px-1.5 py-1 text-left transition-colors hover:bg-surface-2',
           isArtifact && 'text-brand',

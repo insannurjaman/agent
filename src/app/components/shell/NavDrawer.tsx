@@ -84,11 +84,14 @@ export function NavDrawer({
       </div>
 
       {/* Tabs — sticky below header */}
-      <div className="sticky top-0 z-10 flex border-b border-border-subtle bg-surface">
+      <div role="tablist" aria-label="Drawer tabs" className="sticky top-0 z-10 flex border-b border-border-subtle bg-surface">
         {(['chats', 'navigation'] as DrawerTab[]).map((t) => (
           <button
             key={t}
             type="button"
+            role="tab"
+            aria-selected={tab === t}
+            aria-controls={`drawer-tab-${t}`}
             onClick={() => setTab(t)}
             className={cn(
               'flex-1 py-2.5 text-[12px] font-medium uppercase tracking-wide transition-colors',
@@ -103,7 +106,7 @@ export function NavDrawer({
       </div>
 
       {/* Tab content */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div role="tabpanel" id={`drawer-tab-${tab}`} className="min-h-0 flex-1 overflow-y-auto">
         {tab === 'chats' ? (
           <ChatsTab
             running={running}

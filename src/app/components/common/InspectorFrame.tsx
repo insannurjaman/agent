@@ -23,7 +23,7 @@ export function InspectorFrame({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Close inspector"
         >
           <X className="size-4" />

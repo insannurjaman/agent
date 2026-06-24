@@ -148,6 +148,7 @@ export function FacetedSearchScreen() {
           <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
+              aria-label="Search by topic"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="Topic — e.g. bend rate, entry temperature, schema drift…"
@@ -159,6 +160,7 @@ export function FacetedSearchScreen() {
               <button
                 key={m}
                 type="button"
+                aria-pressed={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
                   'rounded-sm px-2.5 py-1 font-mono text-[12px] capitalize transition-colors',
@@ -276,6 +278,7 @@ function FacetPanel({
         <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 focus-within:border-brand-border">
           <Search className="size-3.5 shrink-0 text-text-muted" />
           <input
+            aria-label="Search facet terms"
             value={within}
             onChange={(e) => setWithin(e.target.value)}
             placeholder="Search facet terms…"
@@ -292,6 +295,7 @@ function FacetPanel({
             <div key={dim.id} className="mb-1">
               <button
                 type="button"
+                aria-expanded={isOpen}
                 onClick={() =>
                   setOpen((prev) => {
                     const n = new Set(prev);
@@ -315,6 +319,8 @@ function FacetPanel({
                       <button
                         key={key}
                         type="button"
+                        role="checkbox"
+                        aria-checked={checked}
                         onClick={() => onToggle(key)}
                         className="flex w-full items-center gap-2 rounded-sm px-2 py-1 text-left hover:bg-surface-2"
                       >

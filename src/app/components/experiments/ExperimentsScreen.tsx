@@ -254,9 +254,9 @@ function ReportHeader({ exp, onOpenDetails }: { exp: Experiment; onOpenDetails: 
               </span>
             )}
           </div>
-          <h1 className="mt-2.5 pr-12 text-[19px] font-semibold leading-tight text-text sm:pr-36 sm:text-[21px]">
+          <h2 className="mt-2.5 pr-12 text-[19px] font-semibold leading-tight text-text sm:pr-36 sm:text-[21px]">
             {exp.title}
-          </h1>
+          </h2>
           <MonoId muted className="mt-1.5 block break-all text-[10px] sm:text-[11px]">
             {path}
           </MonoId>

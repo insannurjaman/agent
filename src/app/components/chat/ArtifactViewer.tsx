@@ -89,7 +89,7 @@ export function ArtifactViewer({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-8 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Close artifact viewer"
         >
           <X className="size-4" />

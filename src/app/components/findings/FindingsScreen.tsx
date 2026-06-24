@@ -51,6 +51,7 @@ function FacetCells({ facets }: { facets: string[] }) {
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <th
+      scope="col"
       className={cn(
         'border-b border-border-strong px-3 py-2 text-left font-mono text-[11px] uppercase tracking-wider text-text-muted',
         className,
@@ -147,15 +148,18 @@ export function FindingsScreen() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search id, title, summary…"
+              aria-label="Search findings by ID, title, or summary"
               className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
             />
           </div>
 
-          <div className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
+          <div role="tablist" aria-label="Findings tabs" className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
             {tabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
+                role="tab"
+                aria-selected={tab === t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
@@ -194,6 +198,7 @@ export function FindingsScreen() {
             <button
               type="button"
               onClick={() => setActionableOnly((v) => !v)}
+              aria-pressed={actionableOnly}
               className={cn(
                 'rounded-sm border px-2 py-1 font-mono text-[11px] uppercase tracking-wide transition-colors',
                 actionableOnly
@@ -400,6 +405,8 @@ function FindingRow({
               e.stopPropagation();
               onToggle();
             }}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Collapse details' : 'Expand details'}
             className="text-text-muted hover:text-text"
           >
             <ChevronRight className={cn('size-4 transition-transform', expanded && 'rotate-90')} />
@@ -500,6 +507,8 @@ function QuestionRow({
               e.stopPropagation();
               onToggle();
             }}
+            aria-expanded={expanded}
+            aria-label={expanded ? 'Collapse details' : 'Expand details'}
             className="text-text-muted hover:text-text"
           >
             <ChevronRight className={cn('size-4 transition-transform', expanded && 'rotate-90')} />

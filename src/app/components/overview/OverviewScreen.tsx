@@ -15,14 +15,10 @@ import {
   SlidersHorizontal,
   Share2,
   Terminal,
-  GitBranch,
-  Image as ImageIcon,
   type LucideIcon,
 } from 'lucide-react';
-import { repoStatus } from '../../data';
-import { ScreenHeader, MonoId, MetaRow } from '../common/primitives';
+import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
-import { NavActionButton } from '../common/AskClaudeActions';
 import { cn } from '../ui/utils';
 
 interface LoopNode {
@@ -93,26 +89,6 @@ const LAYERS: DocLayer[] = [
   { id: 'L3', path: 'experiments/<slug>/', purpose: 'Experiment logs, README, REPORT, code, figures, artifacts', files: ['README.md', 'REPORT.md', 'analysis.py', 'outputs/'], status: 'Indexed', tone: 'green' },
 ];
 
-interface ModuleRow {
-  module: string;
-  status: string;
-  tone: 'green' | 'teal' | 'blue' | 'amber' | 'muted';
-  source: string;
-  to: string;
-  icon: LucideIcon;
-}
-
-const MODULES: ModuleRow[] = [
-  { module: 'Findings Viewer', status: 'Ready', tone: 'green', source: 'knowledge/findings.csv', to: '/findings', icon: Table2 },
-  { module: 'Open Questions Viewer', status: 'Ready', tone: 'green', source: 'knowledge/open_questions.csv', to: '/findings?tab=questions', icon: Table2 },
-  { module: 'Experiment Reports', status: 'Ready', tone: 'green', source: 'experiments/*/REPORT.md', to: '/experiments', icon: FlaskConical },
-  { module: 'Faceted Search', status: 'Ready', tone: 'green', source: 'search_kg.py', to: '/search', icon: SlidersHorizontal },
-  { module: 'Knowledge Graph', status: 'Indexed', tone: 'teal', source: 'knowledge_graph_edges.csv', to: '/graph', icon: Share2 },
-  { module: 'Lineage Trace', status: 'Ready', tone: 'green', source: 'supersedes + graph edges', to: '/lineage', icon: GitBranch },
-  { module: 'Chat Workspace', status: 'Connected', tone: 'blue', source: 'Claude relay', to: '/chat', icon: Terminal },
-  { module: 'Artifact Viewer', status: 'Ready', tone: 'green', source: 'experiments/<slug>/outputs/', to: '/chat', icon: ImageIcon },
-];
-
 interface ActivityRow {
   type: string;
   tone: 'green' | 'teal' | 'amber' | 'blue';
@@ -143,15 +119,12 @@ export function OverviewScreen() {
           <div className="flex flex-col gap-5">
             <KnowledgeLoop />
             <DocumentationLayers />
-            <ModuleStatus navigate={navigate} />
             <RecentActivity navigate={navigate} />
           </div>
 
           {/* Right panel — surfaced above the main column on mobile/tablet for guidance */}
           <div className="flex flex-col gap-5 max-lg:order-first">
             <CurrentWork navigate={navigate} />
-            <RepositorySnapshot navigate={navigate} />
-            <ActiveContext navigate={navigate} />
             <QuickActions navigate={navigate} />
           </div>
         </div>
@@ -239,7 +212,7 @@ function KnowledgeLoop() {
                     <LoopCard n={n} />
                     {i < phase.nodes.length - 1 && (
                       <div className="hidden items-center self-center text-text-muted md:flex">
-                        <ChevronRight className="size-4" />
+                        <ChevronRight className="size-4" aria-hidden="true" />
                       </div>
                     )}
                   </div>
@@ -248,7 +221,7 @@ function KnowledgeLoop() {
             </div>
             {pi < LOOP_PHASES.length - 1 && (
               <div className="hidden items-center self-end pb-4 text-border-strong md:flex">
-                <ChevronRight className="size-5" />
+                <ChevronRight className="size-5" aria-hidden="true" />
               </div>
             )}
           </div>
@@ -382,73 +355,6 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
   );
 }
 
-function RepositorySnapshot({ navigate }: { navigate: (to: string) => void }) {
-  const rows: { k: string; v: string; status: string; tone: 'green' | 'teal' | 'blue' }[] = [
-    { k: 'FINDINGS', v: String(repoStatus.findings), status: 'Indexed', tone: 'green' },
-    { k: 'OPEN QUESTIONS', v: String(repoStatus.openQuestions), status: 'Indexed', tone: 'green' },
-    { k: 'GRAPH EDGES', v: String(repoStatus.edges), status: 'Loaded', tone: 'teal' },
-    { k: 'EXPERIMENTS', v: String(repoStatus.experiments), status: 'Synced', tone: 'green' },
-    { k: 'PNG FIGURES', v: String(repoStatus.pngFigures), status: 'Available', tone: 'blue' },
-    { k: 'HTML ARTIFACTS', v: String(repoStatus.htmlArtifacts), status: 'Available', tone: 'blue' },
-  ];
-  return (
-    <Panel title="Repository Snapshot">
-      <div className="flex flex-col">
-        {rows.map((r) => (
-          <div key={r.k} className="flex items-center gap-2 border-b border-border-subtle py-1.5 last:border-0">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{r.k}</span>
-            <span className="ml-auto font-mono text-[13px] text-text">{r.v}</span>
-            <span className={cn('w-20 text-right font-mono text-[10px] uppercase', TONE_TEXT[r.tone])}>· {r.status}</span>
-          </div>
-        ))}
-        <div className="flex items-center justify-between border-b border-border-subtle py-1.5">
-          <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">LAST INDEXED</span>
-          <span className="font-mono text-[13px] text-text">{repoStatus.indexedAgo}</span>
-        </div>
-      </div>
-      <div className="mt-3">
-        <NavActionButton onClick={() => navigate('/status')}>Open repository index</NavActionButton>
-      </div>
-    </Panel>
-  );
-}
-
-function ActiveContext({ navigate }: { navigate: (to: string) => void }) {
-  return (
-    <Panel title="Active Context">
-      <div className="rounded-sm border border-border-subtle bg-surface-2 px-3">
-        <MetaRow label="Backend API">
-          <StatusBadge value="Connected" tone="success" />
-        </MetaRow>
-        <MetaRow label="Knowledge Index">
-          <StatusBadge value="Ready" tone="success" />
-        </MetaRow>
-        <MetaRow label="Graph Index">
-          <StatusBadge value="Ready" tone="success" />
-        </MetaRow>
-        <MetaRow label="Claude Relay">
-          <StatusBadge value="Connected" tone="info" />
-        </MetaRow>
-        <MetaRow label="Repository Watcher">
-          <StatusBadge value="Active" tone="info" />
-        </MetaRow>
-        <MetaRow label="Frontend Mode">
-          <span className="font-mono text-[12px] text-text-secondary">Read-only</span>
-        </MetaRow>
-        <MetaRow label="Update Mode">
-          <span className="font-mono text-[12px] text-text-secondary">Claude-mediated</span>
-        </MetaRow>
-      </div>
-      <p className="mt-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 text-[11px] leading-relaxed text-text-muted">
-        Knowledge CSV files are not edited directly from the frontend. Updates are confirmed through Claude-mediated workflows.
-      </p>
-      <div className="mt-2">
-        <NavActionButton onClick={() => navigate('/status')}>Open System Status</NavActionButton>
-      </div>
-    </Panel>
-  );
-}
-
 function QuickAction({
   icon: Icon,
   label,
@@ -491,44 +397,6 @@ function QuickActions({ navigate }: { navigate: (to: string) => void }) {
         <QuickAction icon={Share2} label="View Knowledge Graph" desc="Trace relationships and lineage" onClick={() => navigate('/graph')} />
         <QuickAction icon={Terminal} label="Start Claude Session" desc="Ask Claude with attached context" onClick={() => navigate('/chat')} claude />
       </div>
-    </Panel>
-  );
-}
-
-function ModuleStatus({ navigate }: { navigate: (to: string) => void }) {
-  return (
-    <Panel title="Module Status">
-      <table className="w-full border-collapse text-[13px]">
-        <thead>
-          <tr>
-            <th className="border-b border-border-strong px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-wider text-text-muted">Module</th>
-            <th className="border-b border-border-strong px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-wider text-text-muted">Status</th>
-            <th className="border-b border-border-strong px-2 py-1.5 text-left font-mono text-[10px] uppercase tracking-wider text-text-muted">Source</th>
-          </tr>
-        </thead>
-        <tbody>
-          {MODULES.map((m) => (
-            <tr
-              key={m.module}
-              onClick={() => navigate(m.to)}
-              className="cursor-pointer border-b border-border-subtle transition-colors last:border-0 hover:bg-surface-2"
-            >
-              <td className="px-2 py-1.5">
-                <div className="flex items-center gap-2 text-text">
-                  <m.icon className="size-3.5 text-text-muted" strokeWidth={1.75} />
-                  {m.module}
-                </div>
-              </td>
-              <td className="px-2 py-1.5">
-                <StatusBadge value={m.status} tone={m.tone === 'muted' ? undefined : m.tone} />
-              </td>
-              <td className="px-2 py-1.5">
-                <span className="font-mono text-[12px] text-text-secondary">{m.source}</span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </Panel>
   );
 }

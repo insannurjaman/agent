@@ -167,7 +167,7 @@ export function ChatStream({
         )}
         <button
           type="button"
-          className="flex size-7 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Session options"
         >
           <MoreHorizontal className="size-4" />
@@ -215,7 +215,7 @@ export function ChatStream({
       )}
 
       {/* Transcript */}
-      <div ref={bodyRef} className="min-h-0 flex-1 overflow-auto">
+      <div ref={bodyRef} role="log" aria-label="Chat conversation" aria-live="polite" className="min-h-0 flex-1 overflow-auto">
         {transcript.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-6 text-center">
             <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
@@ -247,7 +247,7 @@ export function ChatStream({
               return <ProposalGroup key={i} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
             })}
             {streaming && (
-              <div className="flex items-center gap-2 text-[13px] text-brand">
+              <div role="status" aria-live="polite" className="flex items-center gap-2 text-[13px] text-brand">
                 <Loader2 className="size-3.5 animate-spin" />
                 <span>Claude is working…</span>
               </div>
@@ -341,6 +341,19 @@ function Composer({
     setTimeout(() => textareaRef.current?.focus(), 0);
   };
 
+  // Escape closes More dropdown
+  useEffect(() => {
+    if (!moreOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [moreOpen]);
+
   return (
     <div className="shrink-0 border-t border-border-subtle bg-surface px-4 py-3 md:px-5">
       {/* Suggested prompts — 2 primary + More */}
@@ -359,16 +372,19 @@ function Composer({
           <button
             type="button"
             onClick={() => setMoreOpen((v) => !v)}
+            aria-expanded={moreOpen}
+            aria-haspopup="true"
             className="flex items-center gap-1 rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-muted hover:text-text"
           >
             <MoreHorizontal className="size-3.5" /> More
           </button>
           {moreOpen && (
-            <div className="absolute bottom-full z-20 mb-1 w-60 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
+            <div role="menu" className="absolute bottom-full z-20 mb-1 w-60 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
               {MORE_PROMPTS.map((a) => (
                 <button
                   key={a}
                   type="button"
+                  role="menuitem"
                   onClick={() => {
                     selectPrompt(a);
                     setMoreOpen(false);
@@ -385,8 +401,10 @@ function Composer({
 
       {/* Input */}
       <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-brand-border">
+        <label htmlFor="chat-composer" className="sr-only">Message Claude</label>
         <textarea
           ref={textareaRef}
+          id="chat-composer"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => {
@@ -397,6 +415,7 @@ function Composer({
           }}
           rows={2}
           placeholder="Message Claude…"
+          aria-describedby="composer-helper"
           className="w-full resize-none bg-transparent px-3 py-2.5 text-[14px] text-text outline-none placeholder:text-text-muted"
         />
         <div className="flex items-center gap-2 border-t border-border-subtle px-2 py-1.5">
@@ -407,7 +426,7 @@ function Composer({
           >
             <Paperclip className="size-3.5" /> Context{attachedCount > 0 ? ` · ${attachedCount}` : ''}
           </button>
-          <div className="hidden text-[10px] text-text-muted md:inline">
+          <div id="composer-helper" className="hidden text-[10px] text-text-muted md:inline">
             Enter to send · Shift+Enter for new line
           </div>
           <div className="ml-auto">

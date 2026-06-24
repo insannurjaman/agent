@@ -19,6 +19,7 @@ export function NavRail() {
 
   return (
     <nav
+      aria-label="Main navigation"
       className={cn(
         'flex h-full shrink-0 flex-col border-r border-border-subtle bg-surface py-2 transition-[width] duration-200 ease-out',
         expanded ? 'w-60 px-2' : 'w-14 px-2',

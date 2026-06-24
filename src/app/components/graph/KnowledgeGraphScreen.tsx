@@ -206,6 +206,7 @@ export function KnowledgeGraphScreen() {
                 value={nodeSearch}
                 onChange={(e) => setNodeSearch(e.target.value)}
                 placeholder="Search node (F-/Q-/slug)…"
+                aria-label="Search graph node"
                 className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
               />
             </div>
@@ -253,6 +254,7 @@ export function KnowledgeGraphScreen() {
                   key={d}
                   type="button"
                   onClick={() => setDepth(d)}
+                  aria-pressed={depth === d}
                   className={cn(
                     'rounded-sm px-2 py-0.5 font-mono text-[12px]',
                     depth === d ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
@@ -342,7 +344,7 @@ export function KnowledgeGraphScreen() {
               hint="Search a node or pick a different filter set. Too many edges? Narrow by edge type."
             />
           ) : (
-            <svg className="absolute inset-0 size-full">
+            <svg className="absolute inset-0 size-full" role="img" aria-label="Knowledge graph visualization">
               <defs>
                 {edgeTypes.map((t) => (
                   <marker
@@ -508,6 +510,7 @@ function ModeBtn({
       type="button"
       onClick={onClick}
       title={title}
+      aria-pressed={active}
       className={cn(
         'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
         active ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
@@ -555,6 +558,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
         'flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[11px] transition-colors',
         active

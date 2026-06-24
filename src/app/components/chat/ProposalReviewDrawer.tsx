@@ -55,7 +55,7 @@ export function ProposalReviewDrawer({
         <h2 className="text-text" style={{ fontSize: '14px' }}>
           Review proposed updates
         </h2>
-        <button type="button" onClick={onClose} className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text" aria-label="Cancel review">
+        <button type="button" onClick={onClose} className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text" aria-label="Cancel review">
           <X className="size-4" />
         </button>
       </div>

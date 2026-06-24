@@ -201,9 +201,8 @@ function ChainCard({
             <AlertTriangle className="size-3.5" />
             Historical record. Do not use as latest conclusion.
           </span>
-          <span
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onGoLatest();
@@ -211,7 +210,7 @@ function ChainCard({
             className="inline-flex items-center gap-1 font-mono text-[11px] text-brand hover:underline"
           >
             Go to Latest <ArrowUpRight className="size-3" />
-          </span>
+          </button>
         </div>
       )}
     </button>
@@ -271,7 +270,7 @@ function LineageInspector({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Close"
         >
           <X className="size-4" />
