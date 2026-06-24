@@ -1,9 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ChevronRight, Search, MoreHorizontal, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { Search, X, Loader2 } from 'lucide-react';
 import { findings as allFindings, openQuestions as allQuestions } from '../../data';
 import type { Finding, OpenQuestion } from '../../data';
-import { getLatestVersion } from '../../data';
 import { ScreenHeader } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
@@ -11,18 +10,17 @@ import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { EmptyState } from '../common/EmptyState';
 import { FilterSelect } from '../common/FilterSelect';
 import { SegmentedControl } from '../common/SegmentedControl';
+import { SummaryMetrics } from '../common/SummaryMetrics';
+import { FilterChips } from '../common/FilterChips';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { FindingInspector, QuestionInspector } from './Inspectors';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu';
+import { FindingRow } from './FindingRow';
+import { QuestionRow } from './QuestionRow';
 import { cn } from '../ui/utils';
 
 type Tab = 'all' | 'findings' | 'questions';
 type Sort = 'date' | 'confidence' | 'priority';
+type Density = 'comfortable' | 'compact';
 
 const CONFIDENCE_RANK: Record<string, number> = {
   high: 5,
@@ -32,24 +30,6 @@ const CONFIDENCE_RANK: Record<string, number> = {
   superseded: 1,
 };
 const PRIORITY_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };
-
-function FacetCells({ facets }: { facets: string[] }) {
-  const shown = facets.slice(0, 2);
-  const extra = facets.length - shown.length;
-  return (
-    <div className="flex flex-wrap items-center gap-1">
-      {shown.map((f) => (
-        <span
-          key={f}
-          className="rounded-sm border border-border-subtle bg-surface-2 px-1 py-0.5 font-mono text-[10px] text-text-secondary"
-        >
-          {f}
-        </span>
-      ))}
-      {extra > 0 && <span className="font-mono text-[10px] text-text-muted">+{extra}</span>}
-    </div>
-  );
-}
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -65,6 +45,94 @@ function Th({ children, className }: { children: React.ReactNode; className?: st
   );
 }
 
+function SkeletonRows({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <tr key={i} className="h-[42px] border-b border-border-subtle animate-pulse">
+          <td className="px-1 text-center">
+            <div className="mx-auto size-4 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-3 w-16 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-3 w-64 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-4 w-20 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-4 w-24 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-4 w-32 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-4 w-20 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-3 py-2">
+            <div className="h-3 w-20 rounded-sm bg-surface-2" />
+          </td>
+          <td className="px-1">
+            <div className="mx-auto size-8 rounded-sm bg-surface-2" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
+function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
+  const superseded = f.confidence === 'superseded' || !!f.supersededBy;
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        'w-full rounded-sm border border-border-subtle bg-surface px-3 py-2.5 text-left transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        superseded && 'opacity-60',
+      )}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-[12px] text-text">{f.id}</span>
+        <span className="font-mono text-[10px] text-text-muted">{f.date}</span>
+      </div>
+      <div className="mt-1 text-[14px] leading-snug text-text line-clamp-2">{f.title}</div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        {f.confidence === 'superseded' ? (
+          <StatusBadge value="superseded" />
+        ) : (
+          <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
+        )}
+        <StatusBadge value={f.category} showDot={false} />
+        {f.actionable && <StatusBadge value="action required" tone="brand" />}
+      </div>
+    </button>
+  );
+}
+
+function QuestionCard({ q, onSelect }: { q: OpenQuestion; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="w-full rounded-sm border border-border-subtle bg-surface px-3 py-2.5 text-left transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-mono text-[12px] text-amber">{q.id}</span>
+        <span className="font-mono text-[10px] text-text-muted">{q.raisedDate}</span>
+      </div>
+      <div className="mt-1 text-[14px] leading-snug text-text line-clamp-2">{q.title}</div>
+      <div className="mt-2 flex flex-wrap items-center gap-1.5">
+        <StatusBadge value={q.status} />
+        <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />
+        <span className="font-mono text-[10px] text-text-muted">{q.area}</span>
+      </div>
+    </button>
+  );
+}
+
 export function FindingsScreen() {
   const [params, setParams] = useSearchParams();
   const [tab, setTab] = useState<Tab>('all');
@@ -75,8 +143,19 @@ export function FindingsScreen() {
   const [actionableOnly, setActionableOnly] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<{ kind: 'f' | 'q'; id: string } | null>(null);
+  const [density, setDensity] = useState<Density>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('findings-density') as Density) || 'compact';
+    }
+    return 'compact';
+  });
 
-  // Deep-link support: ?tab=, ?focus=
+  // Persist density to localStorage
+  useEffect(() => {
+    localStorage.setItem('findings-density', density);
+  }, [density]);
+
+  // Deep-link support: ?tab=, ?focus=, ?actionable=, ?conf=, ?status=, ?priority=
   useEffect(() => {
     const t = params.get('tab');
     if (t === 'questions' || t === 'findings' || t === 'all') setTab(t);
@@ -85,6 +164,14 @@ export function FindingsScreen() {
       if (focus.startsWith('F-')) setSelected({ kind: 'f', id: focus });
       else if (focus.startsWith('Q-')) setSelected({ kind: 'q', id: focus });
     }
+    const actionable = params.get('actionable');
+    if (actionable === 'true') setActionableOnly(true);
+    const conf = params.get('conf');
+    if (conf) setConfFilter(conf);
+    const status = params.get('status');
+    if (status) setStatusFilter(status);
+    const sortParam = params.get('sort');
+    if (sortParam === 'date' || sortParam === 'confidence' || sortParam === 'priority') setSort(sortParam);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -138,24 +225,40 @@ export function FindingsScreen() {
   return (
     <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
+        {/* Page Header */}
         <ScreenHeader
           title="Findings & Open Questions"
           subtitle="Browse accumulated findings and unresolved issues from knowledge/*.csv."
         />
 
+        {/* Summary Metrics */}
+        <SummaryMetrics findings={allFindings} questions={allQuestions} />
+
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
-          <div className="flex h-11 w-64 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 focus-within:border-brand-border">
+          {/* Search */}
+          <div className="flex h-11 min-w-[320px] items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 focus-within:border-brand-border transition-colors">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search id, title, summary…"
-              aria-label="Search findings by ID, title, or summary"
+              placeholder="Search IDs, titles, summaries, facets, or evidence…"
+              aria-label="Search findings by ID, title, summary, facets, or evidence"
               className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
             />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text hover:bg-surface-hover transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
           </div>
 
+          {/* Segmented Control */}
           <SegmentedControl
             segments={tabs.map((t) => ({ id: t.id, label: t.label, count: t.count }))}
             value={tab}
@@ -163,6 +266,7 @@ export function FindingsScreen() {
             className="w-auto"
           />
 
+          {/* Right side filters */}
           <div className="ml-auto flex items-center gap-2">
             {tab !== 'questions' && (
               <FilterSelect
@@ -186,6 +290,8 @@ export function FindingsScreen() {
               onChange={(v) => setSort(v as Sort)}
               options={['date', 'confidence', 'priority']}
             />
+
+            {/* Actionable toggle */}
             <button
               type="button"
               role="checkbox"
@@ -193,23 +299,45 @@ export function FindingsScreen() {
               aria-label="Show actionable items only"
               onClick={() => setActionableOnly((v) => !v)}
               className={cn(
-                'flex h-11 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors',
+                'flex h-11 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors cursor-pointer',
                 'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                'cursor-pointer',
                 actionableOnly
                   ? 'border-brand-border bg-brand-muted text-brand'
                   : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
               )}
             >
               {actionableOnly ? (
-                <CheckCircle2 className="size-3.5 shrink-0" />
+                <span className="flex size-3.5 items-center justify-center rounded-sm bg-brand text-white">
+                  <svg className="size-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="2,6 5,9 10,3" />
+                  </svg>
+                </span>
               ) : (
                 <span className="size-3.5 shrink-0 rounded-sm border border-border-strong" />
               )}
               Actionable
             </button>
+
+            {/* Density toggle */}
+            <button
+              type="button"
+              role="radio"
+              aria-label={`Table density: ${density}`}
+              onClick={() => setDensity(density === 'comfortable' ? 'compact' : 'comfortable')}
+              className={cn(
+                'flex h-11 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 font-mono text-[11px] text-text-muted transition-colors cursor-pointer',
+                'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'hover:text-text-secondary',
+              )}
+              title={density === 'comfortable' ? 'Switch to compact density' : 'Switch to comfortable density'}
+            >
+              {density === 'comfortable' ? 'Comfortable' : 'Compact'}
+            </button>
           </div>
         </div>
+
+        {/* Active Filter Chips */}
+        <FilterChips />
 
         {/* Onboarding helper */}
         <div className="hidden border-b border-border-subtle bg-surface px-6 py-1.5 lg:block">
@@ -228,128 +356,140 @@ export function FindingsScreen() {
           {totalRows === 0 ? (
             <EmptyState
               icon={Search}
-              title={query ? 'No results match filters' : 'No findings yet'}
+              title={query ? 'No matching findings or questions' : 'No findings yet'}
               hint={
                 query
                   ? 'Adjust search terms or clear filters to view all findings.'
                   : 'Findings are registered through Claude-mediated knowledge workflows.'
               }
-            />
+            >
+              {(query || actionableOnly || confFilter !== 'all' || statusFilter !== 'all') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery('');
+                    setActionableOnly(false);
+                    setConfFilter('all');
+                    setStatusFilter('all');
+                  }}
+                  className="mt-2 text-[12px] text-brand hover:underline"
+                >
+                  Clear search and filters
+                </button>
+              )}
+            </EmptyState>
           ) : (
             <>
-            {/* Card list for mobile + tablet portrait (< lg) */}
-            <div className="flex flex-col gap-2 p-3 lg:hidden">
-              {visibleFindings.map((f) => (
-                <FindingCard key={f.id} f={f} onSelect={() => setSelected({ kind: 'f', id: f.id })} />
-              ))}
-              {visibleQuestions.map((q) => (
-                <QuestionCard key={q.id} q={q} onSelect={() => setSelected({ kind: 'q', id: q.id })} />
-              ))}
-            </div>
+              {/* Card list for mobile + tablet portrait (< lg) */}
+              <div className="flex flex-col gap-2 p-3 lg:hidden">
+                {visibleFindings.map((f) => (
+                  <FindingCard key={f.id} f={f} onSelect={() => setSelected({ kind: 'f', id: f.id })} />
+                ))}
+                {visibleQuestions.map((q) => (
+                  <QuestionCard key={q.id} q={q} onSelect={() => setSelected({ kind: 'q', id: q.id })} />
+                ))}
+              </div>
 
-            {/* Dense table for lg+ */}
-            <table className="hidden w-full border-collapse text-[13px] lg:table" aria-label="Findings and open questions">
-              <caption className="sr-only">
-                {totalRows} result{totalRows !== 1 ? 's' : ''} found
-              </caption>
-              {/* FINDINGS */}
-              {visibleFindings.length > 0 && (
-                <>
-                  {tab === 'all' && (
+              {/* Dense table for lg+ */}
+              <table className="hidden w-full border-collapse text-[13px] lg:table" aria-label="Findings and open questions">
+                <caption className="sr-only">
+                  {totalRows} result{totalRows !== 1 ? 's' : ''} found
+                </caption>
+                {/* FINDINGS */}
+                {visibleFindings.length > 0 && (
+                  <>
+                    {tab === 'all' && (
+                      <thead className="sticky top-0 z-10 bg-surface">
+                        <tr>
+                          <Th colSpan={9} className="py-2">
+                            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
+                              Findings · {visibleFindings.length}
+                            </span>
+                          </Th>
+                        </tr>
+                      </thead>
+                    )}
                     <thead className="sticky top-0 z-10 bg-surface">
                       <tr>
-                        <Th colSpan={11} className="py-2">
-                          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
-                            Findings · {visibleFindings.length}
-                          </span>
-                        </Th>
+                        <Th className="w-10" />
+                        <Th className="w-24">ID</Th>
+                        <Th className="min-w-[320px]">Title</Th>
+                        <Th>Category</Th>
+                        <Th>Confidence</Th>
+                        <Th>Facets</Th>
+                        <Th>Action</Th>
+                        <Th>Date</Th>
+                        <Th className="w-10" />
                       </tr>
                     </thead>
-                  )}
-                  <thead className="sticky top-0 z-10 bg-surface">
-                    <tr>
-                      <Th className="w-8" />
-                      <Th className="w-24">ID</Th>
-                      <Th className="min-w-[280px]">Title</Th>
-                      <Th>Category</Th>
-                      <Th>Confidence</Th>
-                      <Th>Facets</Th>
-                      <Th>Actionable</Th>
-                      <Th>Evidence</Th>
-                      <Th>Supersedes</Th>
-                      <Th>Date</Th>
-                      <Th className="w-8" />
-                    </tr>
-                  </thead>
+                    <tbody>
+                      {visibleFindings.map((f) => (
+                        <FindingRow
+                          key={f.id}
+                          f={f}
+                          expanded={expanded.has(f.id)}
+                          selected={selected?.kind === 'f' && selected.id === f.id}
+                          density={density}
+                          onToggle={() => toggleExpand(f.id)}
+                          onSelect={() => setSelected({ kind: 'f', id: f.id })}
+                          onGoLatest={(id) => setSelected({ kind: 'f', id })}
+                        />
+                      ))}
+                    </tbody>
+                  </>
+                )}
+
+                {/* Separator between groups in All view */}
+                {tab === 'all' && visibleFindings.length > 0 && visibleQuestions.length > 0 && (
                   <tbody>
-                    {visibleFindings.map((f) => (
-                      <FindingRow
-                        key={f.id}
-                        f={f}
-                        expanded={expanded.has(f.id)}
-                        selected={selected?.kind === 'f' && selected.id === f.id}
-                        onToggle={() => toggleExpand(f.id)}
-                        onSelect={() => setSelected({ kind: 'f', id: f.id })}
-                        onGoLatest={(id) => setSelected({ kind: 'f', id })}
-                      />
-                    ))}
+                    <tr>
+                      <td colSpan={9} className="border-b-2 border-border-strong" />
+                    </tr>
                   </tbody>
-                </>
-              )}
+                )}
 
-              {/* Separator between groups in All view */}
-              {tab === 'all' && visibleFindings.length > 0 && visibleQuestions.length > 0 && (
-                <tbody>
-                  <tr>
-                    <td colSpan={11} className="border-b-2 border-border-strong" />
-                  </tr>
-                </tbody>
-              )}
-
-              {/* OPEN QUESTIONS */}
-              {visibleQuestions.length > 0 && (
-                <>
-                  {tab === 'all' && (
+                {/* OPEN QUESTIONS */}
+                {visibleQuestions.length > 0 && (
+                  <>
+                    {tab === 'all' && (
+                      <thead className="sticky top-0 z-10 bg-surface">
+                        <tr>
+                          <Th colSpan={9} className="py-2">
+                            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
+                              Open Questions · {visibleQuestions.length}
+                            </span>
+                          </Th>
+                        </tr>
+                      </thead>
+                    )}
                     <thead className="sticky top-0 z-10 bg-surface">
                       <tr>
-                        <Th colSpan={11} className="py-2">
-                          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
-                            Open Questions · {visibleQuestions.length}
-                          </span>
-                        </Th>
+                        <Th className="w-10" />
+                        <Th className="w-24">ID</Th>
+                        <Th className="min-w-[320px]">Question</Th>
+                        <Th>Status</Th>
+                        <Th>Priority</Th>
+                        <Th>Area</Th>
+                        <Th>Date</Th>
+                        <Th className="w-10" />
                       </tr>
                     </thead>
-                  )}
-                  <thead className="sticky top-0 z-10 bg-surface">
-                    <tr>
-                      <Th className="w-8" />
-                      <Th className="w-24">ID</Th>
-                      <Th className="min-w-[280px]">Title</Th>
-                      <Th>Status</Th>
-                      <Th>Priority</Th>
-                      <Th>Area</Th>
-                      <Th>Facets</Th>
-                      <Th>Raised By</Th>
-                      <Th>Related</Th>
-                      <Th>Raised Date</Th>
-                      <Th className="w-8" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleQuestions.map((q) => (
-                      <QuestionRow
-                        key={q.id}
-                        q={q}
-                        expanded={expanded.has(q.id)}
-                        selected={selected?.kind === 'q' && selected.id === q.id}
-                        onToggle={() => toggleExpand(q.id)}
-                        onSelect={() => setSelected({ kind: 'q', id: q.id })}
-                      />
-                    ))}
-                  </tbody>
-                </>
-              )}
-            </table>
+                    <tbody>
+                      {visibleQuestions.map((q) => (
+                        <QuestionRow
+                          key={q.id}
+                          q={q}
+                          expanded={expanded.has(q.id)}
+                          selected={selected?.kind === 'q' && selected.id === q.id}
+                          density={density}
+                          onToggle={() => toggleExpand(q.id)}
+                          onSelect={() => setSelected({ kind: 'q', id: q.id })}
+                        />
+                      ))}
+                    </tbody>
+                  </>
+                )}
+              </table>
             </>
           )}
         </div>
@@ -362,278 +502,5 @@ export function FindingsScreen() {
         </ResponsiveInspectorOverlay>
       )}
     </div>
-  );
-}
-
-function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
-  const superseded = f.confidence === 'superseded' || !!f.supersededBy;
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        'w-full rounded-sm border border-border-subtle bg-surface px-3 py-2.5 text-left transition-colors hover:border-border-strong',
-        superseded && 'opacity-60',
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[12px] text-text">{f.id}</span>
-        <span className="font-mono text-[10px] text-text-muted">{f.date}</span>
-      </div>
-      <div className="mt-1 text-[14px] leading-snug text-text">{f.title}</div>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        {f.confidence === 'superseded' ? (
-          <StatusBadge value="superseded" />
-        ) : (
-          <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
-        )}
-        <StatusBadge value={f.category} showDot={false} />
-        {f.actionable && <StatusBadge value="actionable" tone="success" />}
-      </div>
-    </button>
-  );
-}
-
-function QuestionCard({ q, onSelect }: { q: OpenQuestion; onSelect: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className="w-full rounded-sm border border-border-subtle bg-surface px-3 py-2.5 text-left transition-colors hover:border-border-strong"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[12px] text-amber">{q.id}</span>
-        <span className="font-mono text-[10px] text-text-muted">{q.raisedDate}</span>
-      </div>
-      <div className="mt-1 text-[14px] leading-snug text-text">{q.title}</div>
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <StatusBadge value={q.status} />
-        <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />
-        <span className="font-mono text-[10px] text-text-muted">{q.area}</span>
-      </div>
-    </button>
-  );
-}
-
-function FindingRow({
-  f,
-  expanded,
-  selected,
-  onToggle,
-  onSelect,
-  onGoLatest,
-}: {
-  f: Finding;
-  expanded: boolean;
-  selected: boolean;
-  onToggle: () => void;
-  onSelect: () => void;
-  onGoLatest: (id: string) => void;
-}) {
-  const isSuperseded = f.confidence === 'superseded' || !!f.supersededBy;
-  return (
-    <>
-      <tr
-        onClick={onSelect}
-        className={cn(
-          'cursor-pointer border-b border-border-subtle transition-colors hover:bg-surface-2',
-          selected && 'bg-brand-muted',
-          isSuperseded && 'opacity-55',
-        )}
-      >
-        <td className="px-1 text-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle();
-            }}
-            aria-expanded={expanded}
-            aria-label={expanded ? 'Collapse details' : 'Expand details'}
-            className="text-text-muted hover:text-text"
-          >
-            <ChevronRight className={cn('size-4 transition-transform', expanded && 'rotate-90')} />
-          </button>
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-text">{f.id}</span>
-        </td>
-        <td className="px-3 py-2 text-text">
-          <div className="flex items-center gap-2">
-            <span className="line-clamp-1">{f.title}</span>
-            {isSuperseded && <StatusBadge value="superseded" showDot={false} />}
-          </div>
-        </td>
-        <td className="px-3 py-2">
-          <StatusBadge value={f.category} showDot={false} />
-        </td>
-        <td className="px-3 py-2">
-          {f.confidence === 'superseded' ? (
-            <StatusBadge value="superseded" />
-          ) : (
-            <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
-          )}
-        </td>
-        <td className="px-3 py-2">
-          <FacetCells facets={f.facets} />
-        </td>
-        <td className="px-3 py-2">
-          {f.actionable ? (
-            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-text-secondary">
-              <CheckCircle2 className="size-3 text-success" /> Yes
-            </span>
-          ) : (
-            <span className="font-mono text-[11px] text-text-muted">—</span>
-          )}
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-secondary">{f.evidence.replace('experiments/', '')}</span>
-        </td>
-        <td className="px-3 py-2">
-          {f.supersedes ? (
-            <span className="font-mono text-[12px] text-text-muted">{f.supersedes}</span>
-          ) : (
-            <span className="text-text-muted">—</span>
-          )}
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-muted">{f.date}</span>
-        </td>
-        <td className="px-1">
-          <RowMenu id={f.id} />
-        </td>
-      </tr>
-      {expanded && (
-        <tr className={cn('border-b border-border-subtle bg-surface', isSuperseded && 'opacity-70')}>
-          <td />
-          <td colSpan={10} className="px-3 pb-3 pt-1">
-            <p className="max-w-3xl text-[13px] leading-relaxed text-text-secondary">{f.summary}</p>
-            {isSuperseded && f.supersededBy && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onGoLatest(getLatestVersion(f.id));
-                }}
-                className="mt-2 inline-flex items-center gap-1 font-mono text-[12px] text-brand hover:underline"
-              >
-                Go to Latest Version {getLatestVersion(f.id)} <ArrowUpRight className="size-3" />
-              </button>
-            )}
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
-
-function QuestionRow({
-  q,
-  expanded,
-  selected,
-  onToggle,
-  onSelect,
-}: {
-  q: OpenQuestion;
-  expanded: boolean;
-  selected: boolean;
-  onToggle: () => void;
-  onSelect: () => void;
-}) {
-  return (
-    <>
-      <tr
-        onClick={onSelect}
-        className={cn(
-          'cursor-pointer border-b border-border-subtle transition-colors hover:bg-surface-2',
-          selected && 'bg-brand-muted',
-        )}
-      >
-        <td className="px-1 text-center">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle();
-            }}
-            aria-expanded={expanded}
-            aria-label={expanded ? 'Collapse details' : 'Expand details'}
-            className="text-text-muted hover:text-text"
-          >
-            <ChevronRight className={cn('size-4 transition-transform', expanded && 'rotate-90')} />
-          </button>
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-amber">{q.id}</span>
-        </td>
-        <td className="px-3 py-2 text-text">
-          <span className="line-clamp-1">{q.title}</span>
-        </td>
-        <td className="px-3 py-2">
-          <StatusBadge value={q.status} />
-        </td>
-        <td className="px-3 py-2">
-          <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-secondary">{q.area}</span>
-        </td>
-        <td className="px-3 py-2">
-          <FacetCells facets={q.facets} />
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-muted">{q.raisedBy}</span>
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-secondary">{q.related.length} linked</span>
-        </td>
-        <td className="px-3 py-2">
-          <span className="font-mono text-[12px] text-text-muted">{q.raisedDate}</span>
-        </td>
-        <td className="px-1">
-          <RowMenu id={q.id} isQuestion />
-        </td>
-      </tr>
-      {expanded && (
-        <tr className="border-b border-border-subtle bg-surface">
-          <td />
-          <td colSpan={10} className="px-3 pb-3 pt-1">
-            <p className="max-w-3xl text-[13px] leading-relaxed text-text-secondary">
-              {q.detail.split('| Date:')[0].trim()}
-            </p>
-          </td>
-        </tr>
-      )}
-    </>
-  );
-}
-
-function RowMenu({ id, isQuestion }: { id: string; isQuestion?: boolean }) {
-  const navigate = useNavigate();
-  const copyId = useCallback(async () => {
-    try { await navigator.clipboard.writeText(id); } catch { /* ok */ }
-  }, [id]);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          onClick={(e) => e.stopPropagation()}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Row actions"
-        >
-          <MoreHorizontal className="size-4" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="font-mono text-[12px]">
-        <DropdownMenuItem onClick={() => navigate(`/graph?focus=${id}`)}>View in Graph</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate(`/lineage?focus=${id}`)}>View Lineage</DropdownMenuItem>
-        <DropdownMenuItem onClick={copyId}>Copy ID</DropdownMenuItem>
-        <DropdownMenuItem className="text-brand" onClick={() => navigate(`/chat?ctx=${id}`)}>
-          {isQuestion ? 'Ask Claude to resolve' : 'Ask Claude about this'}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

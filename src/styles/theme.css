@@ -202,6 +202,7 @@
   --radius: 0.25rem;
 
   /* Action tokens — ghost canonical */
+  */
   --action-brand-bg: rgba(255, 62, 1, 0.1);
   --action-brand-fg: #ff3e01;
   --action-brand-hover: rgba(255, 62, 1, 0.16);
@@ -210,6 +211,34 @@
   --tap-sm: 36px;
   --tap-md: 40px;
   --tap-lg: 48px;
+
+  /* Table density */
+  --density-comfortable: 48px;
+  --density-compact: 42px;
+
+  /* Confidence percentages (derived mapping for prototype) */
+  --confidence-high-pct: 92%;
+  --confidence-medium-high-pct: 78%;
+  --confidence-medium-pct: 62%;
+  --confidence-low-pct: 40%;
+
+  /* Actionable workflow tones */
+  --action-required-text: var(--brand-primary);
+  --action-required-border: var(--brand-primary-border);
+  --action-required-bg: var(--brand-primary-muted);
+  --action-required-dot: var(--brand-primary);
+  --review-recommended-text: var(--warning);
+  --review-recommended-border: var(--warning);
+  --review-recommended-bg: rgba(243, 201, 105, 0.1);
+  --review-recommended-dot: var(--warning);
+  --no-action-text: var(--text-muted);
+  --no-action-border: var(--border-strong);
+  --no-action-bg: var(--surface-2);
+  --no-action-dot: var(--text-muted);
+  --blocked-text: var(--error);
+  --blocked-border: var(--error);
+  --blocked-bg: rgba(255, 107, 107, 0.1);
+  --blocked-dot: var(--error);
 
   /* Semantic spacing */
   --space-1: 4px;
@@ -271,6 +300,28 @@
   --color-tap-sm: var(--tap-sm);
   --color-tap-md: var(--tap-md);
   --color-tap-lg: var(--tap-lg);
+  --color-density-comfortable: var(--density-comfortable);
+  --color-density-compact: var(--density-compact);
+  --color-confidence-high-pct: var(--confidence-high-pct);
+  --color-confidence-medium-high-pct: var(--confidence-medium-high-pct);
+  --color-confidence-medium-pct: var(--confidence-medium-pct);
+  --color-confidence-low-pct: var(--confidence-low-pct);
+  --color-action-required-text: var(--action-required-text);
+  --color-action-required-border: var(--action-required-border);
+  --color-action-required-bg: var(--action-required-bg);
+  --color-action-required-dot: var(--action-required-dot);
+  --color-review-recommended-text: var(--review-recommended-text);
+  --color-review-recommended-border: var(--review-recommended-border);
+  --color-review-recommended-bg: var(--review-recommended-bg);
+  --color-review-recommended-dot: var(--review-recommended-dot);
+  --color-no-action-text: var(--no-action-text);
+  --color-no-action-border: var(--no-action-border);
+  --color-no-action-bg: var(--no-action-bg);
+  --color-no-action-dot: var(--no-action-dot);
+  --color-blocked-text: var(--blocked-text);
+  --color-blocked-border: var(--blocked-border);
+  --color-blocked-bg: var(--blocked-bg);
+  --color-blocked-dot: var(--blocked-dot);
 }
 
 @theme inline {

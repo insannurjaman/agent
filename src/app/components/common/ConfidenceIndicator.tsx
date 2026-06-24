@@ -1,27 +1,39 @@
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../ui/tooltip';
 import { cn } from '../ui/utils';
 
 export type ConfidenceLevel = 'high' | 'medium-high' | 'medium' | 'low';
 
-const CONFIDENCE_STYLE: Record<ConfidenceLevel, { color: string; emptyColor: string; label: string; bars: number }> = {
-  high: { color: 'bg-confidence-high', emptyColor: 'bg-border-subtle', label: 'HIGH', bars: 4 },
-  'medium-high': { color: 'bg-confidence-medium-high', emptyColor: 'bg-border-subtle', label: 'MED-HIGH', bars: 3 },
-  medium: { color: 'bg-confidence-medium', emptyColor: 'bg-border-subtle', label: 'MEDIUM', bars: 2 },
-  low: { color: 'bg-confidence-low', emptyColor: 'bg-border-subtle', label: 'LOW', bars: 1 },
+const CONFIDENCE_STYLE: Record<ConfidenceLevel, { color: string; emptyColor: string; label: string; bars: number; percent: string }> = {
+  high: { color: 'bg-confidence-high', emptyColor: 'bg-border-subtle', label: 'HIGH', bars: 4, percent: '92%' },
+  'medium-high': { color: 'bg-confidence-medium-high', emptyColor: 'bg-border-subtle', label: 'MED-HIGH', bars: 3, percent: '78%' },
+  medium: { color: 'bg-confidence-medium', emptyColor: 'bg-border-subtle', label: 'MEDIUM', bars: 2, percent: '62%' },
+  low: { color: 'bg-confidence-low', emptyColor: 'bg-border-subtle', label: 'LOW', bars: 1, percent: '40%' },
+};
+
+const CONFIDENCE_EXPLANATIONS: Record<ConfidenceLevel, string> = {
+  high: 'Strong evidence from multiple validated experiments. High reliability for decision-making.',
+  'medium-high': 'Good evidence with minor limitations. Reliable for most operational decisions.',
+  medium: 'Moderate evidence with some gaps. Use with caution; consider additional validation.',
+  low: 'Limited or preliminary evidence. Not recommended for critical decisions without further investigation.',
 };
 
 export function ConfidenceIndicator({
   level,
+  showPercent = true,
+  showTooltip = true,
   className,
 }: {
   level: ConfidenceLevel;
+  showPercent?: boolean;
+  showTooltip?: boolean;
   className?: string;
 }) {
   const s = CONFIDENCE_STYLE[level];
 
-  return (
+  const indicator = (
     <span
       className={cn('inline-flex items-center gap-1.5', className)}
-      aria-label={`Confidence: ${level}`}
+      aria-label={`Confidence: ${level}${showPercent ? ` ${s.percent}` : ''}`}
     >
       <span className="inline-flex gap-0.5" aria-hidden="true">
         {Array.from({ length: 4 }, (_, i) => (
@@ -36,7 +48,24 @@ export function ConfidenceIndicator({
       </span>
       <span className="font-mono text-[11px] font-medium text-text-secondary">
         {s.label}
+        {showPercent && <span className="ml-1 text-text-muted">({s.percent})</span>}
       </span>
     </span>
+  );
+
+  if (!showTooltip) return indicator;
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          {indicator}
+        </TooltipTrigger>
+        <TooltipContent side="top" align="center" className="max-w-xs">
+          <div className="font-mono text-[11px] font-medium text-text">{s.label} Confidence ({s.percent})</div>
+          <div className="mt-1 text-[12px] text-text-secondary">{CONFIDENCE_EXPLANATIONS[level]}</div>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
