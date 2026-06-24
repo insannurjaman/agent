@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { X, ShieldCheck } from 'lucide-react';
 import type { FindingProposal, QuestionProposal } from '../../data/chat';
 import { StatusBadge } from '../common/StatusBadge';
+import { IconButton } from '../common/IconButton';
 import { MonoId } from '../common/primitives';
 import { cn } from '../ui/utils';
 
@@ -78,9 +79,7 @@ export function ProposalReviewDrawer({
         <h2 className="text-text" style={{ fontSize: '14px' }}>
           Review proposed updates
         </h2>
-        <button type="button" onClick={onClose} className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text" aria-label="Cancel review">
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Cancel review" onClick={onClose} />
       </div>
 
       {/* Tabs */}

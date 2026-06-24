@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronDown, Plus } from 'lucide-react';
+import { IconButton } from '../common/IconButton';
 import { cn } from '../ui/utils';
 
 const MODES = [
@@ -102,14 +103,7 @@ export function NewChatModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
           <h2 id="new-chat-title" className="text-[15px] font-semibold text-text">New chat</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-            aria-label="Close"
-          >
-            <X className="size-5" />
-          </button>
+          <IconButton icon={X} label="Close" onClick={onClose} />
         </div>
 
         {/* Body */}

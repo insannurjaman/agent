@@ -15,6 +15,7 @@ import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { SegmentedControl } from '../common/SegmentedControl';
 import { FacetTag } from '../common/FacetTag';
+import { IconButton } from '../common/IconButton';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { Drawer } from '../responsive/Drawer';
 import { cn } from '../ui/utils';
@@ -461,14 +462,7 @@ function ResultInspector({
             {result.id.replace('experiments/', '')}
           </MonoId>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close"
-        >
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Close" onClick={onClose} />
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
         <h3 className="text-[15px] leading-snug text-text">{result.title}</h3>

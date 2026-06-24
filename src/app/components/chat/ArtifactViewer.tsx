@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X, ImageIcon, FileText, Code, File, Clock, Copy, ChevronRight, ExternalLink } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { type Artifact, type TimelineItem } from '../../data/chat';
+import { IconButton } from '../common/IconButton';
 import { cn } from '../ui/utils';
 
 type ArtifactType = Artifact['type'];
@@ -86,14 +87,7 @@ export function ArtifactViewer({
         <div className="min-w-0 flex-1">
           <div className="truncate text-[13px] font-medium text-text">Artifact Viewer</div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close artifact viewer"
-        >
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Close artifact viewer" onClick={onClose} className="shrink-0" />
       </div>
 
       {/* Tabs */}

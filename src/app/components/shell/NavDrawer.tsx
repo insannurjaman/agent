@@ -4,6 +4,7 @@ import { X, Plus } from 'lucide-react';
 import { navItems } from './navItems';
 import { sessions, type ChatSession, type SessionStatus } from '../../data/chat';
 import { Drawer } from '../responsive/Drawer';
+import { IconButton } from '../common/IconButton';
 import { cn } from '../ui/utils';
 import type { DrawerTab } from './NavContext';
 
@@ -73,14 +74,7 @@ export function NavDrawer({
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <span className="text-[13px] font-semibold text-text">Quick Agent System</span>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text md:size-9"
-          aria-label="Close navigation"
-        >
-          <X className="size-5" />
-        </button>
+        <IconButton icon={X} label="Close navigation" onClick={onClose} className="md:hidden" />
       </div>
 
       {/* Tabs — sticky below header */}

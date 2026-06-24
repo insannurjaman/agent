@@ -13,6 +13,7 @@ import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
+import { IconButton } from '../common/IconButton';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 
@@ -270,14 +271,7 @@ function LineageInspector({
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">FINDING</span>
           <MonoId className="text-brand">{finding.id}</MonoId>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close"
-        >
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Close" onClick={onClose} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">

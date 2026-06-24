@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { cn } from '../ui/utils';
 
 export function FilterChip({
@@ -5,12 +6,16 @@ export function FilterChip({
   onToggle,
   label,
   count,
+  color,
+  children,
   className,
 }: {
   selected: boolean;
   onToggle: () => void;
-  label: string;
+  label?: string;
   count?: number;
+  color?: string;
+  children?: ReactNode;
   className?: string;
 }) {
   return (
@@ -20,7 +25,7 @@ export function FilterChip({
       aria-checked={selected}
       onClick={onToggle}
       className={cn(
-        'inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-wider transition-colors',
+        'inline-flex min-h-11 items-center gap-1.5 rounded-sm border px-2.5 py-1 font-mono text-[11px] font-medium transition-colors',
         'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
         selected
           ? 'border-brand-border bg-brand-muted text-brand'
@@ -28,7 +33,13 @@ export function FilterChip({
         className,
       )}
     >
-      {label}
+      {color && (
+        <span
+          className="size-2 shrink-0 rounded-full"
+          style={{ background: selected ? color : 'var(--border-strong)' }}
+        />
+      )}
+      {children ?? label}
       {count !== undefined && (
         <span className={cn('ml-0.5 tabular-nums', selected ? 'text-brand/70' : 'text-text-muted/70')}>
           {count}

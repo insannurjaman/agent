@@ -16,6 +16,8 @@ import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { SegmentedControl } from '../common/SegmentedControl';
+import { IconButton } from '../common/IconButton';
+import { FilterChip } from '../common/FilterChip';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { cn } from '../ui/utils';
 import { forceLayout, radialLayout, type Pos } from './layout';
@@ -273,25 +275,18 @@ export function KnowledgeGraphScreen() {
               value={viewMode}
               onChange={(v) => setViewMode(v as 'graph' | 'list')}
             />
-            <IconBtn onClick={() => zoom(1)} label="Zoom in">
-              <Plus className="size-4" />
-            </IconBtn>
-            <IconBtn onClick={() => zoom(-1)} label="Zoom out">
-              <Minus className="size-4" />
-            </IconBtn>
-            <IconBtn onClick={fitView} label="Fit view">
-              <Maximize2 className="size-4" />
-            </IconBtn>
-            <IconBtn
+            <IconButton icon={Plus} label="Zoom in" onClick={() => zoom(1)} />
+            <IconButton icon={Minus} label="Zoom out" onClick={() => zoom(-1)} />
+            <IconButton icon={Maximize2} label="Fit view" onClick={fitView} />
+            <IconButton
+              icon={RotateCcw}
+              label="Reset"
               onClick={() => {
                 setActiveEdgeTypes(new Set(edgeTypes));
                 setActiveKinds(new Set(['finding', 'question', 'experiment']));
                 fitView();
               }}
-              label="Reset"
-            >
-              <RotateCcw className="size-4" />
-            </IconBtn>
+            />
           </div>
         </div>
 
@@ -301,9 +296,9 @@ export function KnowledgeGraphScreen() {
           {(['finding', 'question', 'experiment'] as NodeKind[]).map((k) => (
             <FilterChip
               key={k}
-              active={activeKinds.has(k)}
+              selected={activeKinds.has(k)}
               color={KIND_COLOR[k]}
-              onClick={() =>
+              onToggle={() =>
                 setActiveKinds((prev) => {
                   const n = new Set(prev);
                   n.has(k) ? n.delete(k) : n.add(k);
@@ -319,9 +314,9 @@ export function KnowledgeGraphScreen() {
           {edgeTypes.map((t) => (
             <FilterChip
               key={t}
-              active={activeEdgeTypes.has(t)}
+              selected={activeEdgeTypes.has(t)}
               color={EDGE_COLOR[t]}
-              onClick={() =>
+              onToggle={() =>
                 setActiveEdgeTypes((prev) => {
                   const n = new Set(prev);
                   n.has(t) ? n.delete(t) : n.add(t);
@@ -567,56 +562,6 @@ function truncate(s: string, n: number) {
 }
 
 
-function IconBtn({
-  onClick,
-  label,
-  children,
-}: {
-  onClick: () => void;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted transition-colors hover:text-text"
-    >
-      {children}
-    </button>
-  );
-}
-
-function FilterChip({
-  active,
-  color,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  color: string;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'flex items-center gap-1.5 rounded-sm border px-2 py-1 min-h-11 font-mono text-[11px] transition-colors',
-        active
-          ? 'border-border-strong bg-surface-2 text-text-secondary'
-          : 'border-border-subtle bg-surface text-text-muted opacity-50',
-      )}
-    >
-      <span className="size-2 rounded-full" style={{ background: active ? color : 'var(--border-strong)' }} />
-      {children}
-    </button>
-  );
-}
-
 function Minimap({
   nodeIds,
   layout,
@@ -710,14 +655,7 @@ function NodeInspector({
             {node.id.replace('experiments/', '')}
           </MonoId>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close"
-        >
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Close" onClick={onClose} />
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { IconButton } from '../common/IconButton';
 
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -93,14 +94,7 @@ export function BottomSheet({
         {title && (
           <div className="flex items-center justify-between border-b border-border-subtle px-4 pb-2.5">
             <h2 className="text-[14px] font-medium text-text">{title}</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-              aria-label="Close"
-            >
-              <X className="size-4" />
-            </button>
+            <IconButton icon={X} label="Close" onClick={onClose} />
           </div>
         )}
         <div className="min-h-0 flex-1 overflow-auto px-4 py-3">{children}</div>

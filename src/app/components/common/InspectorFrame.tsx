@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { MonoId } from './primitives';
+import { IconButton } from './IconButton';
 
 export function InspectorFrame({
   kicker,
@@ -20,14 +21,7 @@ export function InspectorFrame({
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{kicker}</span>
           <MonoId className="text-brand">{id}</MonoId>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
-          aria-label="Close inspector"
-        >
-          <X className="size-4" />
-        </button>
+        <IconButton icon={X} label="Close inspector" onClick={onClose} />
       </div>
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">{children}</div>
     </aside>
