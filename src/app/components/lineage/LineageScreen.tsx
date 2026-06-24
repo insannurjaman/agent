@@ -57,46 +57,49 @@ export function LineageScreen() {
       {/* Left: lineage chains — hidden below md */}
       <div className="hidden w-[300px] shrink-0 flex-col border-r border-border-subtle bg-surface md:flex">
         <div className="border-b border-border-subtle px-4 py-3">
-          <h1 className="text-text" style={{ fontSize: '15px' }}>
+          <h2 className="text-text font-medium" style={{ fontSize: '15px' }}>
             Lineage Trace
-          </h1>
+          </h2>
           <p className="mt-0.5 font-mono text-[11px] text-text-muted">
             {chains.length} supersedes chains
           </p>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto p-2">
+        <ul role="listbox" aria-label="Lineage chains" className="min-h-0 flex-1 overflow-auto p-2">
           {chains.map((c) => {
             const head = c[0];
             const tail = c[c.length - 1];
             const isActive = chain.join('>') === c.join('>');
             return (
-              <button
-                key={c.join('>')}
-                type="button"
-                onClick={() => {
-                  setActiveId(head);
-                  setSelected(head);
-                }}
-                className={cn(
-                  'mb-1.5 w-full rounded-sm border px-3 py-2.5 text-left transition-colors',
-                  isActive
-                    ? 'border-brand-border bg-brand-muted'
-                    : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
-                )}
-              >
-                <div className="flex items-center gap-1.5 font-mono text-[12px]">
-                  <span className="text-text-muted">{head}</span>
-                  <ArrowUpRight className="size-3 text-text-muted" />
-                  <span className="text-brand">{tail}</span>
-                </div>
-                <div className="mt-1 line-clamp-2 text-[12px] text-text-secondary">
-                  {getFindingById(tail)?.title}
-                </div>
-                <div className="mt-1.5 font-mono text-[10px] text-text-muted">{c.length} versions</div>
-              </button>
+              <li key={c.join('>')}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={isActive}
+                  onClick={() => {
+                    setActiveId(head);
+                    setSelected(head);
+                  }}
+                  className={cn(
+                    'mb-1.5 w-full rounded-sm border px-3 py-3 min-h-11 text-left transition-colors',
+                    isActive
+                      ? 'border-brand-border bg-brand-muted'
+                      : 'border-border-subtle bg-surface hover:border-border-strong hover:bg-surface-2',
+                  )}
+                >
+                  <div className="flex items-center gap-1.5 font-mono text-[12px]">
+                    <span className="text-text-muted">{head}</span>
+                    <ArrowUpRight className="size-3 text-text-muted" />
+                    <span className="text-brand">{tail}</span>
+                  </div>
+                  <div className="mt-1 line-clamp-2 text-[12px] text-text-secondary">
+                    {getFindingById(tail)?.title}
+                  </div>
+                  <div className="mt-1.5 font-mono text-[10px] text-text-muted">{c.length} versions</div>
+                </button>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </div>
 
       {/* Center: chain timeline */}

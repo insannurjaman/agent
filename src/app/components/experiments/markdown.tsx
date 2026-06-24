@@ -163,12 +163,20 @@ export function Markdown({ source, suppressTitle = false }: { source: string; su
             <h2 className="mb-4 mt-1 text-[21px] font-semibold leading-tight text-text">
               {text}
             </h2>
-          ) : (
+          ) : level === 2 ? (
             <div className="mb-2.5 mt-7 flex items-center gap-3">
               <span className="h-px w-5 shrink-0 bg-brand" />
-              <h3 className={cn('font-semibold leading-tight text-text', level === 2 ? 'text-[16px]' : 'text-[14px]')}>
+              <h3 className="font-semibold leading-tight text-text text-[16px]">
                 {text}
               </h3>
+              <span className="h-px flex-1 bg-border-subtle" />
+            </div>
+          ) : (
+            <div className="mb-2.5 mt-5 flex items-center gap-3">
+              <span className="h-px w-5 shrink-0 bg-brand" />
+              <h4 className="font-semibold leading-tight text-text text-[14px]">
+                {text}
+              </h4>
               <span className="h-px flex-1 bg-border-subtle" />
             </div>
           )}

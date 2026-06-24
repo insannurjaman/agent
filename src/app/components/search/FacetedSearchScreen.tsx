@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Search, X, ChevronDown, FileText, Share2, GitBranch } from 'lucide-react';
+import { Search, X, ChevronDown, FileText, Share2, GitBranch, SlidersHorizontal } from 'lucide-react';
 import {
   findings,
   openQuestions,
@@ -14,6 +14,7 @@ import { StatusBadge } from '../common/StatusBadge';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
+import { Drawer } from '../responsive/Drawer';
 import { cn } from '../ui/utils';
 
 type Mode = 'topic' | 'facet' | 'neighbors' | 'experiment';
@@ -43,6 +44,7 @@ export function FacetedSearchScreen() {
   const [topic, setTopic] = useState(() => params.get('q') ?? '');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
+  const [mobileFacetsOpen, setMobileFacetsOpen] = useState(false);
 
   const toggleFacet = (key: string) =>
     setSelected((prev) => {
@@ -136,6 +138,11 @@ export function FacetedSearchScreen() {
         <FacetPanel selected={selected} onToggle={toggleFacet} onClear={() => setSelected(new Set())} />
       </div>
 
+      {/* Mobile facet drawer */}
+      <Drawer open={mobileFacetsOpen} onClose={() => setMobileFacetsOpen(false)} side="left" width="w-[min(86vw,320px)]" ariaLabel="Filter facets">
+        <FacetPanel selected={selected} onToggle={toggleFacet} onClear={() => setSelected(new Set())} />
+      </Drawer>
+
       {/* Main result area */}
       <div className="flex min-w-0 flex-1 flex-col bg-background">
         <ScreenHeader
@@ -144,7 +151,29 @@ export function FacetedSearchScreen() {
         />
 
         {/* Search bar + mode selector */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-4 py-2.5 sm:px-6 lg:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileFacetsOpen(true)}
+            className="flex min-h-11 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-3 font-mono text-[12px] text-text-secondary hover:text-text lg:hidden"
+            aria-label={`Filter facets${selected.size > 0 ? `, ${selected.size} selected` : ''}`}
+          >
+            <SlidersHorizontal className="size-4" />
+            Filters{selected.size > 0 && ` (${selected.size})`}
+          </button>
+          <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
+            <Search className="size-3.5 shrink-0 text-text-muted" />
+            <input
+              aria-label="Search by topic"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Topic — e.g. bend rate, entry temperature…"
+              className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted"
+            />
+          </div>
+        </div>
+        {/* Desktop search bar + mode selector */}
+        <div className="hidden flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5 lg:flex">
           <div className="flex flex-1 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-1.5 focus-within:border-brand-border">
             <Search className="size-3.5 shrink-0 text-text-muted" />
             <input
@@ -163,7 +192,7 @@ export function FacetedSearchScreen() {
                 aria-pressed={mode === m}
                 onClick={() => setMode(m)}
                 className={cn(
-                  'rounded-sm px-2.5 py-1 font-mono text-[12px] capitalize transition-colors',
+                  'rounded-sm px-2.5 py-1.5 min-h-11 font-mono text-[12px] capitalize transition-colors',
                   mode === m ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
@@ -303,7 +332,7 @@ function FacetPanel({
                     return n;
                   })
                 }
-                className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 hover:bg-surface-2"
+                className="flex w-full items-center justify-between rounded-sm px-2 py-2 min-h-11 hover:bg-surface-2"
               >
                 <span className="font-mono text-[11px] uppercase tracking-wider text-text-secondary">
                   {dim.label}
@@ -441,7 +470,7 @@ function ResultInspector({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Close"
         >
           <X className="size-4" />

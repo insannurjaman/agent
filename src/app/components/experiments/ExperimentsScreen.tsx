@@ -311,17 +311,22 @@ function ReportDetailsContent({
 
   const copyPath = async () => {
     try {
-      const textarea = document.createElement('textarea');
-      textarea.value = reportPath;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      textarea.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      textarea.remove();
+      await navigator.clipboard.writeText(reportPath);
     } catch {
-      // Feedback still confirms the intended local prototype action.
+      // Fallback: try the old method
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = reportPath;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        textarea.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+      } catch {
+        // Feedback still confirms the intended local prototype action.
+      }
     }
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1600);
@@ -338,7 +343,7 @@ function ReportDetailsContent({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-9 rounded-sm px-2 font-mono text-[11px] text-text-muted hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring"
+            className="min-h-11 rounded-sm px-2 font-mono text-[11px] text-text-muted hover:bg-surface-hover hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring"
           >
             Close
           </button>
@@ -355,7 +360,7 @@ function ReportDetailsContent({
                 type="button"
                 onClick={() => onSelectSection(heading.id)}
                 className={cn(
-                  'min-h-8 border-l-2 px-2 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring',
+                  'min-h-11 border-l-2 px-2 text-left text-[12px] outline-none transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring',
                   activeSection === heading.id
                     ? 'border-brand bg-brand-muted text-text'
                     : 'border-border-subtle text-text-secondary hover:border-border-strong hover:bg-surface-hover hover:text-text',
@@ -391,7 +396,7 @@ function ReportDetailsContent({
                 key={finding}
                 type="button"
                 onClick={() => navigate(`/findings?focus=${finding}`)}
-                className="min-h-7 rounded-sm border border-brand-border bg-brand-muted px-2 font-mono text-[11px] text-brand outline-none hover:bg-brand-surface focus-visible:ring-2 focus-visible:ring-brand-ring"
+                className="min-h-11 rounded-sm border border-brand-border bg-brand-muted px-2 font-mono text-[11px] text-brand outline-none hover:bg-brand-surface focus-visible:ring-2 focus-visible:ring-brand-ring"
               >
                 {finding}
               </button>
@@ -401,7 +406,7 @@ function ReportDetailsContent({
                 key={question}
                 type="button"
                 onClick={() => navigate(`/findings?tab=questions&focus=${question}`)}
-                className="min-h-7 rounded-sm border border-warning/30 bg-warning/10 px-2 font-mono text-[11px] text-warning outline-none hover:bg-warning/15 focus-visible:ring-2 focus-visible:ring-brand-ring"
+                className="min-h-11 rounded-sm border border-warning/30 bg-warning/10 px-2 font-mono text-[11px] text-warning outline-none hover:bg-warning/15 focus-visible:ring-2 focus-visible:ring-brand-ring"
               >
                 {question}
               </button>
@@ -415,7 +420,7 @@ function ReportDetailsContent({
               {exp.figures.map((figure) => (
                 <div
                   key={figure}
-                  className="flex min-h-9 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5"
+                  className="flex min-h-11 items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5"
                 >
                   <ImageIcon className="size-3.5 shrink-0 text-info" />
                   <span className="truncate font-mono text-[11px] text-text-secondary">

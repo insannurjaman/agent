@@ -24,9 +24,9 @@ function Tags({ items }: { items: string[] }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">
+    <h4 className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">
       {children}
-    </div>
+    </h4>
   );
 }
 

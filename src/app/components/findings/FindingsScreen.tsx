@@ -153,16 +153,38 @@ export function FindingsScreen() {
             />
           </div>
 
-          <div role="tablist" aria-label="Findings tabs" className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
+          <div
+            role="tablist"
+            aria-label="Findings tabs"
+            className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5"
+            onKeyDown={(e) => {
+              const idx = tabs.findIndex((t) => t.id === tab);
+              if (idx === -1) return;
+              if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                setTab(tabs[(idx + 1) % tabs.length].id);
+              } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                setTab(tabs[(idx - 1 + tabs.length) % tabs.length].id);
+              } else if (e.key === 'Home') {
+                e.preventDefault();
+                setTab(tabs[0].id);
+              } else if (e.key === 'End') {
+                e.preventDefault();
+                setTab(tabs[tabs.length - 1].id);
+              }
+            }}
+          >
             {tabs.map((t) => (
               <button
                 key={t.id}
                 type="button"
                 role="tab"
                 aria-selected={tab === t.id}
+                tabIndex={tab === t.id ? 0 : -1}
                 onClick={() => setTab(t.id)}
                 className={cn(
-                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
+                  'flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 min-h-11 text-[12px] transition-colors',
                   tab === t.id ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                 )}
               >
@@ -218,6 +240,11 @@ export function FindingsScreen() {
           </span>
         </div>
 
+        {/* Live region for screen readers */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only">
+          {totalRows} result{totalRows !== 1 ? 's' : ''} found
+        </div>
+
         {/* Table */}
         <div className="min-h-0 flex-1 overflow-auto">
           {totalRows === 0 ? (
@@ -243,7 +270,10 @@ export function FindingsScreen() {
             </div>
 
             {/* Dense table for lg+ */}
-            <table className="hidden w-full border-collapse text-[13px] lg:table">
+            <table className="hidden w-full border-collapse text-[13px] lg:table" aria-label="Findings and open questions">
+              <caption className="sr-only">
+                {totalRows} result{totalRows !== 1 ? 's' : ''} found
+              </caption>
               {/* FINDINGS */}
               {visibleFindings.length > 0 && (
                 <>

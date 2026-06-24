@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Search, Maximize2, RotateCcw, Plus, Minus, X, Crosshair, Globe } from 'lucide-react';
+import { Search, Maximize2, RotateCcw, Plus, Minus, X, Crosshair, Globe, List } from 'lucide-react';
 import {
   edges as allEdges,
   graphNodes,
@@ -43,11 +43,13 @@ const NODE_W = 158;
 const NODE_H = 48;
 
 type Mode = 'neighborhood' | 'global';
+type ViewMode = 'graph' | 'list';
 
 export function KnowledgeGraphScreen() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [mode, setMode] = useState<Mode>('neighborhood');
+  const [viewMode, setViewMode] = useState<ViewMode>('graph');
   const [depth, setDepth] = useState(2);
   const [rootId, setRootId] = useState<string>(params.get('focus') ?? 'F-0050');
   const [nodeSearch, setNodeSearch] = useState('');
@@ -211,13 +213,15 @@ export function KnowledgeGraphScreen() {
               />
             </div>
             {searchMatches.length > 0 && (
-              <div className="absolute z-30 mt-1 w-72 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
+              <div role="listbox" aria-label="Graph nodes" className="absolute z-30 mt-1 w-72 rounded-sm border border-border-strong bg-popover py-1 shadow-xl">
                 {searchMatches.map((n) => (
                   <button
                     key={n.id}
                     type="button"
+                    role="option"
+                    aria-selected={selected === n.id}
                     onClick={() => focusNode(n.id)}
-                    className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left hover:bg-surface-2"
+                    className="flex w-full items-center gap-2 px-2.5 py-2 text-left hover:bg-surface-2 min-h-11"
                   >
                     <span className="size-2 shrink-0 rounded-full" style={{ background: KIND_COLOR[n.kind] }} />
                     <MonoId className="shrink-0">{n.id.replace('experiments/', '')}</MonoId>
@@ -256,7 +260,7 @@ export function KnowledgeGraphScreen() {
                   onClick={() => setDepth(d)}
                   aria-pressed={depth === d}
                   className={cn(
-                    'rounded-sm px-2 py-0.5 font-mono text-[12px]',
+                    'rounded-sm px-2.5 py-1 min-h-11 font-mono text-[12px]',
                     depth === d ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
                   )}
                 >
@@ -267,6 +271,35 @@ export function KnowledgeGraphScreen() {
           )}
 
           <div className="ml-auto flex items-center gap-1">
+            {/* View switcher */}
+            <div className="flex rounded-sm border border-border-subtle bg-surface-2 p-0.5">
+              <button
+                type="button"
+                onClick={() => setViewMode('graph')}
+                aria-pressed={viewMode === 'graph'}
+                aria-label="Visual graph view"
+                className={cn(
+                  'flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
+                  viewMode === 'graph' ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
+                )}
+              >
+                <Crosshair className="size-3.5" />
+                <span className="hidden sm:inline">Graph</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                aria-pressed={viewMode === 'list'}
+                aria-label="Relationship list view"
+                className={cn(
+                  'flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
+                  viewMode === 'list' ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
+                )}
+              >
+                <List className="size-3.5" />
+                <span className="hidden sm:inline">List</span>
+              </button>
+            </div>
             <IconBtn onClick={() => zoom(1)} label="Zoom in">
               <Plus className="size-4" />
             </IconBtn>
@@ -328,7 +361,8 @@ export function KnowledgeGraphScreen() {
           ))}
         </div>
 
-        {/* Canvas */}
+        {/* Canvas or Relationship List */}
+        {viewMode === 'graph' ? (
         <div
           ref={wrapRef}
           onWheel={onWheel}
@@ -337,6 +371,7 @@ export function KnowledgeGraphScreen() {
           onPointerUp={onPointerUp}
           onPointerLeave={onPointerUp}
           className="relative min-h-0 flex-1 cursor-grab touch-none overflow-hidden bg-background active:cursor-grabbing [background-image:radial-gradient(circle,#171c20_1px,transparent_1px)] [background-size:24px_24px]"
+          aria-label="Graph canvas — drag to pan, scroll to zoom, double-click a node to focus"
         >
           {filtered.nodeIds.size === 0 ? (
             <EmptyState
@@ -412,6 +447,10 @@ export function KnowledgeGraphScreen() {
                       transform={`translate(${p.x - NODE_W / 2},${p.y - NODE_H / 2})`}
                       opacity={dim ? 0.25 : 1}
                       className="cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${node.kind} ${id.replace('experiments/', '')}: ${node.label}`}
+                      aria-selected={isSel}
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelected(id);
@@ -419,6 +458,12 @@ export function KnowledgeGraphScreen() {
                       onDoubleClick={(e) => {
                         e.stopPropagation();
                         focusNode(id);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSelected(id);
+                        }
                       }}
                     >
                       <rect
@@ -466,6 +511,62 @@ export function KnowledgeGraphScreen() {
             drag to pan · scroll to zoom · double-click a node to focus
           </div>
         </div>
+        ) : (
+        /* Relationship List */
+        <div className="min-h-0 flex-1 overflow-auto" role="region" aria-label="Relationship list">
+          {filtered.nodeIds.size === 0 ? (
+            <EmptyState
+              title="No nodes match filters"
+              hint="Adjust node or edge type filters to see relationships."
+            />
+          ) : (
+            <div className="divide-y divide-border-subtle">
+              {[...filtered.nodeIds].map((id) => {
+                const node = graphNodes.get(id)!;
+                const isSel = selected === id;
+                const incident = filtered.edges.filter((e) => e.src === id || e.dst === id);
+                const color = KIND_COLOR[node.kind];
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setSelected(id)}
+                    className={cn(
+                      'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2',
+                      isSel && 'bg-surface-2',
+                    )}
+                    aria-current={isSel ? 'true' : undefined}
+                  >
+                    <span className="mt-1 size-2.5 shrink-0 rounded-full" style={{ background: color }} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <MonoId className={node.kind === 'experiment' ? 'text-info' : 'text-brand'}>
+                          {id.replace('experiments/', '')}
+                        </MonoId>
+                        <span className="font-mono text-[10px] uppercase text-text-muted">{node.kind}</span>
+                      </div>
+                      <div className="mt-0.5 truncate text-[13px] text-text-secondary">{node.label}</div>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {incident.slice(0, 5).map((ed, i) => {
+                          const other = ed.src === id ? ed.dst : ed.src;
+                          return (
+                            <span key={i} className="rounded-sm border border-border-subtle bg-surface px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+                              {ed.edgeType} → {other.replace('experiments/', '')}
+                            </span>
+                          );
+                        })}
+                        {incident.length > 5 && (
+                          <span className="font-mono text-[10px] text-text-muted">+{incident.length - 5} more</span>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        )}
       </div>
 
       {/* Node inspector — bottom sheet / overlay below lg */}
@@ -512,7 +613,7 @@ function ModeBtn({
       title={title}
       aria-pressed={active}
       className={cn(
-        'flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[12px] transition-colors',
+        'flex items-center gap-1.5 rounded-sm px-2.5 py-1.5 min-h-11 text-[12px] transition-colors',
         active ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
       )}
     >
@@ -536,7 +637,7 @@ function IconBtn({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex size-8 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted transition-colors hover:text-text"
+      className="flex min-h-11 min-w-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-2 text-text-muted transition-colors hover:text-text"
     >
       {children}
     </button>
@@ -560,7 +661,7 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        'flex items-center gap-1.5 rounded-sm border px-1.5 py-0.5 font-mono text-[11px] transition-colors',
+        'flex items-center gap-1.5 rounded-sm border px-2 py-1 min-h-11 font-mono text-[11px] transition-colors',
         active
           ? 'border-border-strong bg-surface-2 text-text-secondary'
           : 'border-border-subtle bg-surface text-text-muted opacity-50',
@@ -649,9 +750,9 @@ function NodeInspector({
   const e = node.kind === 'experiment' ? getExperimentBySlug(node.id) : undefined;
 
   const Label = ({ children }: { children: React.ReactNode }) => (
-    <div className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">
+    <h4 className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">
       {children}
-    </div>
+    </h4>
   );
 
   return (
@@ -668,7 +769,7 @@ function NodeInspector({
         <button
           type="button"
           onClick={onClose}
-          className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text"
+          className="flex min-h-11 min-w-11 items-center justify-center rounded-sm text-text-muted hover:text-text"
           aria-label="Close"
         >
           <X className="size-4" />
@@ -734,7 +835,7 @@ function NodeInspector({
                 key={i}
                 type="button"
                 onClick={() => onPickNode(other)}
-                className="flex w-full items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5 text-left hover:border-border-strong"
+                className="flex w-full items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-2 min-h-11 text-left hover:border-border-strong"
               >
                 <StatusBadge value={ed.edgeType} showDot />
                 <span className="font-mono text-[11px] text-text-muted">{dir}</span>

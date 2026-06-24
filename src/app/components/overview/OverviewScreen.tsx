@@ -267,7 +267,7 @@ function ActionLink({ children, onClick, claude }: { children: React.ReactNode; 
       type="button"
       onClick={onClick}
       className={cn(
-        'rounded-sm border px-1.5 py-0.5 font-mono text-[11px] transition-colors',
+        'rounded-sm border px-2 py-1 min-h-11 font-mono text-[11px] transition-colors',
         claude
           ? 'border-brand-border bg-brand-muted text-brand hover:bg-brand-surface'
           : 'border-border-strong bg-surface-2 text-text-secondary hover:text-text',
@@ -285,7 +285,7 @@ function CurrentWork({ navigate }: { navigate: (to: string) => void }) {
       <button
         type="button"
         onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}
-        className="mb-2.5 flex w-full items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-2 text-left transition-colors hover:bg-brand-surface"
+        className="mb-2.5 flex w-full items-center gap-2 rounded-sm border border-brand-border bg-brand-muted px-3 py-3 min-h-11 text-left transition-colors hover:bg-brand-surface"
       >
         <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Recommended next step</span>
         <span className="ml-auto font-mono text-[12px] text-brand">Ask Claude to investigate Q-0014 →</span>
@@ -420,7 +420,7 @@ function RecentActivity({ navigate }: { navigate: (to: string) => void }) {
             <button
               type="button"
               onClick={() => navigate(a.to)}
-              className="shrink-0 rounded-sm border border-border-strong bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-text-secondary transition-colors hover:text-text"
+              className="shrink-0 rounded-sm border border-border-strong bg-surface-2 px-2 py-1 min-h-11 font-mono text-[11px] text-text-secondary transition-colors hover:text-text"
             >
               {a.action}
             </button>
