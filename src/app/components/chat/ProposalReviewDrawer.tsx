@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router';
 import { X, ShieldCheck } from 'lucide-react';
 import type { FindingProposal, QuestionProposal } from '../../data/chat';
 import { StatusBadge } from '../common/StatusBadge';
+import { PriorityBadge } from '../common/PriorityBadge';
+import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { IconButton } from '../common/IconButton';
+import { Button } from '../common/Button';
 import { MonoId } from '../common/primitives';
 import { cn } from '../ui/utils';
 
@@ -131,26 +134,26 @@ export function ProposalReviewDrawer({
       </div>
 
       <div className="flex items-center justify-end gap-2 border-t border-border-subtle px-4 py-3">
-        <button type="button" onClick={onClose} className="rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text">
+        <Button variant="secondary" size="sm" onClick={onClose}>
           Cancel
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => {
             const id = isFinding ? tab.finding!.findingId : tab.question!.questionId;
             navigate(`/chat?ctx=${id}`);
           }}
-          className="rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text"
         >
           Ask Claude to revise
-        </button>
-        <button
-          type="button"
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
           onClick={() => onConfirm(tab.kind, isFinding ? tab.finding!.findingId : tab.question!.questionId)}
-          className="rounded-sm border border-brand-border bg-brand px-3 py-1.5 text-[12px] text-primary-foreground hover:bg-brand-hover"
         >
           Confirm through Claude
-        </button>
+        </Button>
       </div>
     </aside>
   );
@@ -163,7 +166,13 @@ function FindingFields({ p }: { p: FindingProposal }) {
       <Field label="Title">{p.title}</Field>
       <Field label="Summary"><span className="text-text-secondary">{p.summary}</span></Field>
       <Field label="Evidence"><MonoId className="text-info">{p.evidence}</MonoId></Field>
-      <Field label="Confidence"><StatusBadge value={p.confidence} /></Field>
+      <Field label="Confidence">
+        {p.confidence === 'superseded' ? (
+          <StatusBadge value="superseded" />
+        ) : (
+          <ConfidenceIndicator level={p.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+        )}
+      </Field>
       <Field label="Facets">
         <div className="flex flex-wrap gap-1">
           {p.facets.map((f) => (
@@ -183,7 +192,7 @@ function QuestionFields({ p }: { p: QuestionProposal }) {
     <>
       <Field label="ID"><MonoId className="text-amber">{p.questionId}</MonoId></Field>
       <Field label="Title">{p.title}</Field>
-      <Field label="Priority"><StatusBadge value={p.priority} showDot={false} /></Field>
+      <Field label="Priority"><PriorityBadge priority={p.priority as 'critical' | 'high' | 'medium' | 'low'} /></Field>
       <Field label="Area">{p.area}</Field>
       <Field label="Related"><MonoId className="text-brand">{p.relatedFinding}</MonoId></Field>
     </>

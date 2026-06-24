@@ -20,6 +20,7 @@ import {
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
+import { Button } from '../common/Button';
 import { cn } from '../ui/utils';
 
 interface LoopNode {
@@ -264,18 +265,14 @@ function DocumentationLayers() {
 
 function ActionLink({ children, onClick, claude }: { children: React.ReactNode; onClick: () => void; claude?: boolean }) {
   return (
-    <button
-      type="button"
+    <Button
+      variant={claude ? 'primary' : 'secondary'}
+      size="md"
       onClick={onClick}
-      className={cn(
-        'flex min-h-11 items-center rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors',
-        claude
-          ? 'bg-brand text-primary-foreground hover:bg-brand-hover'
-          : 'border border-border-strong bg-surface-2 text-text-secondary hover:text-text',
-      )}
+      className="w-full justify-start"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 

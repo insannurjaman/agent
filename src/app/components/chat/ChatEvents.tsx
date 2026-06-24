@@ -13,6 +13,7 @@ import {
   Activity as ActivityIcon,
 } from 'lucide-react';
 import type { ChatEvent, FindingProposal, QuestionProposal } from '../../data/chat';
+import { Button } from '../common/Button';
 import { cn } from '../ui/utils';
 
 export type ProposalStatus = 'idle' | 'pending' | 'completed' | 'failed';
@@ -42,25 +43,17 @@ function IdLink({ id, onNav }: { id: string; onNav: (id: string) => void }) {
 
 function UtilityBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-sm border border-border-strong bg-surface-2 px-2.5 py-1 text-[12px] text-text-secondary transition-colors hover:text-text"
-    >
+    <Button variant="secondary" size="sm" onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }
 
 function ClaudeBtn({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-sm border border-brand-border bg-brand-muted px-2.5 py-1 text-[12px] text-brand transition-colors hover:bg-brand-surface"
-    >
+    <Button variant="ghost" size="sm" onClick={onClick}>
       {children}
-    </button>
+    </Button>
   );
 }
 

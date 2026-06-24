@@ -13,6 +13,8 @@ import {
 import type { Edge, EdgeType, GraphNode, NodeKind } from '../../data';
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
+import { PriorityBadge } from '../common/PriorityBadge';
+import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { SegmentedControl } from '../common/SegmentedControl';
@@ -661,10 +663,16 @@ function NodeInspector({
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
         <h3 className="text-[15px] leading-snug text-text">{node.label}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {f && <StatusBadge value={f.confidence} />}
+          {f && (
+            f.confidence === 'superseded' ? (
+              <StatusBadge value="superseded" />
+            ) : (
+              <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+            )
+          )}
           {f && <StatusBadge value={f.category} showDot={false} />}
           {q && <StatusBadge value={q.status} />}
-          {q && <StatusBadge value={q.priority} showDot={false} />}
+          {q && <PriorityBadge priority={q.priority as 'critical' | 'high' | 'medium' | 'low'} />}
           {e && <StatusBadge value={e.outdated ? 'outdated' : e.reportStatus} />}
         </div>
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, ChevronDown, Plus } from 'lucide-react';
 import { IconButton } from '../common/IconButton';
+import { Button } from '../common/Button';
 import { cn } from '../ui/utils';
 
 const MODES = [
@@ -201,26 +202,17 @@ export function NewChatModal({
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-2 border-t border-border-subtle px-4 py-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-1.5 text-[12px] text-text-secondary hover:text-text"
-          >
+          <Button variant="secondary" size="sm" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="primary"
+            size="sm"
             disabled={!prompt.trim()}
             onClick={() => onStart('auto', prompt, context)}
-            className={cn(
-              'rounded-sm px-3 py-1.5 text-[12px] font-medium transition-colors',
-              prompt.trim()
-                ? 'bg-brand text-primary-foreground hover:bg-brand-hover'
-                : 'cursor-not-allowed bg-surface text-text-muted',
-            )}
           >
             Start
-          </button>
+          </Button>
         </div>
       </div>
     </div>

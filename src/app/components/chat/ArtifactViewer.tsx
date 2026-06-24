@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { X, ImageIcon, FileText, Code, File, Clock, Copy, ChevronRight, ExternalLink } from 'lucide-react';
+import { X, ImageIcon, FileText, Code, File, Clock, ChevronRight } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { type Artifact, type TimelineItem } from '../../data/chat';
 import { IconButton } from '../common/IconButton';

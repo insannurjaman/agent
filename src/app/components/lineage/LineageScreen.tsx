@@ -11,6 +11,7 @@ import {
 import type { Finding } from '../../data';
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
+import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { EmptyState } from '../common/EmptyState';
 import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { IconButton } from '../common/IconButton';
@@ -277,7 +278,11 @@ function LineageInspector({
       <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
         <h3 className="text-[15px] leading-snug text-text">{finding.title}</h3>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          <StatusBadge value={finding.confidence} />
+          {finding.confidence === 'superseded' ? (
+            <StatusBadge value="superseded" />
+          ) : (
+            <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+          )}
           <StatusBadge value={finding.category} showDot={false} />
         </div>
 
