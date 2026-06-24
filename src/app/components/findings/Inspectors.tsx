@@ -45,9 +45,9 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
         {finding.confidence === 'superseded' ? (
           <StatusBadge value="superseded" />
         ) : (
-          <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+          <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
         )}
-        {finding.actionable && <StatusBadge value="actionable" tone="brand" />}
+        {finding.actionable && <StatusBadge value="actionable" tone="success" />}
       </div>
 
       {isSuperseded && (

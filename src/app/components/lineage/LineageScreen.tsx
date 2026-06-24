@@ -281,7 +281,7 @@ function LineageInspector({
           {finding.confidence === 'superseded' ? (
             <StatusBadge value="superseded" />
           ) : (
-            <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+            <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
           )}
           <StatusBadge value={finding.category} showDot={false} />
         </div>

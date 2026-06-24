@@ -170,7 +170,7 @@ function FindingFields({ p }: { p: FindingProposal }) {
         {p.confidence === 'superseded' ? (
           <StatusBadge value="superseded" />
         ) : (
-          <ConfidenceIndicator level={p.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+          <ConfidenceIndicator level={p.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
         )}
       </Field>
       <Field label="Facets">

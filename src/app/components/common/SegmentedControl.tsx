@@ -38,7 +38,7 @@ export function SegmentedControl({
             aria-selected={active}
             onClick={() => onChange(seg.id)}
             className={cn(
-              'flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-sm px-3 text-[13px] font-medium transition-colors',
+              'flex min-h-10 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-sm px-3 text-[13px] font-medium transition-colors',
               'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
               active
                 ? 'bg-background text-foreground shadow-sm'

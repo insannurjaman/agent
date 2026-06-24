@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ChevronRight, Search, MoreHorizontal, ArrowUpRight } from 'lucide-react';
+import { ChevronRight, Search, MoreHorizontal, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { findings as allFindings, openQuestions as allQuestions } from '../../data';
 import type { Finding, OpenQuestion } from '../../data';
 import { getLatestVersion } from '../../data';
@@ -10,6 +10,7 @@ import { PriorityBadge } from '../common/PriorityBadge';
 import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
 import { EmptyState } from '../common/EmptyState';
 import { FilterSelect } from '../common/FilterSelect';
+import { SegmentedControl } from '../common/SegmentedControl';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { FindingInspector, QuestionInspector } from './Inspectors';
 import {
@@ -155,46 +156,12 @@ export function FindingsScreen() {
             />
           </div>
 
-          <div
-            role="tablist"
-            aria-label="Findings tabs"
-            className="flex h-11 rounded-sm border border-border-subtle bg-surface-2 p-0.5"
-            onKeyDown={(e) => {
-              const idx = tabs.findIndex((t) => t.id === tab);
-              if (idx === -1) return;
-              if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                setTab(tabs[(idx + 1) % tabs.length].id);
-              } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                setTab(tabs[(idx - 1 + tabs.length) % tabs.length].id);
-              } else if (e.key === 'Home') {
-                e.preventDefault();
-                setTab(tabs[0].id);
-              } else if (e.key === 'End') {
-                e.preventDefault();
-                setTab(tabs[tabs.length - 1].id);
-              }
-            }}
-          >
-            {tabs.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                tabIndex={tab === t.id ? 0 : -1}
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-1.5 rounded-sm px-2.5 text-[12px] transition-colors',
-                  tab === t.id ? 'bg-brand-muted text-brand' : 'text-text-muted hover:text-text-secondary',
-                )}
-              >
-                {t.label}
-                <span className="font-mono text-[10px] text-text-muted opacity-70">{t.count}</span>
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            segments={tabs.map((t) => ({ id: t.id, label: t.label, count: t.count }))}
+            value={tab}
+            onChange={(id) => setTab(id as Tab)}
+            className="w-auto"
+          />
 
           <div className="ml-auto flex items-center gap-2">
             {tab !== 'questions' && (
@@ -221,15 +188,24 @@ export function FindingsScreen() {
             />
             <button
               type="button"
+              role="checkbox"
+              aria-checked={actionableOnly}
+              aria-label="Show actionable items only"
               onClick={() => setActionableOnly((v) => !v)}
-              aria-pressed={actionableOnly}
               className={cn(
-                'flex h-11 items-center rounded-sm border px-2.5 font-mono text-[11px] uppercase tracking-wide transition-colors',
+                'flex h-11 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors',
+                'focus-visible:ring-2 focus-visible:ring-brand-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'cursor-pointer',
                 actionableOnly
                   ? 'border-brand-border bg-brand-muted text-brand'
                   : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary',
               )}
             >
+              {actionableOnly ? (
+                <CheckCircle2 className="size-3.5 shrink-0" />
+              ) : (
+                <span className="size-3.5 shrink-0 rounded-sm border border-border-strong" />
+              )}
               Actionable
             </button>
           </div>
@@ -279,6 +255,17 @@ export function FindingsScreen() {
               {/* FINDINGS */}
               {visibleFindings.length > 0 && (
                 <>
+                  {tab === 'all' && (
+                    <thead className="sticky top-0 z-10 bg-surface">
+                      <tr>
+                        <Th colSpan={11} className="py-2">
+                          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
+                            Findings · {visibleFindings.length}
+                          </span>
+                        </Th>
+                      </tr>
+                    </thead>
+                  )}
                   <thead className="sticky top-0 z-10 bg-surface">
                     <tr>
                       <Th className="w-8" />
@@ -310,9 +297,29 @@ export function FindingsScreen() {
                 </>
               )}
 
+              {/* Separator between groups in All view */}
+              {tab === 'all' && visibleFindings.length > 0 && visibleQuestions.length > 0 && (
+                <tbody>
+                  <tr>
+                    <td colSpan={11} className="border-b-2 border-border-strong" />
+                  </tr>
+                </tbody>
+              )}
+
               {/* OPEN QUESTIONS */}
               {visibleQuestions.length > 0 && (
                 <>
+                  {tab === 'all' && (
+                    <thead className="sticky top-0 z-10 bg-surface">
+                      <tr>
+                        <Th colSpan={11} className="py-2">
+                          <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-text">
+                            Open Questions · {visibleQuestions.length}
+                          </span>
+                        </Th>
+                      </tr>
+                    </thead>
+                  )}
                   <thead className="sticky top-0 z-10 bg-surface">
                     <tr>
                       <Th className="w-8" />
@@ -370,7 +377,7 @@ function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[12px] text-brand">{f.id}</span>
+        <span className="font-mono text-[12px] text-text">{f.id}</span>
         <span className="font-mono text-[10px] text-text-muted">{f.date}</span>
       </div>
       <div className="mt-1 text-[14px] leading-snug text-text">{f.title}</div>
@@ -378,10 +385,10 @@ function FindingCard({ f, onSelect }: { f: Finding; onSelect: () => void }) {
         {f.confidence === 'superseded' ? (
           <StatusBadge value="superseded" />
         ) : (
-          <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+          <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
         )}
         <StatusBadge value={f.category} showDot={false} />
-        {f.actionable && <span className="font-mono text-[10px] text-brand">actionable</span>}
+        {f.actionable && <StatusBadge value="actionable" tone="success" />}
       </div>
     </button>
   );
@@ -449,7 +456,7 @@ function FindingRow({
           </button>
         </td>
         <td className="px-3 py-2">
-          <span className="font-mono text-[13px] text-brand">{f.id}</span>
+          <span className="font-mono text-[13px] text-text">{f.id}</span>
         </td>
         <td className="px-3 py-2 text-text">
           <div className="flex items-center gap-2">
@@ -464,7 +471,7 @@ function FindingRow({
           {f.confidence === 'superseded' ? (
             <StatusBadge value="superseded" />
           ) : (
-            <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+            <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
           )}
         </td>
         <td className="px-3 py-2">
@@ -472,9 +479,11 @@ function FindingRow({
         </td>
         <td className="px-3 py-2">
           {f.actionable ? (
-            <span className="font-mono text-[11px] text-brand">yes</span>
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-text-secondary">
+              <CheckCircle2 className="size-3 text-success" /> Yes
+            </span>
           ) : (
-            <span className="font-mono text-[11px] text-text-muted">no</span>
+            <span className="font-mono text-[11px] text-text-muted">—</span>
           )}
         </td>
         <td className="px-3 py-2">

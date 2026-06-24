@@ -667,7 +667,7 @@ function NodeInspector({
             f.confidence === 'superseded' ? (
               <StatusBadge value="superseded" />
             ) : (
-              <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} showBars />
+              <ConfidenceIndicator level={f.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
             )
           )}
           {f && <StatusBadge value={f.category} showDot={false} />}
