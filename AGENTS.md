@@ -42,3 +42,9 @@ Use an Oxide-inspired interface:
 - Run build checks when possible.
 - Do not introduce backend dependencies.
 - This is still a prototype, so static/mock data is acceptable.
+
+## QA + Auto-commit rule
+- After every code change, run `npm run build` (or the relevant QA command) to verify no errors.
+- If errors occur, fix them before proceeding.
+- Once QA passes, automatically commit with a clear message and push to GitHub (`git add -A && git commit -m "..." && git push`).
+- Do not wait for user approval to push — push immediately after a clean build.
