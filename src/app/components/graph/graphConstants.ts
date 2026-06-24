@@ -22,3 +22,21 @@ export const KIND_COLOR: Record<NodeKind, string> = {
 
 export const NODE_W = 158;
 export const NODE_H = 48;
+
+export const ZOOM = {
+  min: { global: 0.08, neighborhood1: 0.35, neighborhood2: 0.15, neighborhood3: 0.1, cluster: 0.2 },
+  max: { global: 0.8, neighborhood1: 1.4, neighborhood2: 1.2, neighborhood3: 1.0, cluster: 1.2 },
+  minReadableNode: 0.35,
+  maxSelectedEdgeWidth: 2.0,
+  maxBoundaryEdgeWidth: 3.0,
+  maxSelectedEdgeLabels: 5,
+  maxBoundaryEdges: 8,
+};
+
+export function getZoomBounds(scope: string, depth?: number) {
+  if (scope === 'global') return { min: ZOOM.min.global, max: ZOOM.max.global };
+  if (scope === 'cluster') return { min: ZOOM.min.cluster, max: ZOOM.max.cluster };
+  if (depth === 1) return { min: ZOOM.min.neighborhood1, max: ZOOM.max.neighborhood1 };
+  if (depth === 2) return { min: ZOOM.min.neighborhood2, max: ZOOM.max.neighborhood2 };
+  return { min: ZOOM.min.neighborhood3, max: ZOOM.max.neighborhood3 };
+}

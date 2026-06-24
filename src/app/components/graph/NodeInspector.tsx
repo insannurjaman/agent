@@ -12,13 +12,6 @@ import { cn } from '../ui/utils';
 
 type TabId = 'overview' | 'relationships' | 'details' | 'actions';
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'relationships', label: 'Relationships' },
-  { id: 'details', label: 'Details' },
-  { id: 'actions', label: 'Actions' },
-];
-
 export function NodeInspector({
   node,
   incident,
@@ -38,6 +31,21 @@ export function NodeInspector({
   const f = node.kind === 'finding' ? getFindingById(node.id) : undefined;
   const q = node.kind === 'question' ? getQuestionById(node.id) : undefined;
   const e = node.kind === 'experiment' ? getExperimentBySlug(node.id) : undefined;
+
+  const showRelationships = incident.length > 0;
+  const showDetails = (() => {
+    if (f) return f.tags.length > 0 || f.facets.length > 0 || !!f.evidence || (f.supersedes != null) || (f.supersededBy != null);
+    if (q) return q.facets.length > 0 || !!q.raisedBy || !!q.raisedDate;
+    if (e) return e.figures.length > 0 || !!e.lastModified || !!e.reportStatus;
+    return false;
+  })();
+
+  const TABS: { id: TabId; label: string }[] = [
+    { id: 'overview', label: 'Overview' },
+    ...(showRelationships ? [{ id: 'relationships' as TabId, label: `Relationships (${incident.length})` }] : []),
+    ...(showDetails ? [{ id: 'details' as TabId, label: 'Details' }] : []),
+    { id: 'actions', label: 'Actions' },
+  ];
 
   const Sec = ({ children }: { children: React.ReactNode }) => (
     <h4 className="mt-5 mb-2 font-mono text-[11px] uppercase tracking-wider text-text-muted first:mt-0">{children}</h4>
