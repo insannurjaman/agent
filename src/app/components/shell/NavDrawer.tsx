@@ -70,7 +70,7 @@ export function NavDrawer({
   }
 
   return (
-    <Drawer open={open} onClose={onClose} side="left" width="w-[min(86vw,320px)]">
+    <Drawer open={open} onClose={onClose} side="left" width="w-full sm:w-[360px]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <span className="text-[13px] font-semibold text-text">Quick Agent System</span>

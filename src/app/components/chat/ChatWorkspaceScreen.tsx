@@ -168,7 +168,7 @@ export function ChatWorkspaceScreen() {
   return (
     <div className="flex h-full min-h-0 w-full overflow-hidden">
       {/* Left Panel drawer */}
-      <Drawer open={panelOpen} onClose={() => setPanelOpen(false)} side="left" width="w-[min(86vw,320px)]" ariaLabel="Session explorer">
+      <Drawer open={panelOpen} onClose={() => setPanelOpen(false)} side="left" width="w-full sm:w-[360px]" ariaLabel="Session explorer">
         <SessionExplorerPane
           sessionList={sessions}
           activeSessionId={session.id}
@@ -195,7 +195,7 @@ export function ChatWorkspaceScreen() {
       </Drawer>
 
       {/* Artifact Viewer drawer */}
-      <Drawer open={artifactOpen} onClose={() => setArtifactOpen(false)} side="right" width="w-[min(86vw,400px)]" ariaLabel="Artifact viewer">
+      <Drawer open={artifactOpen} onClose={() => setArtifactOpen(false)} side="right" width="w-full sm:w-[420px]" ariaLabel="Artifact viewer">
         <ArtifactViewer
           artifact={artifact}
           onClose={() => setArtifactOpen(false)}

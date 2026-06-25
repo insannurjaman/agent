@@ -200,7 +200,7 @@ export function FacetedSearchScreen() {
       </div>
 
       {/* Mobile facet drawer */}
-      <Drawer open={mobileFacetsOpen} onClose={() => setMobileFacetsOpen(false)} side="left" width="w-[min(86vw,320px)]" ariaLabel="Filter facets">
+      <Drawer open={mobileFacetsOpen} onClose={() => setMobileFacetsOpen(false)} side="left" width="w-full sm:w-[360px]" ariaLabel="Filter facets">
         <FacetPanel selected={selected} onToggle={toggleFacet} onClear={() => setSelected(new Set())} facetCounts={facetCounts} />
       </Drawer>
 
@@ -493,7 +493,7 @@ function ResultInspector({ result, onClose, navigate }: { result: Result; onClos
   const tablePath = result.kind === 'question' ? `/findings?tab=questions&focus=${result.id}` : result.kind === 'finding' ? `/findings?focus=${result.id}` : `/experiments/${result.id}`;
 
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col bg-surface lg:w-[420px]">
+    <aside className="flex h-full w-full shrink-0 flex-col bg-surface">
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="font-mono text-[11px] uppercase tracking-wider text-text-muted">{result.kind}</span>
