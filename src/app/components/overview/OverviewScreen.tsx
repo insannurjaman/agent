@@ -2,38 +2,32 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   HelpCircle, Search, FolderPlus, Play, CheckCheck, BookMarked, CircleHelp,
-  FileText, BadgeCheck, ChevronRight, ChevronDown, Sparkles,
-  Table2, FlaskConical, Share2, type LucideIcon,
+  FileText, BadgeCheck, ArrowDown, ArrowRight, Sparkles,
+  type LucideIcon,
 } from 'lucide-react';
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
-import { repoStatus } from '../../data';
+import { repoStatus, getFindingById } from '../../data';
 import { cn } from '../ui/utils';
 
 // ── Data ────────────────────────────────────────────────────────────────
 
 interface LoopNode { step: string; label: string; sub: string; icon: LucideIcon; tone: 'green' | 'teal' | 'amber' | 'blue' | 'purple'; clickable?: boolean; to?: string; }
 
-interface LoopPhase { id: string; label: string; nodes: LoopNode[]; }
-
-const LOOP_PHASES: LoopPhase[] = [
-  { id: 'P1', label: 'Phase 1 · Input', nodes: [
-    { step: '01', label: 'Question', sub: 'Unresolved issue or investigation prompt', icon: HelpCircle, tone: 'amber', clickable: true, to: '/findings?tab=questions' },
-    { step: '02', label: 'Review Knowledge', sub: 'Search findings, questions, facets, and graph', icon: Search, tone: 'blue', clickable: true, to: '/search' },
-  ]},
-  { id: 'P2', label: 'Phase 2 · Experiment', nodes: [
-    { step: '03', label: 'Create Experiment', sub: 'Create experiments/<slug>/ workspace', icon: FolderPlus, tone: 'teal', clickable: true, to: '/experiments' },
-    { step: '04', label: 'Execute', sub: 'Run analysis code and generate artifacts', icon: Play, tone: 'blue' },
-    { step: '05', label: 'Validate', sub: 'Check outputs, metrics, and evidence', icon: CheckCheck, tone: 'teal' },
-  ]},
-  { id: 'P3', label: 'Phase 3 · Knowledge Output', nodes: [
-    { step: '06', label: 'Knowledge', sub: 'Register findings through Claude-mediated workflow', icon: BookMarked, tone: 'green', clickable: true, to: '/findings' },
-    { step: '07', label: 'Issues', sub: 'Register open questions through Claude-mediated workflow', icon: CircleHelp, tone: 'amber', clickable: true, to: '/findings?tab=questions' },
-    { step: '08', label: 'Report', sub: 'Generate README / REPORT.md', icon: FileText, tone: 'teal', clickable: true, to: '/experiments' },
-    { step: '09', label: 'Promotion', sub: 'User confirms promoted knowledge', icon: BadgeCheck, tone: 'purple' },
-  ]},
+const LOOP_NODES: LoopNode[] = [
+  { step: '01', label: 'Question', sub: 'Unresolved issue or investigation prompt', icon: HelpCircle, tone: 'amber', clickable: true, to: '/findings?tab=questions' },
+  { step: '02', label: 'Review Knowledge', sub: 'Search findings, questions, facets, and graph', icon: Search, tone: 'blue', clickable: true, to: '/search' },
+  { step: '03', label: 'Create Experiment', sub: 'Create experiments/<slug>/ workspace', icon: FolderPlus, tone: 'teal', clickable: true, to: '/experiments' },
+  { step: '04', label: 'Execute', sub: 'Run analysis code and generate artifacts', icon: Play, tone: 'blue' },
+  { step: '05', label: 'Validate', sub: 'Check outputs, metrics, and evidence', icon: CheckCheck, tone: 'teal' },
+  { step: '06', label: 'Knowledge', sub: 'Register findings through Claude-mediated workflow', icon: BookMarked, tone: 'green', clickable: true, to: '/findings' },
+  { step: '07', label: 'Issues', sub: 'Register open questions through Claude-mediated workflow', icon: CircleHelp, tone: 'amber', clickable: true, to: '/findings?tab=questions' },
+  { step: '08', label: 'Report', sub: 'Generate README / REPORT.md', icon: FileText, tone: 'teal', clickable: true, to: '/experiments' },
+  { step: '09', label: 'Promotion', sub: 'User confirms promoted knowledge', icon: BadgeCheck, tone: 'purple' },
 ];
+
+const PHASE_BOUNDARIES = [1, 3, 5]; // step indices where phases start (0-based)
 
 interface DocLayer { id: string; path: string; purpose: string; files: string[]; status: string; tone: 'green' | 'teal' | 'amber' | 'blue' | 'purple' | 'muted'; }
 
@@ -56,6 +50,8 @@ const ACTIVITY: ActivityRow[] = [
 
 const TONE_TEXT: Record<string, string> = { green: 'text-green', teal: 'text-teal', amber: 'text-amber', blue: 'text-blue', purple: 'text-purple', muted: 'text-text-muted' };
 
+const PHASE_LABELS = ['Phase 1 · Input', 'Phase 2 · Experiment', 'Phase 3 · Knowledge Output'];
+
 function Sec({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-sm border border-border-subtle bg-surface">
@@ -72,7 +68,6 @@ function Sec({ title, desc, children }: { title: string; desc?: string; children
 
 export function OverviewScreen() {
   const navigate = useNavigate();
-
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Overview" subtitle="System status and current knowledge work." />
@@ -83,12 +78,10 @@ export function OverviewScreen() {
           <Sec title="Knowledge Loop" desc="Agent-driven experiments convert questions into reusable knowledge, reports, and unresolved issues.">
             <KnowledgeLoop />
           </Sec>
-          {/* Wide desktop: Doc + Activity side by side */}
           <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1fr]">
             <Sec title="Documentation Layers"><DocLayers /></Sec>
             <Sec title="Recent Knowledge Activity"><RecentActivitySection navigate={navigate} /></Sec>
           </div>
-          <QuickActionsSection navigate={navigate} />
         </div>
       </div>
     </div>
@@ -122,6 +115,8 @@ function SystemStatus() {
 
 // ── Current Work ────────────────────────────────────────────────────────
 function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
+  const f0034 = getFindingById('F-0034');
+  const f0031 = getFindingById('F-0031');
   return (
     <section className="rounded-sm border border-brand-border bg-elevated">
       <div className="flex items-center justify-between border-b border-brand-border/20 px-5 py-3">
@@ -158,19 +153,19 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
         {/* Divider */}
         <div className="border-t border-border-subtle" />
 
-        {/* Recommended next step */}
-        <div className="rounded-sm bg-brand-muted/15 border border-brand-border/30 px-4 py-3">
+        {/* Recommended next step — no internal border */}
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
             <Sparkles className="size-4 text-brand shrink-0" />
             <span className="font-mono text-[11px] uppercase tracking-wider text-brand">Recommended next step</span>
           </div>
-          <p className="mt-1 text-[14px] text-text">
+          <p className="text-[14px] text-text">
             Investigate whether entry temperature interacts with the roll-gap setpoint.
           </p>
-          <p className="mt-0.5 text-[12px] text-text-secondary">
+          <p className="text-[12px] text-text-secondary">
             Q-0014 indicates an entry-temp floor near 980°C. Confirming this could refine the thickness model.
           </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}
               className="flex h-10 items-center gap-1.5 rounded-sm bg-brand px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand-ring">
               <Sparkles className="size-3.5" /> Continue investigation
@@ -207,13 +202,30 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
               <button type="button" onClick={() => navigate('/experiments')} className="ml-auto text-brand hover:underline">Open →</button>
             </div>
           </div>
+
+          {/* Related Findings — with real titles */}
           <div className="rounded-sm border border-border-subtle bg-surface px-3 py-3">
-            <div className="text-[11px] uppercase tracking-wider text-text-muted font-medium">Related Findings</div>
-            <div className="mt-1 flex flex-wrap gap-2">
-              <span className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary">F-0034</span>
-              <span className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary">F-0031</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-text-muted font-medium">Related Findings</span>
+              <span className="text-[11px] text-text-muted">· 2</span>
             </div>
-            <button type="button" onClick={() => navigate('/findings?focus=F-0050')} className="mt-2 text-[11px] text-brand hover:underline">View all →</button>
+            <div className="mt-1.5 space-y-1.5">
+              {f0034 && (
+                <button type="button" onClick={() => navigate(`/findings?focus=${f0034.id}`)}
+                  className="flex w-full items-center gap-2 rounded-sm px-1.5 py-1 text-left hover:bg-surface-2 transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring min-h-8">
+                  <span className="font-mono text-[11px] text-text-secondary shrink-0">F-0034</span>
+                  <span className="text-[12px] text-text truncate">{f0034.title}</span>
+                </button>
+              )}
+              {f0031 && (
+                <button type="button" onClick={() => navigate(`/findings?focus=${f0031.id}`)}
+                  className="flex w-full items-center gap-2 rounded-sm px-1.5 py-1 text-left hover:bg-surface-2 transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring min-h-8">
+                  <span className="font-mono text-[11px] text-text-secondary shrink-0">F-0031</span>
+                  <span className="text-[12px] text-text truncate">{f0031.title}</span>
+                </button>
+              )}
+            </div>
+            <button type="button" onClick={() => navigate('/findings?focus=F-0050')} className="mt-1.5 text-[11px] text-brand hover:underline">View all related →</button>
           </div>
         </div>
       </div>
@@ -224,35 +236,44 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
 // ── Knowledge Loop ──────────────────────────────────────────────────────
 function KnowledgeLoop() {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0">
-      {LOOP_PHASES.map((phase, pi) => (
-        <div key={phase.id} className="flex flex-1 flex-col">
-          <div className="mb-2 text-[11px] uppercase tracking-wider text-text-muted font-medium px-1">{phase.label}</div>
-          <div className="flex flex-col gap-2 flex-1">
-            {phase.nodes.map((n, ni) => (
-              <div key={n.step} className="flex items-stretch gap-2">
-                <LoopCard n={n} />
-                {ni < phase.nodes.length - 1 && (
-                  <div className="flex items-center text-text-muted">
-                    <ChevronDown className="size-4" />
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-0">
+      {[0, 1, 2].map((phaseIdx) => {
+        const start = PHASE_BOUNDARIES[phaseIdx];
+        const end = phaseIdx < PHASE_BOUNDARIES.length - 1 ? PHASE_BOUNDARIES[phaseIdx + 1] : LOOP_NODES.length;
+        const phaseNodes = LOOP_NODES.slice(start, end);
+        return (
+          <div key={phaseIdx} className="flex flex-1 flex-col">
+            <div className="mb-2 text-[11px] uppercase tracking-wider text-text-muted font-medium px-1">{PHASE_LABELS[phaseIdx]}</div>
+            <div className="flex flex-col gap-0 flex-1">
+              {phaseNodes.map((n, ni) => {
+                const globalIdx = start + ni;
+                return (
+                  <div key={n.step} className="flex flex-col">
+                    <LoopCard n={n} globalIdx={globalIdx} />
+                    {ni < phaseNodes.length - 1 && (
+                      <div className="flex justify-center py-1 text-text-muted">
+                        <ArrowDown className="size-3.5" aria-hidden="true" />
+                      </div>
+                    )}
+                    {/* Inter-phase connector: after last card of phase i to first card of phase i+1 */}
+                    {ni === phaseNodes.length - 1 && phaseIdx < 2 && (
+                      <div className="flex items-center justify-center py-2 sm:py-0 sm:px-2 sm:self-stretch sm:min-h-[40px]">
+                        <ArrowRight className="size-4 hidden sm:block text-text-muted" aria-hidden="true" />
+                        <ArrowDown className="size-4 sm:hidden text-text-muted" aria-hidden="true" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {pi < LOOP_PHASES.length - 1 && (
-            <div className="flex items-center justify-center py-3 sm:py-0 sm:px-3 sm:self-stretch">
-              <ChevronRight className="size-5 shrink-0 hidden sm:block text-text-muted" />
-              <ChevronDown className="size-5 shrink-0 sm:hidden text-text-muted" />
+                );
+              })}
             </div>
-          )}
-        </div>
-      ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
 
-function LoopCard({ n }: { n: LoopNode }) {
+function LoopCard({ n, globalIdx }: { n: LoopNode; globalIdx: number }) {
   const navigate = useNavigate();
   const Tag = n.clickable ? 'button' : 'div';
   return (
@@ -265,13 +286,17 @@ function LoopCard({ n }: { n: LoopNode }) {
           ? 'cursor-pointer border-border-strong bg-elevated hover:border-brand-border hover:bg-elevated transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring'
           : 'border-border-subtle bg-surface-2',
       )}
+      aria-label={n.clickable ? `${n.step}: ${n.label} — ${n.sub}` : undefined}
     >
-      <div className="flex flex-col items-center gap-1 pt-0.5">
-        <n.icon className={cn('size-4 shrink-0', TONE_TEXT[n.tone])} strokeWidth={1.75} />
+      <div className="flex flex-col items-center gap-0.5 pt-0.5">
+        <span className="font-mono text-[10px] text-text-muted tabular-nums">{n.step}</span>
         <span className={cn('size-1 rounded-full', TONE_TEXT[n.tone])} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className={cn('text-[13px]', n.clickable ? 'text-text font-medium' : 'text-text-secondary')}>{n.label}</div>
+        <div className="flex items-center gap-1.5">
+          <n.icon className={cn('size-3.5 shrink-0', TONE_TEXT[n.tone])} strokeWidth={1.75} />
+          <span className={cn('text-[13px]', n.clickable ? 'text-text font-medium' : 'text-text-secondary')}>{n.label}</span>
+        </div>
         <p className="text-[11px] leading-snug text-text-muted mt-0.5">{n.sub}</p>
       </div>
     </Tag>
@@ -300,7 +325,9 @@ function DocLayers() {
                 <StatusBadge value={l.status} tone={l.tone === 'muted' ? undefined : l.tone} />
               </div>
               <span className="shrink-0 text-[12px] text-text-muted">{l.files.length} files</span>
-              <ChevronDown className={cn('size-3.5 text-text-muted shrink-0 transition-transform', isOpen && 'rotate-180')} />
+              <span className={cn('size-3.5 shrink-0 text-text-muted transition-transform', isOpen && 'rotate-180')}>
+                ▼
+              </span>
             </button>
             {isOpen && (
               <div className="flex flex-wrap gap-1.5 px-3 pt-1.5 pb-2">
@@ -329,27 +356,7 @@ function RecentActivitySection({ navigate }: { navigate: (to: string) => void })
             <span className="text-[12px] text-text-muted">{a.source}</span>
           </div>
           <span className="shrink-0 text-[12px] text-text-muted">{a.time}</span>
-          <ChevronRight className="size-3.5 shrink-0 text-text-muted" />
-        </button>
-      ))}
-    </div>
-  );
-}
-
-// ── Quick Actions (reduced to 3 most contextual) ────────────────────────
-function QuickActionsSection({ navigate }: { navigate: (to: string) => void }) {
-  const actions: { icon: LucideIcon; label: string; to: string }[] = [
-    { icon: Search, label: 'Search Knowledge', to: '/search' },
-    { icon: Share2, label: 'Knowledge Graph', to: '/graph' },
-    { icon: Table2, label: 'Findings & Questions', to: '/findings' },
-  ];
-  return (
-    <div className="flex flex-wrap items-center gap-2 pb-4">
-      <span className="text-[11px] uppercase tracking-wider text-text-muted font-medium mr-1">Explore</span>
-      {actions.map((a) => (
-        <button key={a.to} type="button" onClick={() => navigate(a.to)}
-          className="flex h-10 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-3 text-[12px] text-text-muted transition-colors hover:text-text hover:border-border-strong focus-visible:ring-2 focus-visible:ring-brand-ring">
-          <a.icon className="size-3.5" /> {a.label}
+          <span className="size-3.5 shrink-0 text-text-muted">→</span>
         </button>
       ))}
     </div>
