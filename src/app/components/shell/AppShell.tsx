@@ -72,7 +72,7 @@ export function AppShell() {
       </div>
 
       {/* Global mobile navigation drawer */}
-      <NavDrawer open={mobileNavOpen} onClose={closeNav} initialTab={drawerTab} />
+      <NavDrawer open={mobileNavOpen} onClose={closeNav} />
     </NavContext.Provider>
   );
 }

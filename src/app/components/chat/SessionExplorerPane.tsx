@@ -57,7 +57,7 @@ export function SessionExplorerPane({
   const failed = unique.filter((s) => s.status === 'failed');
 
   return (
-    <div className="flex h-full w-[280px] shrink-0 flex-col border-r border-border-subtle bg-surface">
+    <div className="flex h-full w-full shrink-0 flex-col bg-surface">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border-subtle px-3 py-2.5">
         <span className="text-[13px] font-semibold text-text">Workspace</span>
