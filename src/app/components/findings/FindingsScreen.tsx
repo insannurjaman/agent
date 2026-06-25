@@ -62,6 +62,10 @@ const CHIP_LABELS: Record<string, Record<string, string>> = {
 
 function chipDisplayValue(key: string, value: string): string { return CHIP_LABELS[key]?.[value] ?? value; }
 
+function sortLabel(key: SortKey): string {
+  switch (key) { case 'date': return 'Newest'; case 'confidence': return 'Highest confidence'; case 'priority': return 'Highest priority'; default: return 'Date'; }
+}
+
 function isMetricActive(query: QueryState): ActiveMetricId {
   if (query.dateRange === 'this-week') return 'new-this-week';
   if (query.findingFilters.action === 'action-required') return 'action-required';
@@ -127,6 +131,37 @@ function QuestionCard({ q, onSelect }: { q: OpenQuestion; onSelect: () => void }
         <span className="font-mono text-[11px] text-text-secondary">{q.area}</span>
       </div>
     </button>
+  );
+}
+
+// ── Mobile metrics (2×2 grid) ───────────────────────────────────────
+function MobileMetrics({ findings, questions, activeMetricId, onMetricClick }: {
+  findings: Finding[]; questions: OpenQuestion[]; activeMetricId?: string | null; onMetricClick?: (id: string) => void;
+}) {
+  const now = new Date(); const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const items = [
+    { id: 'action-required', label: 'Action required', value: findings.filter((f) => f.actionable).length, color: 'text-brand' },
+    { id: 'high-confidence', label: 'High confidence', value: findings.filter((f) => ['high', 'medium-high'].includes(f.confidence)).length, color: 'text-amber' },
+    { id: 'high-priority', label: 'High priority', value: questions.filter((q) => q.priority === 'high').length, color: 'text-error' },
+    { id: 'recently-resolved', label: 'Recently resolved', value: questions.filter((q) => q.status === 'resolved').length, color: 'text-success' },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-2 px-3 py-2 lg:hidden">
+      {items.map((m) => {
+        const isActive = activeMetricId === m.id;
+        return (
+          <button key={m.id} type="button" onClick={() => onMetricClick?.(m.id)}
+            aria-pressed={isActive}
+            className={cn('flex items-center gap-2 rounded-sm border px-3 py-2 transition-colors cursor-pointer',
+              isActive ? 'border-brand bg-brand-muted/20 ring-1 ring-brand-ring' : 'border-border-subtle bg-surface hover:border-border-strong',
+              'focus-visible:ring-2 focus-visible:ring-brand-ring')}
+            aria-label={`${m.label}: ${m.value}`}>
+            <span className={cn('text-[18px] font-medium tabular-nums', m.color)}>{m.value}</span>
+            <span className="text-[11px] text-text-muted leading-tight">{m.label}</span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -230,7 +265,7 @@ export function FindingsScreen() {
   const tabsConfig = [
     { id: 'all' as DatasetType, label: 'All', count: allFindings.length + allQuestions.length },
     { id: 'findings' as DatasetType, label: 'Findings', count: allFindings.length },
-    { id: 'questions' as DatasetType, label: 'Questions', count: allQuestions.length },
+    { id: 'questions' as DatasetType, label: 'Open Questions', count: allQuestions.length },
   ];
 
   const ALL_VIEW_LIMIT = 6;
@@ -258,7 +293,13 @@ export function FindingsScreen() {
       <div className="flex min-w-0 flex-1 flex-col">
         <ScreenHeader title="Findings & Open Questions" subtitle="Browse accumulated findings and unresolved issues from knowledge/*.csv." />
 
-        <SummaryMetrics findings={allFindings} questions={allQuestions} activeMetricId={activeMetric} onMetricClick={handleMetricClick} />
+        {/* Desktop metrics */}
+        <div className="hidden lg:block">
+          <SummaryMetrics findings={allFindings} questions={allQuestions} activeMetricId={activeMetric} onMetricClick={handleMetricClick} />
+        </div>
+
+        {/* Mobile compact metrics grid (2×2) */}
+        <MobileMetrics findings={allFindings} questions={allQuestions} activeMetricId={activeMetric} onMetricClick={handleMetricClick} />
 
         {/* Desktop toolbar */}
         <div className="hidden flex-wrap items-center gap-2 border-b border-border-subtle bg-surface px-6 py-2.5 lg:flex">
@@ -304,11 +345,11 @@ export function FindingsScreen() {
             <button type="button" onClick={() => setMobileFiltersOpen(true)}
               className={cn('flex h-9 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors shrink-0', hasActiveFilters ? 'border-brand-border bg-brand-muted text-brand' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary')}
               aria-label={`Filters${hasActiveFilters ? `, ${filterChips.length} active` : ''}`}>
-              <SlidersHorizontal className="size-3" /> Filters{hasActiveFilters ? ` · ${filterChips.length}` : ''}
+              <SlidersHorizontal className="size-3" /> Filters · {filterChips.length}
             </button>
             <select value={query.sort} onChange={(e) => updateQuery({ sort: e.target.value as SortKey })}
-              className="h-9 rounded-sm border border-border-subtle bg-surface-2 px-2 font-mono text-[11px] text-text outline-none cursor-pointer ml-auto" aria-label="Sort results">
-              {sortOptions.map((s) => (<option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>))}
+              className="h-9 rounded-sm border border-border-subtle bg-surface-2 px-2 font-mono text-[11px] text-text outline-none cursor-pointer ml-auto" aria-label={`Sort by, currently ${sortLabel(query.sort)}`}>
+              {sortOptions.map((s) => (<option key={s} value={s}>{sortLabel(s)}</option>))}
             </select>
           </div>
 
