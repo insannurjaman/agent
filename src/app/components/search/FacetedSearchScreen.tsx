@@ -106,21 +106,22 @@ export function FacetedSearchScreen() {
     return { findings: fRes, questions: qRes, experiments: eRes };
   }, [query, selected]);
 
-  // Facet counts (preview: how many results each term would match)
+  // Facet counts: full dataset when no filters, tab-aware filtered counts when query/selection active
   const facetCounts = useMemo(() => {
+    const source = defaultResults ? [...allResults.findings, ...allResults.questions, ...allResults.experiments] : visibleResults;
     const counts = new Map<string, number>();
     for (const dim of facetDimensions) {
       for (const term of dim.terms) {
         const key = `${dim.id}:${term}`;
         let count = 0;
-        for (const r of [...allResults.findings, ...allResults.questions, ...allResults.experiments]) {
+        for (const r of source) {
           if (r.facets.includes(key)) count++;
         }
         counts.set(key, count);
       }
     }
     return counts;
-  }, [allResults]);
+  }, [visibleResults, allResults, defaultResults]);
 
   // Default recent results (when no query or facets)
   const defaultResults = useMemo(() => {
