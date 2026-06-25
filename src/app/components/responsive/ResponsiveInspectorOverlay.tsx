@@ -43,9 +43,9 @@ export function ResponsiveInspectorOverlay({
 
   return (
     <>
-      {/* Backdrop for overlay modes (lg only, not 2xl) */}
+      {/* Backdrop for mobile full-screen overlay only — hidden on desktop where sidebar panels exist */}
       <div
-        className="fixed inset-0 z-30 bg-black/50 2xl:hidden"
+        className="fixed inset-0 z-30 bg-black/50 lg:hidden"
         onClick={onDismiss}
         aria-hidden="true"
       />
