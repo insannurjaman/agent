@@ -22,6 +22,7 @@ export interface Finding {
   confidence: Confidence;
   supersedes?: string; // F-id this replaces
   supersededBy?: string; // F-id that replaced this
+  supersedeReason?: string; // why this finding was superseded
   actionable: boolean;
   facets: string[];
   relatedQuestions?: string[]; // Q-ids
