@@ -64,16 +64,16 @@ export function ChatWorkspaceScreen() {
     ? { id: bundle.latestArtifactId, name: bundle.latestArtifactId }
     : null;
 
-  // Desktop: CSS Grid layout — explicit columns prevent content from pushing siblings
+  // Desktop: CSS Grid layout — conversation never compresses below readable width
   if (bp === 'desktop') {
     return (
       <>
         <div
           className="grid h-full min-h-0 w-full overflow-hidden"
-          style={{ gridTemplateColumns: artifactOpen ? '280px minmax(0,1fr) 380px' : '280px minmax(0,1fr)' }}
+          style={{ gridTemplateColumns: artifactOpen ? '280px minmax(520px,1fr) 420px' : '280px minmax(0,1fr)' }}
         >
           {/* Left Panel — Chats/Explorer (fixed width) */}
-          <div className="hidden border-r border-border-subtle md:block">
+          <div className="hidden border-r border-border-subtle md:block xl:block">
             <SessionExplorerPane
               sessionList={sessions}
               activeSessionId={session.id}

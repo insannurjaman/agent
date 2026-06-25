@@ -1,81 +1,43 @@
 import { useEffect, useState } from 'react';
-import { X, ImageIcon, FileText, Code, File, Clock, ChevronRight } from 'lucide-react';
+import { X, ImageIcon, FileText, Code, File, Clock } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import { type Artifact, type TimelineItem } from '../../data/chat';
+import { Markdown } from '../experiments/markdown';
 import { IconButton } from '../common/IconButton';
 import { cn } from '../ui/utils';
 
 type ArtifactType = Artifact['type'];
 
 const TYPE_ICONS: Record<ArtifactType, typeof ImageIcon> = {
-  png: ImageIcon,
-  json: Code,
-  html: FileText,
-  markdown: FileText,
-  log: File,
+  png: ImageIcon, json: Code, html: FileText, markdown: FileText, log: File,
 };
 
 const TYPE_LABELS: Record<ArtifactType, string> = {
-  png: 'Image',
-  json: 'JSON Data',
-  html: 'HTML Page',
-  markdown: 'Document',
-  log: 'Log File',
+  png: 'Image', json: 'JSON Data', html: 'HTML Page', markdown: 'Document', log: 'Log File',
 };
 
-export interface RelatedItem {
-  id: string;
-  label: string;
-  type: 'finding' | 'question' | 'experiment';
-}
+export interface RelatedItem { id: string; label: string; type: 'finding' | 'question' | 'experiment'; }
 
 export function ArtifactViewer({
-  artifact,
-  onClose,
-  newArtifact,
-  timeline,
-  onTimelineOpen,
-  related,
-  onNav,
+  artifact, onClose, newArtifact, timeline, onTimelineOpen, related, onNav,
 }: {
-  artifact: Artifact | null;
-  onClose: () => void;
+  artifact: Artifact | null; onClose: () => void;
   newArtifact: { id: string; name: string } | null;
-  timeline: TimelineItem[];
-  onTimelineOpen: (item: TimelineItem) => void;
-  related: RelatedItem[];
-  onNav: (id: string) => void;
+  timeline: TimelineItem[]; onTimelineOpen: (item: TimelineItem) => void;
+  related: RelatedItem[]; onNav: (id: string) => void;
 }) {
-  const [tab, setTab] = useState<'preview' | 'metadata' | 'related' | 'timeline'>('preview');
+  const [tab, setTab] = useState<'preview' | 'source' | 'metadata' | 'timeline'>('preview');
 
-  // Escape key closes
   useEffect(() => {
     if (!artifact) return;
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        onClose();
-      }
-    }
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
+    function h(e: KeyboardEvent) { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
   }, [artifact, onClose]);
 
-  // Reset tab when artifact changes
-  useEffect(() => {
-    setTab('preview');
-  }, [artifact?.id]);
+  useEffect(() => { setTab('preview'); }, [artifact?.id]);
 
-  if (!artifact) {
-    return (
-      <div className="flex h-full flex-col items-center justify-center bg-surface px-6 text-center">
-        <div className="mb-3 flex size-10 items-center justify-center rounded-sm border border-border-strong bg-surface-2">
-          <ImageIcon className="size-5 text-text-muted" />
-        </div>
-        <div className="text-[13px] text-text-muted">No artifact selected</div>
-      </div>
-    );
-  }
+  if (!artifact) return null;
 
   const Icon = TYPE_ICONS[artifact.type];
 
@@ -85,7 +47,8 @@ export function ArtifactViewer({
       <div className="flex shrink-0 items-center gap-2 border-b border-border-subtle px-3 py-2.5">
         <Icon className="size-4 shrink-0 text-text-muted" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-medium text-text">Artifact Viewer</div>
+          <div className="truncate text-[13px] font-medium text-text">{artifact.name}</div>
+          <div className="text-[11px] text-text-muted">{artifact.generatedAt}</div>
         </div>
         <IconButton icon={X} label="Close artifact viewer" onClick={onClose} className="shrink-0" />
       </div>
@@ -94,6 +57,7 @@ export function ArtifactViewer({
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="flex min-h-0 flex-1 flex-col">
         <TabsList className="mx-3 mt-2 shrink-0">
           <TabsTrigger value="preview" className="flex-1 text-[11px]">Preview</TabsTrigger>
+          <TabsTrigger value="source" className="flex-1 text-[11px]">Source</TabsTrigger>
           <TabsTrigger value="metadata" className="flex-1 text-[11px]">Metadata</TabsTrigger>
           {related.length > 0 && (
             <TabsTrigger value="related" className="flex-1 text-[11px]">Related</TabsTrigger>
@@ -101,22 +65,19 @@ export function ArtifactViewer({
           <TabsTrigger value="timeline" className="flex-1 text-[11px]">Timeline</TabsTrigger>
         </TabsList>
 
-        {/* Preview — simplified: only artifact preview, filename, caption, generatedAt */}
+        {/* Preview — rendered markdown */}
         <TabsContent value="preview" className="min-h-0 flex-1 overflow-auto p-3">
           <ArtifactBody artifact={artifact} />
-          <div className="mt-3 border-t border-border-subtle pt-3">
-            <div className="truncate text-[12px] font-medium text-text">{artifact.name}</div>
-            {artifact.caption && (
-              <div className="mt-0.5 text-[11px] text-text-muted">{artifact.caption}</div>
-            )}
-            <div className="mt-1 flex items-center gap-1.5 font-mono text-[10px] text-text-muted">
-              <Clock className="size-3" />
-              {artifact.generatedAt}
-            </div>
-          </div>
         </TabsContent>
 
-        {/* Metadata — technical fields moved here */}
+        {/* Source — raw markdown */}
+        <TabsContent value="source" className="min-h-0 flex-1 overflow-auto p-3">
+          <pre className="whitespace-pre-wrap text-[12px] text-text-secondary font-mono leading-relaxed">
+            {artifact.markdown || artifact.log || artifact.json ? JSON.stringify(artifact.json, null, 2) : ''}
+          </pre>
+        </TabsContent>
+
+        {/* Metadata */}
         <TabsContent value="metadata" className="min-h-0 flex-1 overflow-auto p-3">
           <div className="space-y-3">
             <MetaRow label="File" value={artifact.name} />
@@ -125,6 +86,7 @@ export function ArtifactViewer({
             <MetaRow label="Generated" value={artifact.generatedAt} />
             <MetaRow label="Generated by" value={artifact.generatedBy} />
             <MetaRow label="Path" value={artifact.path} mono />
+            {artifact.caption && <MetaRow label="Caption" value={artifact.caption} />}
             {artifact.sourceCommand && (
               <div>
                 <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-text-muted">Source command</div>
@@ -141,13 +103,8 @@ export function ArtifactViewer({
           <TabsContent value="related" className="min-h-0 flex-1 overflow-auto p-3">
             <div className="space-y-1">
               {related.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => onNav(r.id)}
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] text-text-secondary hover:bg-surface-2 hover:text-text"
-                >
-                  <ChevronRight className="size-3 shrink-0 text-text-muted" />
+                <button key={r.id} type="button" onClick={() => onNav(r.id)}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[12px] text-text-secondary hover:bg-surface-2 hover:text-text">
                   <span className="font-mono text-[11px] text-text-muted">{r.id}</span>
                   <span className="truncate">{r.label}</span>
                 </button>
@@ -160,18 +117,9 @@ export function ArtifactViewer({
         <TabsContent value="timeline" className="min-h-0 flex-1 overflow-auto p-3">
           <div className="space-y-0">
             {timeline.map((item, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => item.artifactId && onTimelineOpen(item)}
+              <button key={i} type="button" onClick={() => item.artifactId && onTimelineOpen(item)}
                 disabled={!item.artifactId}
-                className={cn(
-                  'flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px]',
-                  item.artifactId
-                    ? 'text-text-secondary hover:bg-surface-2 hover:text-text cursor-pointer'
-                    : 'text-text-muted cursor-default',
-                )}
-              >
+                className={cn('flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px]', item.artifactId ? 'text-text-secondary hover:bg-surface-2 hover:text-text cursor-pointer' : 'text-text-muted cursor-default')}>
                 <Clock className="size-3 shrink-0" />
                 <span className="truncate">{item.label}</span>
                 <span className="ml-auto shrink-0 font-mono text-[10px] text-text-muted">{item.time}</span>
@@ -195,76 +143,46 @@ function MetaRow({ label, value, mono }: { label: string; value: string; mono?: 
 
 function ArtifactBody({ artifact }: { artifact: Artifact }) {
   switch (artifact.type) {
-    case 'png':
-      return <PngPreview artifact={artifact} />;
+    case 'markdown':
+      return artifact.markdown ? (
+        <div className="rounded-sm border border-border-subtle bg-elevated p-4">
+          <Markdown source={artifact.markdown} />
+        </div>
+      ) : <EmptyPreview />;
     case 'json':
       return artifact.json ? <JsonTree data={artifact.json} /> : <EmptyPreview />;
     case 'html':
       return artifact.html ? (
         <div className="overflow-hidden rounded-sm border border-border-subtle">
-          <iframe
-            srcDoc={artifact.html}
-            title={artifact.name}
-            className="h-64 w-full"
-            sandbox=""
-          />
+          <iframe srcDoc={artifact.html} title={artifact.name} className="h-64 w-full" sandbox="" />
         </div>
-      ) : (
-        <EmptyPreview />
-      );
-    case 'markdown':
-      return artifact.markdown ? (
-        <div className="rounded-sm border border-border-subtle bg-elevated p-3">
-          <div className="whitespace-pre-wrap text-[12px] text-text-secondary">{artifact.markdown}</div>
-        </div>
-      ) : (
-        <EmptyPreview />
-      );
+      ) : <EmptyPreview />;
     case 'log':
       return artifact.log ? (
         <pre className="max-h-64 overflow-auto rounded-sm border border-border-subtle bg-code-surface p-3 font-mono text-[11px] text-text-secondary">
           {artifact.log}
         </pre>
-      ) : (
-        <EmptyPreview />
-      );
+      ) : <EmptyPreview />;
+    case 'png':
+      return <PngPreview artifact={artifact} />;
     default:
       return <EmptyPreview />;
   }
 }
 
 function PngPreview({ artifact }: { artifact: Artifact }) {
-  // Render a simplified SVG chart placeholder for PNG artifacts
   return (
     <div className="overflow-hidden rounded-sm border border-border-subtle bg-elevated">
       <svg viewBox="0 0 400 240" className="h-48 w-full" aria-label={`Chart: ${artifact.name}`}>
         <rect width="400" height="240" fill="var(--surface-2)" />
-        {/* Y-axis */}
         <line x1="40" y1="20" x2="40" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
-        {/* X-axis */}
         <line x1="40" y1="200" x2="380" y2="200" stroke="var(--border-strong)" strokeWidth="1" />
-        {/* Y-axis ticks */}
-        {[40, 80, 120, 160].map((y) => (
-          <line key={y} x1="36" y1={y} x2="40" y2={y} stroke="var(--border-strong)" strokeWidth="1" />
-        ))}
-        {/* Bars */}
+        {[40, 80, 120, 160].map((y) => (<line key={y} x1="36" y1={y} x2="40" y2={y} stroke="var(--border-strong)" strokeWidth="1" />))}
         {[60, 110, 160, 210, 260, 310, 360].map((x, i) => {
           const h = [120, 80, 140, 60, 100, 90, 110][i];
-          return (
-            <rect
-              key={x}
-              x={x - 15}
-              y={200 - h}
-              width="30"
-              height={h}
-              fill={i === 2 ? 'var(--brand-primary)' : 'var(--border-strong)'}
-              rx="2"
-            />
-          );
+          return (<rect key={x} x={x - 15} y={200 - h} width="30" height={h} fill={i === 2 ? 'var(--brand-primary)' : 'var(--border-strong)'} rx="2" />);
         })}
-        <text x="210" y="230" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontFamily="monospace">
-          {artifact.name}
-        </text>
+        <text x="210" y="230" textAnchor="middle" fill="var(--text-muted)" fontSize="10" fontFamily="monospace">{artifact.name}</text>
       </svg>
     </div>
   );
@@ -273,46 +191,22 @@ function PngPreview({ artifact }: { artifact: Artifact }) {
 function JsonTree({ data, depth = 0 }: { data: unknown; depth?: number }) {
   if (depth > 3) return <span className="text-text-muted">…</span>;
   if (data === null || data === undefined) return <span className="text-text-muted">null</span>;
-  if (typeof data !== 'object') {
-    return <span className="text-text-secondary">{String(data)}</span>;
-  }
+  if (typeof data !== 'object') return <span className="text-text-secondary">{String(data)}</span>;
   if (Array.isArray(data)) {
-    return (
-      <div className="ml-2">
-        <span className="text-text-muted">[</span>
-        {data.slice(0, 10).map((item, i) => (
-          <div key={i} className="ml-2">
-            <JsonTree data={item} depth={depth + 1} />
-            {i < Math.min(data.length, 10) - 1 && <span className="text-text-muted">,</span>}
-          </div>
-        ))}
-        {data.length > 10 && <div className="ml-2 text-text-muted">… {data.length - 10} more</div>}
-        <span className="text-text-muted">]</span>
-      </div>
-    );
+    return (<div className="ml-2"><span className="text-text-muted">[</span>
+      {data.slice(0, 10).map((item, i) => (<div key={i} className="ml-2"><JsonTree data={item} depth={depth + 1} />{i < Math.min(data.length, 10) - 1 && <span className="text-text-muted">,</span>}</div>))}
+      {data.length > 10 && <div className="ml-2 text-text-muted">… {data.length - 10} more</div>}
+      <span className="text-text-muted">]</span>
+    </div>);
   }
   const entries = Object.entries(data as Record<string, unknown>);
-  return (
-    <div className="ml-2">
-      <span className="text-text-muted">{'{'}</span>
-      {entries.slice(0, 15).map(([key, val], i) => (
-        <div key={key} className="ml-2">
-          <span className="text-brand">{key}</span>
-          <span className="text-text-muted">: </span>
-          <JsonTree data={val} depth={depth + 1} />
-          {i < Math.min(entries.length, 15) - 1 && <span className="text-text-muted">,</span>}
-        </div>
-      ))}
-      {entries.length > 15 && <div className="ml-2 text-text-muted">… {entries.length - 15} more</div>}
-      <span className="text-text-muted">{'}'}</span>
-    </div>
-  );
+  return (<div className="ml-2"><span className="text-text-muted">{'{'}</span>
+    {entries.slice(0, 15).map(([key, val], i) => (<div key={key} className="ml-2"><span className="text-brand">{key}</span><span className="text-text-muted">: </span><JsonTree data={val} depth={depth + 1} />{i < Math.min(entries.length, 15) - 1 && <span className="text-text-muted">,</span>}</div>))}
+    {entries.length > 15 && <div className="ml-2 text-text-muted">… {entries.length - 15} more</div>}
+    <span className="text-text-muted">{'}'}</span>
+  </div>);
 }
 
 function EmptyPreview() {
-  return (
-    <div className="flex h-40 items-center justify-center rounded-sm border border-border-subtle bg-elevated">
-      <span className="text-[12px] text-text-muted">Preview not available</span>
-    </div>
-  );
+  return (<div className="flex h-40 items-center justify-center rounded-sm border border-border-subtle bg-elevated"><span className="text-[12px] text-text-muted">Preview not available</span></div>);
 }
