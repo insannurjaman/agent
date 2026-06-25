@@ -339,16 +339,20 @@ export function FindingsScreen() {
             </div>
           </div>
 
-          {/* Scope tabs + Filters + Sort row */}
-          <div className="flex items-center gap-1.5 px-3 pb-2">
-            <SegmentedControl compact segments={tabsConfig.map(t => ({ id: t.id, label: t.label, count: t.count }))} value={query.dataset} onChange={(id) => switchDataset(id as DatasetType)} className="shrink-0" />
+          {/* Scope tabs row — dedicated row, never overflows */}
+          <div className="flex items-center px-3 pb-1.5">
+            <SegmentedControl compact segments={tabsConfig.map(t => ({ id: t.id, label: t.id === 'questions' ? 'Questions' : t.label, count: t.count }))} value={query.dataset} onChange={(id) => switchDataset(id as DatasetType)} className="shrink-0" aria-label="View options" />
+          </div>
+
+          {/* Filters + Sort row — dedicated row, never overflows */}
+          <div className="flex items-center gap-2 px-3 pb-2">
             <button type="button" onClick={() => setMobileFiltersOpen(true)}
-              className={cn('flex h-9 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors shrink-0', hasActiveFilters ? 'border-brand-border bg-brand-muted text-brand' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary')}
-              aria-label={`Filters${hasActiveFilters ? `, ${filterChips.length} active` : ''}`}>
+              className={cn('flex h-9 items-center gap-1.5 rounded-sm border px-2.5 font-mono text-[11px] transition-colors', hasActiveFilters ? 'border-brand-border bg-brand-muted text-brand' : 'border-border-subtle bg-surface-2 text-text-muted hover:text-text-secondary')}
+              aria-label={`Open filters, ${filterChips.length} filter${filterChips.length !== 1 ? 's' : ''} applied`}>
               <SlidersHorizontal className="size-3" /> Filters · {filterChips.length}
             </button>
             <select value={query.sort} onChange={(e) => updateQuery({ sort: e.target.value as SortKey })}
-              className="h-9 rounded-sm border border-border-subtle bg-surface-2 px-2 font-mono text-[11px] text-text outline-none cursor-pointer ml-auto" aria-label={`Sort by, currently ${sortLabel(query.sort)}`}>
+              className="h-9 rounded-sm border border-border-subtle bg-surface-2 px-2 font-mono text-[11px] text-text outline-none cursor-pointer" aria-label={`Sort results, currently ${sortLabel(query.sort)}`}>
               {sortOptions.map((s) => (<option key={s} value={s}>{sortLabel(s)}</option>))}
             </select>
           </div>
