@@ -1,6 +1,6 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { Search, X, ChevronDown, ChevronUp, FileText, Share2, GitBranch, SlidersHorizontal } from 'lucide-react';
+import { Search, X, ChevronDown, ChevronUp, FileText, Share2, GitBranch, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import {
   findings,
   openQuestions,
@@ -16,7 +16,6 @@ import { AskClaudeButton, NavActionButton } from '../common/AskClaudeActions';
 import { SegmentedControl } from '../common/SegmentedControl';
 import { IconButton } from '../common/IconButton';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
-import { Drawer } from '../responsive/Drawer';
 import { cn } from '../ui/utils';
 
 type ResultKind = 'finding' | 'question' | 'experiment';
@@ -200,10 +199,15 @@ export function FacetedSearchScreen() {
         <FacetPanel selected={selected} onToggle={toggleFacet} onClear={() => setSelected(new Set())} facetCounts={facetCounts} />
       </div>
 
-      {/* Mobile facet drawer */}
-      <Drawer open={mobileFacetsOpen} onClose={() => setMobileFacetsOpen(false)} side="left" width="w-full sm:w-[360px]" ariaLabel="Filter facets">
-        <FacetPanel selected={selected} onToggle={toggleFacet} onClear={() => setSelected(new Set())} facetCounts={facetCounts} />
-      </Drawer>
+      {/* Mobile facet drawer — full screen */}
+      {mobileFacetsOpen && <MobileFilterDrawer
+        selected={selected}
+        facetCounts={facetCounts}
+        total={total}
+        onToggle={toggleFacet}
+        onClear={() => setSelected(new Set())}
+        onClose={() => setMobileFacetsOpen(false)}
+      />}
 
       {/* Main area */}
       <div className="flex min-w-0 flex-1 flex-col bg-background">
@@ -434,6 +438,142 @@ function FacetPanel({ selected, onToggle, onClear, facetCounts }: {
         })}
       </div>
     </aside>
+  );
+}
+
+// ── MobileFilterDrawer ──────────────────────────────────────────────────
+function MobileFilterDrawer({ selected, facetCounts, total, onToggle, onClear, onClose }: {
+  selected: Set<string>; facetCounts: Map<string, number>; total: number;
+  onToggle: (k: string) => void; onClear: () => void; onClose: () => void;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocus = useRef<HTMLElement | null>(null);
+  const [within, setWithin] = useState('');
+  const [open, setOpen] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    previousFocus.current = document.activeElement as HTMLElement;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => { panelRef.current?.focus(); });
+    return () => { document.body.style.overflow = ''; if (previousFocus.current) previousFocus.current.focus(); };
+  }, []);
+
+  useEffect(() => {
+    function h(e: KeyboardEvent) { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }
+    document.addEventListener('keydown', h);
+    return () => document.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const effectiveOpen = useMemo(() => {
+    const next = new Set(open);
+    for (const key of selected) { const dim = key.split(':')[0]; next.add(dim); }
+    return next;
+  }, [open, selected]);
+
+  const toggleOpen = (id: string) => setOpen((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+
+  return (
+    <div className="fixed inset-0 z-50 flex" role="dialog" aria-modal="true" aria-label="Facet filters">
+      <div className="fixed inset-0 bg-black/60" onClick={onClose} aria-hidden="true" />
+      <div ref={panelRef} tabIndex={-1}
+        className="relative ml-auto flex h-dvh w-full max-w-[100vw] flex-col bg-surface shadow-2xl outline-none sm:max-w-[400px]">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <h2 className="text-[14px] font-medium text-text">Facets</h2>
+            {selected.size > 0 && <span className="font-mono text-[11px] text-text-muted">· {selected.size}</span>}
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close facet filters"
+            className="flex size-10 items-center justify-center rounded-sm text-text-muted hover:text-text hover:bg-surface-hover transition-colors">
+            <X className="size-4" />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="border-b border-border-subtle px-4 py-2.5 shrink-0">
+          <div className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-2 focus-within:border-brand-border transition-colors">
+            <Search className="size-3.5 shrink-0 text-text-muted" />
+            <input aria-label="Filter available facets" value={within} onChange={(e) => setWithin(e.target.value)}
+              placeholder="Filter available facets…"
+              className="w-full bg-transparent text-[13px] text-text outline-none placeholder:text-text-muted" />
+            {within && <button type="button" onClick={() => setWithin('')} className="flex size-6 items-center justify-center rounded-sm text-text-muted hover:text-text" aria-label="Clear"><X className="size-3" /></button>}
+          </div>
+        </div>
+
+        {/* Selected filter summary */}
+        {selected.size > 0 && (
+          <div className="border-b border-border-subtle bg-surface/80 px-4 py-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[...selected].slice(0, 4).map((k) => {
+                const [dim, term] = k.split(':');
+                return (
+                  <span key={k} className="inline-flex items-center gap-1 rounded-sm border border-brand-border bg-brand-muted/30 px-1.5 py-0.5 font-mono text-[11px] text-brand">
+                    {dim}:{term}
+                    <button type="button" onClick={() => onToggle(k)} aria-label={`Remove ${dim}:${term}`} className="ml-0.5 text-text-muted hover:text-text"><X className="size-2.5" /></button>
+                  </span>
+                );
+              })}
+              {selected.size > 4 && <span className="font-mono text-[11px] text-text-muted">+{selected.size - 4} more</span>}
+              <button type="button" onClick={onClear} className="font-mono text-[11px] text-text-muted hover:text-text ml-auto">Clear all</button>
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable facet content */}
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-3">
+          {facetDimensions.map((dim) => {
+            const terms = dim.terms.filter((t) => t.toLowerCase().includes(within.toLowerCase()));
+            if (terms.length === 0) return null;
+            const isOpen = effectiveOpen.has(dim.id);
+            const selCount = [...selected].filter((k) => k.startsWith(dim.id + ':')).length;
+            return (
+              <div key={dim.id} className="mb-1">
+                <button type="button" aria-expanded={isOpen} onClick={() => toggleOpen(dim.id)}
+                  className="flex w-full items-center justify-between rounded-sm px-3 py-3 min-h-11 hover:bg-surface-2 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-text-secondary">{dim.label}</span>
+                    {selCount > 0 && <span className="rounded-sm border border-brand-border bg-brand-muted px-1.5 font-mono text-[10px] text-brand tabular-nums">{selCount} selected</span>}
+                  </div>
+                  {isOpen ? <ChevronUp className="size-3.5 text-text-muted" /> : <ChevronDown className="size-3.5 text-text-muted" />}
+                </button>
+                {isOpen && (
+                  <div className="mt-1 space-y-0.5 pl-2 pr-1 pb-1">
+                    {terms.map((term) => {
+                      const key = `${dim.id}:${term}`;
+                      const checked = selected.has(key);
+                      const count = facetCounts.get(key) ?? 0;
+                      return (
+                        <button key={key} type="button" role="checkbox" aria-checked={checked}
+                          onClick={() => onToggle(key)}
+                          className={cn('flex w-full items-center gap-3 rounded-sm px-3 py-2.5 min-h-10 text-left hover:bg-surface-2 transition-colors', count === 0 && !checked && 'opacity-40')}>
+                          <span className={cn('flex size-4 shrink-0 items-center justify-center rounded-[3px] border', checked ? 'border-brand bg-brand-muted' : 'border-border-strong')}>
+                            {checked && <span className="size-2 rounded-[1px] bg-brand" />}
+                          </span>
+                          <span className={cn('font-mono text-[13px]', checked ? 'text-text font-medium' : 'text-text-secondary')}>{term}</span>
+                          <span className="ml-auto font-mono text-[11px] text-text-muted tabular-nums">{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-3 border-t border-border-subtle px-4 py-3 shrink-0">
+          <button type="button" onClick={onClear} disabled={selected.size === 0}
+            className={cn('flex items-center gap-1.5 rounded-sm border px-3 py-2 font-mono text-[12px] transition-colors', selected.size > 0 ? 'border-border-strong bg-surface-2 text-text-secondary hover:text-text' : 'border-border-subtle text-text-muted opacity-40 cursor-default')}>
+            <RotateCcw className="size-3.5" /> Reset
+          </button>
+          <button type="button" onClick={onClose}
+            className="flex-1 rounded-sm bg-brand px-3 py-2 font-mono text-[13px] font-medium text-primary-foreground text-center transition-colors hover:bg-brand-hover">
+            Show {total} result{total !== 1 ? 's' : ''}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
