@@ -37,7 +37,25 @@ export function ArtifactViewer({
 
   useEffect(() => { setTab('preview'); }, [artifact?.id]);
 
-  if (!artifact) return null;
+  if (!artifact) {
+    return (
+      <aside aria-label="Artifact viewer" className="flex h-full w-full min-h-0 flex-col bg-surface">
+        <div className="flex shrink-0 items-center justify-between border-b border-border-subtle px-3 py-2.5">
+          <span className="text-[13px] font-medium text-text">Artifact Viewer</span>
+          <IconButton icon={X} label="Close artifact viewer" onClick={onClose} className="shrink-0" />
+        </div>
+        <div className="flex flex-1 items-center justify-center px-6">
+          <div className="text-center">
+            <div className="text-[13px] text-text-muted">This artifact could not be loaded.</div>
+            <button type="button" onClick={onClose}
+              className="mt-3 rounded-sm border border-border-strong bg-surface-2 px-3 py-1.5 font-mono text-[12px] text-text-secondary hover:text-text transition-colors">
+              Return to investigation
+            </button>
+          </div>
+        </div>
+      </aside>
+    );
+  }
 
   const Icon = TYPE_ICONS[artifact.type];
 

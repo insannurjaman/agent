@@ -104,6 +104,7 @@ export function ChatStream({
   onOpenPanel?: () => void;
   onToggleArtifact?: () => void;
   hasArtifact?: boolean;
+  onPanelChange?: (panel: string | null) => void;
 }) {
   const navigate = useNavigate();
   const { openNav } = useNavContext();
