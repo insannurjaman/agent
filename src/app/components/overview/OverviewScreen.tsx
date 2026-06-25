@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   HelpCircle, Search, FolderPlus, Play, CheckCheck, BookMarked, CircleHelp,
-  FileText, BadgeCheck, ArrowDown, ArrowRight, Sparkles,
+  FileText, BadgeCheck, ArrowDown, ArrowRight, ChevronRight, ChevronDown, Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import { ScreenHeader, MonoId } from '../common/primitives';
@@ -27,7 +27,7 @@ const LOOP_NODES: LoopNode[] = [
   { step: '09', label: 'Promotion', sub: 'User confirms promoted knowledge', icon: BadgeCheck, tone: 'purple' },
 ];
 
-const PHASE_BOUNDARIES = [1, 3, 5]; // step indices where phases start (0-based)
+const PHASE_BOUNDARIES = [0, 2, 5]; // 0-based start indices for each phase: P1(0-1)=01-02, P2(2-4)=03-05, P3(5-8)=06-09
 
 interface DocLayer { id: string; path: string; purpose: string; files: string[]; status: string; tone: 'green' | 'teal' | 'amber' | 'blue' | 'purple' | 'muted'; }
 
@@ -118,7 +118,7 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
   const f0034 = getFindingById('F-0034');
   const f0031 = getFindingById('F-0031');
   return (
-    <section className="rounded-sm border border-brand-border bg-elevated">
+    <section className="rounded-sm border border-brand-border/40 bg-elevated">
       <div className="flex items-center justify-between border-b border-brand-border/20 px-5 py-3">
         <h2 className="text-[14px] font-medium text-text">Current Investigation</h2>
         <span className="text-[12px] text-text-muted">Updated 2m ago</span>
@@ -312,9 +312,10 @@ function DocLayers() {
     <div className="flex flex-col gap-1.5">
       {LAYERS.map((l) => {
         const isOpen = expanded.has(l.id);
+        const panelId = `doc-panel-${l.id}`;
         return (
           <div key={l.id}>
-            <button type="button" aria-expanded={isOpen} onClick={() => toggle(l.id)}
+            <button type="button" aria-expanded={isOpen} aria-controls={panelId} onClick={() => toggle(l.id)}
               className="flex w-full items-center gap-3 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-strong focus-visible:ring-2 focus-visible:ring-brand-ring min-h-10">
               <span className={cn('font-mono text-[13px] w-10 shrink-0', TONE_TEXT[l.tone])}>{l.id}</span>
               <div className="min-w-0 flex-1">
@@ -325,12 +326,14 @@ function DocLayers() {
                 <StatusBadge value={l.status} tone={l.tone === 'muted' ? undefined : l.tone} />
               </div>
               <span className="shrink-0 text-[12px] text-text-muted">{l.files.length} files</span>
-              <span className={cn('size-3.5 shrink-0 text-text-muted transition-transform', isOpen && 'rotate-180')}>
-                ▼
-              </span>
+              {isOpen ? (
+                <ChevronDown className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
+              ) : (
+                <ChevronRight className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
+              )}
             </button>
             {isOpen && (
-              <div className="flex flex-wrap gap-1.5 px-3 pt-1.5 pb-2">
+              <div id={panelId} className="flex flex-wrap gap-1.5 px-3 pt-1.5 pb-2">
                 {l.files.map((f) => (
                   <span key={f} className="rounded-sm border border-border-subtle bg-surface px-1.5 py-0.5 font-mono text-[11px] text-text-muted">{f}</span>
                 ))}
@@ -349,6 +352,7 @@ function RecentActivitySection({ navigate }: { navigate: (to: string) => void })
     <div className="flex flex-col">
       {ACTIVITY.map((a, i) => (
         <button key={i} type="button" onClick={() => navigate(a.to)}
+          aria-label={`${a.type}: ${a.title}`}
           className="flex items-center gap-3 border-b border-border-subtle py-2.5 last:border-0 px-2 -mx-2 rounded-sm hover:bg-surface-2 transition-colors text-left min-h-10 focus-visible:ring-2 focus-visible:ring-brand-ring">
           <span className={cn('w-16 shrink-0 text-[11px] uppercase font-medium', TONE_TEXT[a.tone])}>{a.type}</span>
           <div className="min-w-0 flex-1">
@@ -356,7 +360,7 @@ function RecentActivitySection({ navigate }: { navigate: (to: string) => void })
             <span className="text-[12px] text-text-muted">{a.source}</span>
           </div>
           <span className="shrink-0 text-[12px] text-text-muted">{a.time}</span>
-          <span className="size-3.5 shrink-0 text-text-muted">→</span>
+          <ChevronRight className="size-3.5 shrink-0 text-text-muted" aria-hidden="true" />
         </button>
       ))}
     </div>
