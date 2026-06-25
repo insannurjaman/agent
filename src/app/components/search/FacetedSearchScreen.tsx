@@ -106,23 +106,6 @@ export function FacetedSearchScreen() {
     return { findings: fRes, questions: qRes, experiments: eRes };
   }, [query, selected]);
 
-  // Facet counts: full dataset when no filters, tab-aware filtered counts when query/selection active
-  const facetCounts = useMemo(() => {
-    const source = defaultResults ? [...allResults.findings, ...allResults.questions, ...allResults.experiments] : visibleResults;
-    const counts = new Map<string, number>();
-    for (const dim of facetDimensions) {
-      for (const term of dim.terms) {
-        const key = `${dim.id}:${term}`;
-        let count = 0;
-        for (const r of source) {
-          if (r.facets.includes(key)) count++;
-        }
-        counts.set(key, count);
-      }
-    }
-    return counts;
-  }, [visibleResults, allResults, defaultResults]);
-
   // Default recent results (when no query or facets)
   const defaultResults = useMemo(() => {
     if (query || selected.size > 0) return null;
@@ -171,6 +154,23 @@ export function FacetedSearchScreen() {
     }
     return combined;
   }, [allResults, defaultResults, resultType, sort, query]);
+
+  // Facet counts: full dataset when no filters, tab-aware filtered counts when query/selection active
+  const facetCounts = useMemo(() => {
+    const source = defaultResults ? [...allResults.findings, ...allResults.questions, ...allResults.experiments] : visibleResults;
+    const counts = new Map<string, number>();
+    for (const dim of facetDimensions) {
+      for (const term of dim.terms) {
+        const key = `${dim.id}:${term}`;
+        let count = 0;
+        for (const r of source) {
+          if (r.facets.includes(key)) count++;
+        }
+        counts.set(key, count);
+      }
+    }
+    return counts;
+  }, [visibleResults, allResults, defaultResults]);
 
   const total = visibleResults.length;
   const hasActiveQuery = query.trim() !== '' || selected.size > 0;
