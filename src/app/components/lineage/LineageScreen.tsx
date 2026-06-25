@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { ArrowDown, ArrowUpRight, AlertTriangle, FlaskConical, GitBranch, X, ChevronLeft } from 'lucide-react';
+import { ArrowDown, ArrowUpRight, AlertTriangle, FlaskConical, GitBranch, X } from 'lucide-react';
 import {
   getFindingById,
   getSupersedesChain,
@@ -26,22 +26,30 @@ export function LineageScreen() {
   const [params] = useSearchParams();
   const roots = useMemo(() => getLineageRoots(), []);
   const focusParam = params.get('focus');
+  const inspectParam = params.get('inspect');
   const initial = focusParam && getFindingById(focusParam) ? focusParam : roots[0] ?? 'F-0001';
 
   const [activeId, setActiveId] = useState<string>(initial);
-  const [selected, setSelected] = useState<string>(initial);
+  // inspectedId is separate from activeId — only set on explicit user action or deep link
+  const [inspectedId, setInspectedId] = useState<string>(
+    inspectParam && getFindingById(inspectParam) ? inspectParam : ''
+  );
   const [expanded, setExpanded] = useState(true);
-  const [mobileListOpen, setMobileListOpen] = useState(false);
 
+  // Handle URL focus param on mount
   useEffect(() => {
     if (focusParam && getFindingById(focusParam)) {
-      setActiveId(focusParam); setSelected(focusParam);
+      setActiveId(focusParam);
+      // Do NOT set inspectedId — drawer stays closed
     }
-  }, [focusParam]);
+    if (inspectParam && getFindingById(inspectParam)) {
+      setInspectedId(inspectParam);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const chain = useMemo(() => getSupersedesChain(activeId), [activeId]);
   const latest = chain[chain.length - 1];
-  const selectedFinding = getFindingById(selected);
+  const inspectedFinding = inspectedId ? getFindingById(inspectedId) : undefined;
   const latestFinding = getFindingById(latest);
 
   const chains = useMemo(() => {
@@ -51,19 +59,29 @@ export function LineageScreen() {
   }, [roots]);
 
   const selectChain = useCallback((id: string) => {
-    setActiveId(id); setSelected(id); setExpanded(true); setMobileListOpen(false);
+    setActiveId(id); setExpanded(true); setInspectedId(''); // close drawer when switching chains
   }, []);
 
-  const latestFindingIncident = useMemo(() => {
-    if (!latestFinding) return [];
-    return edges.filter((e) => e.src === latest || e.dst === latest);
-  }, [latest, latestFinding]);
+  const inspectFinding = useCallback((id: string) => {
+    setInspectedId(id);
+  }, []);
 
-  // Mobile chain selector as dropdown
-  const mobileChainOptions = useMemo(() => chains.map((c) => {
-    const tail = getFindingById(c[c.length - 1]);
-    return { id: c[0], label: `${c[0]} → ${c[c.length - 1]}: ${tail?.title?.slice(0, 50) || ''}`, count: c.length };
-  }), [chains]);
+  const closeDrawer = useCallback(() => {
+    setInspectedId('');
+  }, []);
+
+  const showGoToLatest = useCallback((id: string, index: number) => {
+    // Only show Go to Latest when the latest version is not directly visible
+    // Hide for 2-version chains where latest is adjacent
+    if (chain.length <= 2) return false;
+    // For longer chains, show if this is not the last or second-to-last visible version
+    if (!expanded) {
+      // When collapsed, only first and last are shown — show on historical (first)
+      return id === chain[0];
+    }
+    // When expanded, show if there are at least 2 versions below this one
+    return index < chain.length - 2;
+  }, [chain.length, expanded]);
 
   return (
     <div className="flex h-full">
@@ -106,20 +124,27 @@ export function LineageScreen() {
       <div className="flex min-w-0 flex-1 flex-col bg-background">
         <ScreenHeader title="Supersedes Trace" subtitle="Follow a claim from its obsolete origin to the latest valid finding." />
 
-        {/* Mobile chain selector */}
+        {/* Mobile chain selector with proper context */}
         <div className="flex items-center gap-2 border-b border-border-subtle bg-surface px-4 py-2 md:hidden">
           <select value={activeId} onChange={(e) => selectChain(e.target.value)}
             className="flex-1 h-10 rounded-sm border border-border-subtle bg-surface-2 px-2 font-mono text-[12px] text-text outline-none cursor-pointer">
-            {mobileChainOptions.map((opt) => (<option key={opt.id} value={opt.id}>{opt.label} ({opt.count})</option>))}
+            {chains.map((c) => {
+              const tail = getFindingById(c[c.length - 1]);
+              return (
+                <option key={c.join('>')} value={c[0]}>
+                  {c[0]} → {c[c.length - 1]} · {c.length}v · {tail?.title?.slice(0, 60) || ''}
+                </option>
+              );
+            })}
           </select>
         </div>
 
         {/* Lineage summary bar */}
         {chain.length > 0 && (() => {
           const firstF = getFindingById(chain[0]); const lastF = getFindingById(latest);
-          const firstConf = firstF?.confidence ? CONFIDENCE_RANK[firstF.confidence] || 0 : 0;
-          const lastConf = lastF?.confidence ? CONFIDENCE_RANK[lastF.confidence] || 0 : 0;
-          const confDir = lastConf > firstConf ? '↑' : lastConf < firstConf ? '↓' : '→';
+          const fConf = firstF?.confidence ? CONFIDENCE_RANK[firstF.confidence] || 0 : 0;
+          const lConf = lastF?.confidence ? CONFIDENCE_RANK[lastF.confidence] || 0 : 0;
+          const confDir = lConf > fConf ? '↑' : lConf < fConf ? '↓' : '→';
           return (
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border-subtle bg-surface px-6 py-2 font-mono text-[10px] text-text-muted">
               <span>{chain.length} version{chain.length !== 1 ? 's' : ''}</span>
@@ -139,14 +164,13 @@ export function LineageScreen() {
               {chain.map((id, i) => {
                 const f = getFindingById(id)!;
                 const isLatest = id === latest;
-                const isSelected = selected === id;
+                const isInspected = inspectedId === id;
                 const isFirst = i === 0;
                 const isLast = i === chain.length - 1;
-                // For chains > 2, collapse middle unless expanded
                 const isMiddleCollapsed = chain.length > 2 && !isFirst && !isLast && !expanded;
+
                 if (isMiddleCollapsed) {
                   if (i === 1 && !expanded) {
-                    // Show a "show all" button instead of middle versions
                     return (
                       <div key="collapse" className="flex flex-col items-center py-2">
                         <button type="button" onClick={() => setExpanded(true)}
@@ -160,16 +184,18 @@ export function LineageScreen() {
                       </div>
                     );
                   }
-                  return null; // skip collapsed middle versions after the show-all button
+                  return null;
                 }
+
                 return (
                   <div key={id}>
                     <ChainCard
                       finding={f}
                       isLatest={isLatest}
-                      selected={isSelected}
-                      onClick={() => setSelected(id)}
-                      onGoLatest={() => setSelected(latest)}
+                      selected={isInspected}
+                      onClick={() => inspectFinding(id)}
+                      showGoToLatest={showGoToLatest(id, i)}
+                      onGoLatest={() => inspectFinding(latest)}
                     />
                     {i < chain.length - 1 && (
                       <>
@@ -178,18 +204,10 @@ export function LineageScreen() {
                           <StatusBadge value="superseded" />
                           <span className="font-mono text-[10px] text-text-muted">by</span>
                         </div>
-                        {/* Change summary between adjacent versions */}
                         {(() => {
                           const nextF = getFindingById(chain[i + 1]);
                           if (!nextF) return null;
-                          // For collapsed multi-version, only show change summary between the visible pair
-                          if (chain.length > 2 && !isLast) {
-                            // Show change summary only for the last visible transition
-                            if (expanded || i === chain.length - 2) {
-                              return <ChangeSummary oldF={f} newF={nextF} />;
-                            }
-                            return null;
-                          }
+                          if (chain.length > 2 && !expanded && i < chain.length - 2) return null;
                           return <ChangeSummary oldF={f} newF={nextF} />;
                         })()}
                       </>
@@ -198,7 +216,6 @@ export function LineageScreen() {
                 );
               })}
 
-              {/* Expand all link when collapsed */}
               {chain.length > 2 && !expanded && (
                 <div className="flex justify-center py-2">
                   <button type="button" onClick={() => setExpanded(true)}
@@ -212,14 +229,14 @@ export function LineageScreen() {
         </div>
       </div>
 
-      {/* Right inspector */}
-      {selectedFinding && (
-        <ResponsiveInspectorOverlay isOpen={!!selectedFinding} onDismiss={() => setSelected('')}>
+      {/* Right inspector — only opens on explicit inspection */}
+      {inspectedFinding && (
+        <ResponsiveInspectorOverlay isOpen={!!inspectedFinding} onDismiss={closeDrawer}>
           <LineageInspector
-            finding={selectedFinding}
-            latest={getLatestVersion(selectedFinding.id)}
-            onClose={() => setSelected('')}
-            onGoLatest={() => setSelected(getLatestVersion(selectedFinding.id))}
+            finding={inspectedFinding}
+            latest={getLatestVersion(inspectedFinding.id)}
+            onClose={closeDrawer}
+            onGoLatest={() => setInspectedId(getLatestVersion(inspectedFinding.id))}
             navigate={navigate}
           />
         </ResponsiveInspectorOverlay>
@@ -229,47 +246,30 @@ export function LineageScreen() {
 }
 
 // ── ChainCard ──────────────────────────────────────────────────────────
-function ChainCard({ finding, isLatest, selected, onClick, onGoLatest }: {
-  finding: Finding; isLatest: boolean; selected: boolean; onClick: () => void; onGoLatest: () => void;
+function ChainCard({ finding, isLatest, selected, onClick, showGoToLatest, onGoLatest }: {
+  finding: Finding; isLatest: boolean; selected: boolean; onClick: () => void; showGoToLatest?: boolean; onGoLatest: () => void;
 }) {
   return (
     <button type="button" onClick={onClick}
       className={cn('block w-full rounded-sm border px-4 py-3 text-left transition-colors',
         selected ? 'border-brand-border bg-brand-muted' : 'border-border-subtle hover:border-border-strong')}>
-      {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <MonoId className={isLatest ? 'text-brand' : 'text-text-muted'}>{finding.id}</MonoId>
           <span className="font-mono text-[11px] text-text-muted">{finding.date}</span>
         </div>
         {isLatest ? (
-          <span className="inline-flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-2 py-0.5 font-mono text-[11px] text-brand">
-            Current claim
-          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-sm border border-brand-border bg-brand-muted px-2 py-0.5 font-mono text-[11px] text-brand">Current claim</span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-sm border border-amber/30 bg-amber/10 px-2 py-0.5 font-mono text-[10px] text-amber">
-            Superseded
-          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-sm border border-amber/30 bg-amber/10 px-2 py-0.5 font-mono text-[10px] text-amber">Superseded</span>
         )}
       </div>
-
-      {/* Title */}
       <div className="mt-1.5 text-[14px] text-text">{finding.title}</div>
-
-      {/* Confidence + category */}
       <div className="mt-2 flex flex-wrap gap-1.5">
-        {finding.confidence === 'superseded' ? (
-          <StatusBadge value="superseded" />
-        ) : (
-          <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />
-        )}
+        {finding.confidence === 'superseded' ? <StatusBadge value="superseded" /> : <ConfidenceIndicator level={finding.confidence as 'high' | 'medium-high' | 'medium' | 'low'} />}
         <StatusBadge value={finding.category} showDot={false} />
       </div>
-
-      {/* Summary */}
       <p className="mt-1.5 text-[12px] text-text-secondary leading-relaxed">{finding.summary}</p>
-
-      {/* Supersede reason (for historical) */}
       {!isLatest && finding.supersedeReason && (
         <div className="mt-2 flex items-start gap-1.5 rounded-sm border border-amber/20 bg-amber/5 px-2.5 py-1.5">
           <AlertTriangle className="size-3 shrink-0 mt-0.5 text-amber" />
@@ -279,15 +279,11 @@ function ChainCard({ finding, isLatest, selected, onClick, onGoLatest }: {
           </div>
         </div>
       )}
-
-      {/* Evidence */}
       <div className="mt-2 flex items-center gap-1.5">
         <FlaskConical className="size-3 text-text-muted" />
         <span className="font-mono text-[11px] text-info">{finding.evidence.replace('experiments/', '')}</span>
       </div>
-
-      {/* Go to latest (for historical) */}
-      {!isLatest && (
+      {showGoToLatest && (
         <div className="mt-2 flex justify-end">
           <button type="button" onClick={(e) => { e.stopPropagation(); onGoLatest(); }}
             className="inline-flex items-center gap-1 font-mono text-[11px] text-brand hover:underline">
@@ -299,7 +295,7 @@ function ChainCard({ finding, isLatest, selected, onClick, onGoLatest }: {
   );
 }
 
-// ── LineageInspector ───────────────────────────────────────────────────
+// ── LineageInspector (no duplicated content) ───────────────────────────
 function LineageInspector({ finding, latest, onClose, onGoLatest, navigate }: {
   finding: Finding; latest: string; onClose: () => void; onGoLatest: () => void; navigate: (to: string) => void;
 }) {
@@ -333,6 +329,7 @@ function LineageInspector({ finding, latest, onClose, onGoLatest, navigate }: {
           <StatusBadge value={finding.category} showDot={false} />
         </div>
 
+        {/* Only the superseded notice — Summary and relationships are in the timeline */}
         {!isLatest && (
           <div className="mt-4 rounded-sm border border-border-strong bg-surface-2 px-3 py-2.5">
             <div className="font-mono text-[11px] uppercase tracking-wider text-amber">Superseded</div>
@@ -345,16 +342,7 @@ function LineageInspector({ finding, latest, onClose, onGoLatest, navigate }: {
           </div>
         )}
 
-        <Sec>Summary</Sec>
-        <p className="text-[13px] leading-relaxed text-text-secondary">{finding.summary}</p>
-
-        <Sec>Supersedes Relationships</Sec>
-        <div className="space-y-1 font-mono text-[12px] text-text-secondary">
-          {finding.supersedes ? <div>supersedes <Ref id={finding.supersedes} /></div> : null}
-          {finding.supersededBy ? <div className="text-amber">superseded by <Ref id={finding.supersededBy} /></div> : null}
-          {!finding.supersedes && !finding.supersededBy && <span className="text-text-muted">none</span>}
-        </div>
-
+        {/* Detail sections not visible in the timeline cards */}
         <Sec>Experiments That Generated It</Sec>
         {origins.length ? (<div className="flex flex-col gap-1.5">{origins.map((e, i) => (<div key={i} className="flex items-center gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1.5"><FlaskConical className="size-3.5 shrink-0 text-text-muted" /><Ref id={e.src} /></div>))}</div>) : <span className="text-[12px] text-text-muted">—</span>}
 
