@@ -143,7 +143,7 @@ export function ChatWorkspaceScreen() {
           onNewChat={() => { closeMobilePanel(); setNewChatOpen(true); }}
           relay="connected" tree={bundle.tree} artifacts={bundle.artifacts}
           onSelectArtifact={(id) => { setArtifactId(id); setMobilePanel('viewer'); }}
-          context={attachedContext}
+          context={attachedContext} onClose={closeMobilePanel}
         />
       </Drawer>
 
