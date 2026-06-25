@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   HelpCircle, Search, FolderPlus, Play, CheckCheck, BookMarked, CircleHelp,
-  FileText, BadgeCheck, ChevronRight, ChevronDown, AlertTriangle, Sparkles,
-  Table2, FlaskConical, SlidersHorizontal, Share2, GitBranch, type LucideIcon,
+  FileText, BadgeCheck, ChevronRight, ChevronDown, Sparkles,
+  Table2, FlaskConical, Share2, type LucideIcon,
 } from 'lucide-react';
 import { ScreenHeader, MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
@@ -56,7 +56,7 @@ const ACTIVITY: ActivityRow[] = [
 
 const TONE_TEXT: Record<string, string> = { green: 'text-green', teal: 'text-teal', amber: 'text-amber', blue: 'text-blue', purple: 'text-purple', muted: 'text-text-muted' };
 
-function Sec({ title, desc, children, right }: { title: string; desc?: string; children: React.ReactNode; right?: React.ReactNode }) {
+function Sec({ title, desc, children }: { title: string; desc?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-sm border border-border-subtle bg-surface">
       <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
@@ -64,7 +64,6 @@ function Sec({ title, desc, children, right }: { title: string; desc?: string; c
           <h2 className="text-[13px] font-medium text-text">{title}</h2>
           {desc && <p className="mt-0.5 text-[12px] text-text-secondary">{desc}</p>}
         </div>
-        {right}
       </div>
       <div className="p-4">{children}</div>
     </section>
@@ -77,30 +76,18 @@ export function OverviewScreen() {
   return (
     <div className="flex h-full flex-col">
       <ScreenHeader title="Overview" subtitle="System status and current knowledge work." />
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-4xl flex-col gap-5">
-          {/* System Status Strip */}
+      <div className="min-h-0 flex-1 overflow-auto px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-5 lg:max-w-7xl">
           <SystemStatus />
-
-          {/* Current Work */}
           <CurrentWorkSection navigate={navigate} />
-
-          {/* Knowledge Loop */}
           <Sec title="Knowledge Loop" desc="Agent-driven experiments convert questions into reusable knowledge, reports, and unresolved issues.">
             <KnowledgeLoop />
           </Sec>
-
-          {/* Documentation Layers */}
-          <Sec title="Documentation Layers">
-            <DocLayers />
-          </Sec>
-
-          {/* Recent Activity */}
-          <Sec title="Recent Knowledge Activity">
-            <RecentActivitySection navigate={navigate} />
-          </Sec>
-
-          {/* Quick Actions (de-emphasized, compact) */}
+          {/* Wide desktop: Doc + Activity side by side */}
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_1fr]">
+            <Sec title="Documentation Layers"><DocLayers /></Sec>
+            <Sec title="Recent Knowledge Activity"><RecentActivitySection navigate={navigate} /></Sec>
+          </div>
           <QuickActionsSection navigate={navigate} />
         </div>
       </div>
@@ -110,23 +97,25 @@ export function OverviewScreen() {
 
 // ── System Status ───────────────────────────────────────────────────────
 function SystemStatus() {
+  const navigate = useNavigate();
   const items = [
     { label: 'Findings', count: repoStatus.findings, to: '/findings' },
-    { label: 'Questions', count: repoStatus.openQuestions, to: '/findings?tab=questions' },
-    { label: 'Edges', count: repoStatus.edges, to: '/graph' },
+    { label: 'Open Questions', count: repoStatus.openQuestions, to: '/findings?tab=questions' },
     { label: 'Experiments', count: repoStatus.experiments, to: '/experiments' },
+    { label: 'Relationships', count: repoStatus.edges, to: '/graph' },
     { label: 'Figures', count: repoStatus.pngFigures, to: '/experiments' },
   ];
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 rounded-sm border border-border-subtle bg-surface/80 px-4 py-2.5 font-mono text-[10px] text-text-muted">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 rounded-sm border border-border-subtle bg-surface/80 px-5 py-3">
       {items.map((item) => (
-        <button key={item.label} type="button" onClick={() => {}} // no nav — purely informational
-          className="flex items-center gap-1.5 cursor-default">
-          <span className="tabular-nums text-text-secondary font-medium">{item.count}</span>
-          <span>{item.label}</span>
+        <button key={item.label} type="button" onClick={() => navigate(item.to)}
+          className="group flex items-center gap-1.5 rounded-sm px-1 -mx-1 py-0.5 transition-colors hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-brand-ring"
+          aria-label={`${item.count} ${item.label} — click to view`}>
+          <span className="tabular-nums text-[14px] font-medium text-text">{item.count}</span>
+          <span className="text-[12px] text-text-secondary group-hover:text-text transition-colors">{item.label}</span>
         </button>
       ))}
-      <span className="ml-auto text-text-muted">Indexed {repoStatus.indexedAgo}</span>
+      <span className="ml-auto text-[12px] text-text-muted">Indexed {repoStatus.indexedAgo}</span>
     </div>
   );
 }
@@ -135,44 +124,47 @@ function SystemStatus() {
 function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
   return (
     <section className="rounded-sm border border-brand-border bg-elevated">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b border-brand-border/30 px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <h2 className="text-[13px] font-medium text-text">Current Investigation</h2>
-          <span className="font-mono text-[10px] text-text-muted">Updated 2m ago</span>
-        </div>
+      <div className="flex items-center justify-between border-b border-brand-border/20 px-5 py-3">
+        <h2 className="text-[14px] font-medium text-text">Current Investigation</h2>
+        <span className="text-[12px] text-text-muted">Updated 2m ago</span>
       </div>
 
-      <div className="p-4">
-        {/* Active finding */}
+      <div className="p-5 space-y-4">
+        {/* Finding */}
         <div className="flex items-start gap-3">
-          <span className="size-2 shrink-0 rounded-full bg-brand mt-1.5" />
+          <span className="size-2.5 shrink-0 rounded-full bg-brand mt-1" />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[12px] text-brand font-medium">F-0050</span>
-              <span className="text-[13px] text-text font-medium">Entry temperature variance</span>
-            </div>
-            <p className="mt-1 text-[12px] text-text-secondary leading-relaxed">
+            <span className="font-mono text-[13px] text-brand font-medium">F-0050</span>
+            <span className="text-[14px] text-text font-medium ml-2">Entry temperature variance</span>
+            <p className="mt-0.5 text-[12px] text-text-secondary leading-relaxed">
               Residual thickness variance remains linked to roll-gap and entry temperature interactions.
             </p>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] text-text-muted">
-              <span>Related: <button type="button" onClick={() => navigate('/findings?tab=questions&focus=Q-0014')} className="text-amber hover:underline">Q-0014</button></span>
-              <span>·</span>
-              <span>experiments/2026-06-17_roll_gap_variance</span>
+          </div>
+        </div>
+
+        {/* Blocking question */}
+        <div className="flex items-start gap-3 pl-6">
+          <span className="size-2 shrink-0 rounded-full bg-amber mt-1.5" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-text-muted">Open question blocking progress</span>
+              <MonoId className="text-amber text-[12px]">Q-0014</MonoId>
+              <PriorityBadge priority="high" />
             </div>
+            <div className="mt-0.5 text-[13px] text-text">Does entry temperature interact with roll-gap setpoint?</div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="my-3 border-t border-border-subtle" />
+        <div className="border-t border-border-subtle" />
 
         {/* Recommended next step */}
-        <div className="rounded-sm border border-brand-border/40 bg-brand-muted/20 px-3 py-3">
+        <div className="rounded-sm bg-brand-muted/15 border border-brand-border/30 px-4 py-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-brand" />
-            <span className="font-mono text-[10px] uppercase tracking-wider text-brand">Recommended next step</span>
+            <Sparkles className="size-4 text-brand shrink-0" />
+            <span className="font-mono text-[11px] uppercase tracking-wider text-brand">Recommended next step</span>
           </div>
-          <p className="mt-1 text-[13px] text-text">
+          <p className="mt-1 text-[14px] text-text">
             Investigate whether entry temperature interacts with the roll-gap setpoint.
           </p>
           <p className="mt-0.5 text-[12px] text-text-secondary">
@@ -180,51 +172,48 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => navigate('/chat?ctx=Q-0014,F-0050')}
-              className="flex h-11 items-center gap-1.5 rounded-sm bg-brand px-4 text-[12px] font-medium text-primary-foreground transition-colors hover:bg-brand-hover">
+              className="flex h-10 items-center gap-1.5 rounded-sm bg-brand px-4 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand-ring">
               <Sparkles className="size-3.5" /> Continue investigation
             </button>
             <button type="button" onClick={() => navigate('/findings?focus=F-0050')}
-              className="flex h-11 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text">
+              className="flex h-10 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring">
               Open finding
             </button>
             <button type="button" onClick={() => navigate('/findings?tab=questions&focus=Q-0014')}
-              className="flex h-11 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text">
+              className="flex h-10 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring">
               View question
             </button>
             <button type="button" onClick={() => navigate('/graph?focus=F-0050')}
-              className="flex h-11 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text">
+              className="flex h-10 items-center rounded-sm border border-border-strong bg-surface-2 px-3 text-[12px] text-text-secondary transition-colors hover:text-text focus-visible:ring-2 focus-visible:ring-brand-ring">
               View graph
             </button>
           </div>
         </div>
 
-        {/* Related question + report row */}
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Open Question</span>
-                <MonoId className="text-amber text-[11px]">Q-0014</MonoId>
-              </div>
-              <PriorityBadge priority="high" />
+        {/* Related cards */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-sm border border-border-subtle bg-surface px-3 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] uppercase tracking-wider text-text-muted font-medium">Latest Report</span>
+              <span className="text-[11px] text-text-muted">indexed 18m ago</span>
             </div>
-            <div className="mt-1.5 text-[13px] text-text">Does entry temperature interact with roll-gap setpoint?</div>
-            <button type="button" onClick={() => navigate('/findings?tab=questions&focus=Q-0014')}
-              className="mt-1.5 font-mono text-[11px] text-brand hover:underline">View question →</button>
-          </div>
-          <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Latest Report</span>
-              <span className="font-mono text-[10px] text-text-muted">18m ago</span>
+            <div className="mt-1">
+              <span className="text-[13px] text-text">Roll-gap variance</span>
+              <MonoId muted className="block text-[12px] mt-0.5">experiments/2026-06-17_roll_gap_variance</MonoId>
             </div>
-            <div className="mt-1.5 text-[13px] text-text">Roll-gap variance report</div>
-            <MonoId muted className="text-[11px]">experiments/2026-06-17_roll_gap_variance</MonoId>
-            <div className="mt-1 flex gap-3 font-mono text-[10px] text-text-muted">
+            <div className="mt-2 flex items-center gap-3 text-[11px] text-text-muted">
               <span>2 figures</span>
-              <span>3 related findings</span>
+              <span>3 related</span>
+              <button type="button" onClick={() => navigate('/experiments')} className="ml-auto text-brand hover:underline">Open →</button>
             </div>
-            <button type="button" onClick={() => navigate('/experiments')}
-              className="mt-1.5 font-mono text-[11px] text-brand hover:underline">Open report →</button>
+          </div>
+          <div className="rounded-sm border border-border-subtle bg-surface px-3 py-3">
+            <div className="text-[11px] uppercase tracking-wider text-text-muted font-medium">Related Findings</div>
+            <div className="mt-1 flex flex-wrap gap-2">
+              <span className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary">F-0034</span>
+              <span className="rounded-sm border border-border-subtle bg-surface-2 px-2 py-0.5 font-mono text-[11px] text-text-secondary">F-0031</span>
+            </div>
+            <button type="button" onClick={() => navigate('/findings?focus=F-0050')} className="mt-2 text-[11px] text-brand hover:underline">View all →</button>
           </div>
         </div>
       </div>
@@ -235,19 +224,26 @@ function CurrentWorkSection({ navigate }: { navigate: (to: string) => void }) {
 // ── Knowledge Loop ──────────────────────────────────────────────────────
 function KnowledgeLoop() {
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-0">
       {LOOP_PHASES.map((phase, pi) => (
-        <div key={phase.id} className="flex flex-1 flex-col gap-2">
-          <div className="font-mono text-[10px] uppercase tracking-wider text-text-muted">{phase.label}</div>
+        <div key={phase.id} className="flex flex-1 flex-col">
+          <div className="mb-2 text-[11px] uppercase tracking-wider text-text-muted font-medium px-1">{phase.label}</div>
           <div className="flex flex-col gap-2 flex-1">
-            {phase.nodes.map((n) => (
-              <LoopCard key={n.step} n={n} />
+            {phase.nodes.map((n, ni) => (
+              <div key={n.step} className="flex items-stretch gap-2">
+                <LoopCard n={n} />
+                {ni < phase.nodes.length - 1 && (
+                  <div className="flex items-center text-text-muted">
+                    <ChevronDown className="size-4" />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           {pi < LOOP_PHASES.length - 1 && (
-            <div className="flex items-center justify-center py-1 text-text-muted sm:py-0 sm:px-2 sm:self-stretch sm:items-center">
-              <ChevronRight className="size-5 shrink-0 hidden sm:block" />
-              <ChevronDown className="size-5 shrink-0 sm:hidden" />
+            <div className="flex items-center justify-center py-3 sm:py-0 sm:px-3 sm:self-stretch">
+              <ChevronRight className="size-5 shrink-0 hidden sm:block text-text-muted" />
+              <ChevronDown className="size-5 shrink-0 sm:hidden text-text-muted" />
             </div>
           )}
         </div>
@@ -264,18 +260,19 @@ function LoopCard({ n }: { n: LoopNode }) {
       type={n.clickable ? 'button' : undefined}
       onClick={n.clickable ? () => navigate(n.to!) : undefined}
       className={cn(
-        'flex gap-2.5 rounded-sm border px-3 py-2 min-h-11 text-left',
-        n.clickable ? 'cursor-pointer border-border-strong bg-elevated hover:border-brand-border transition-colors' : 'border-border-subtle bg-surface-2',
-        n.clickable && 'hover:bg-elevated',
+        'flex gap-3 rounded-sm border px-3 py-2.5 min-h-11 text-left flex-1',
+        n.clickable
+          ? 'cursor-pointer border-border-strong bg-elevated hover:border-brand-border hover:bg-elevated transition-colors focus-visible:ring-2 focus-visible:ring-brand-ring'
+          : 'border-border-subtle bg-surface-2',
       )}
     >
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1 pt-0.5">
         <n.icon className={cn('size-4 shrink-0', TONE_TEXT[n.tone])} strokeWidth={1.75} />
         <span className={cn('size-1 rounded-full', TONE_TEXT[n.tone])} />
       </div>
       <div className="min-w-0 flex-1">
-        <div className={cn('text-[12px]', n.clickable ? 'text-text' : 'text-text-secondary')}>{n.label}</div>
-        <p className="text-[10px] leading-snug text-text-muted">{n.sub}</p>
+        <div className={cn('text-[13px]', n.clickable ? 'text-text font-medium' : 'text-text-secondary')}>{n.label}</div>
+        <p className="text-[11px] leading-snug text-text-muted mt-0.5">{n.sub}</p>
       </div>
     </Tag>
   );
@@ -293,22 +290,22 @@ function DocLayers() {
         return (
           <div key={l.id}>
             <button type="button" aria-expanded={isOpen} onClick={() => toggle(l.id)}
-              className="flex w-full items-center gap-3 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-strong">
+              className="flex w-full items-center gap-3 rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5 text-left transition-colors hover:border-border-strong focus-visible:ring-2 focus-visible:ring-brand-ring min-h-10">
               <span className={cn('font-mono text-[13px] w-10 shrink-0', TONE_TEXT[l.tone])}>{l.id}</span>
               <div className="min-w-0 flex-1">
-                <MonoId className="text-info text-[12px]">{l.path}</MonoId>
+                <span className="font-mono text-[12px] text-info">{l.path}</span>
                 <p className="text-[12px] text-text-secondary">{l.purpose}</p>
               </div>
               <div className="hidden sm:block shrink-0">
                 <StatusBadge value={l.status} tone={l.tone === 'muted' ? undefined : l.tone} />
               </div>
-              <span className="shrink-0 font-mono text-[10px] text-text-muted">{l.files.length} files</span>
+              <span className="shrink-0 text-[12px] text-text-muted">{l.files.length} files</span>
               <ChevronDown className={cn('size-3.5 text-text-muted shrink-0 transition-transform', isOpen && 'rotate-180')} />
             </button>
             {isOpen && (
               <div className="flex flex-wrap gap-1.5 px-3 pt-1.5 pb-2">
                 {l.files.map((f) => (
-                  <span key={f} className="rounded-sm border border-border-subtle bg-surface px-1.5 py-0.5 font-mono text-[10px] text-text-muted">{f}</span>
+                  <span key={f} className="rounded-sm border border-border-subtle bg-surface px-1.5 py-0.5 font-mono text-[11px] text-text-muted">{f}</span>
                 ))}
               </div>
             )}
@@ -325,13 +322,13 @@ function RecentActivitySection({ navigate }: { navigate: (to: string) => void })
     <div className="flex flex-col">
       {ACTIVITY.map((a, i) => (
         <button key={i} type="button" onClick={() => navigate(a.to)}
-          className="flex items-center gap-3 border-b border-border-subtle py-2 last:border-0 px-2 -mx-2 rounded-sm hover:bg-surface-2 transition-colors text-left min-h-11">
-          <span className={cn('w-16 shrink-0 font-mono text-[10px] uppercase', TONE_TEXT[a.tone])}>{a.type}</span>
+          className="flex items-center gap-3 border-b border-border-subtle py-2.5 last:border-0 px-2 -mx-2 rounded-sm hover:bg-surface-2 transition-colors text-left min-h-10 focus-visible:ring-2 focus-visible:ring-brand-ring">
+          <span className={cn('w-16 shrink-0 text-[11px] uppercase font-medium', TONE_TEXT[a.tone])}>{a.type}</span>
           <div className="min-w-0 flex-1">
             <div className="truncate text-[13px] text-text">{a.title}</div>
-            <MonoId muted className="text-[11px]">{a.source}</MonoId>
+            <span className="text-[12px] text-text-muted">{a.source}</span>
           </div>
-          <span className="shrink-0 font-mono text-[11px] text-text-muted">{a.time}</span>
+          <span className="shrink-0 text-[12px] text-text-muted">{a.time}</span>
           <ChevronRight className="size-3.5 shrink-0 text-text-muted" />
         </button>
       ))}
@@ -339,22 +336,20 @@ function RecentActivitySection({ navigate }: { navigate: (to: string) => void })
   );
 }
 
-// ── Quick Actions ───────────────────────────────────────────────────────
+// ── Quick Actions (reduced to 3 most contextual) ────────────────────────
 function QuickActionsSection({ navigate }: { navigate: (to: string) => void }) {
   const actions: { icon: LucideIcon; label: string; to: string }[] = [
-    { icon: Table2, label: 'Open Findings', to: '/findings' },
-    { icon: FlaskConical, label: 'Open Reports', to: '/experiments' },
-    { icon: SlidersHorizontal, label: 'Faceted Search', to: '/search' },
+    { icon: Search, label: 'Search Knowledge', to: '/search' },
     { icon: Share2, label: 'Knowledge Graph', to: '/graph' },
-    { icon: GitBranch, label: 'View Lineage', to: '/lineage' },
+    { icon: Table2, label: 'Findings & Questions', to: '/findings' },
   ];
   return (
     <div className="flex flex-wrap items-center gap-2 pb-4">
-      <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted mr-1">Navigate</span>
+      <span className="text-[11px] uppercase tracking-wider text-text-muted font-medium mr-1">Explore</span>
       {actions.map((a) => (
         <button key={a.to} type="button" onClick={() => navigate(a.to)}
-          className="flex h-9 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2.5 font-mono text-[11px] text-text-muted transition-colors hover:text-text hover:border-border-strong">
-          <a.icon className="size-3" /> {a.label}
+          className="flex h-10 items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-3 text-[12px] text-text-muted transition-colors hover:text-text hover:border-border-strong focus-visible:ring-2 focus-visible:ring-brand-ring">
+          <a.icon className="size-3.5" /> {a.label}
         </button>
       ))}
     </div>
