@@ -10,6 +10,7 @@
 //    Imai-san specification can be wired in without rewriting the page.
 
 import type { Edge, EdgeType, Experiment, Finding, OpenQuestion } from './types';
+import { canonicalExperimentPath } from './routes';
 
 // ── Entity types ────────────────────────────────────────────────────────
 
@@ -173,7 +174,7 @@ function experimentAsEntity(e: Experiment): InOutEntity {
     kind: 'experiment',
     title: e.title,
     status: e.outdated ? 'outdated' : e.reportStatus,
-    href: `/experiments/${e.slug}`,
+    href: canonicalExperimentPath(e.slug),
   };
 }
 
@@ -398,7 +399,7 @@ export function buildInOutViewModel(opts: BuildInOutOptions): InOutViewModel {
         kind: 'artifact',
         title: pluralize(experiment.figures.length, 'figure', 'figures'),
         status: experiment.figures[0]?.replace('outputs/figures/', ''),
-        href: `/experiments/${experiment.slug}`,
+        href: canonicalExperimentPath(experiment.slug),
       },
       group: 'artifacts',
     });

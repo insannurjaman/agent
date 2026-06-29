@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useLayoutEffect,
 } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import {
@@ -33,6 +34,7 @@ import {
   getExperimentBySlug,
   describeRelationshipSentence,
   formatShortId,
+  canonicalExperimentPath,
   type InOutEntity,
   type InOutExperiment,
   type InOutInput,
@@ -61,7 +63,7 @@ const OUTPUT_ROLE_LABEL: Record<InOutOutput['role'], string> = {
   'produced-finding': 'Produced finding',
   'produced-question': 'Produced open question',
   'updated-finding': 'Updated finding',
-  'carried-forward': 'Carried forward',
+  'carried-forward': 'Carried forward as reference',
   artifact: 'Artifact',
 };
 
@@ -134,6 +136,14 @@ const ENTITY_KIND_LABEL: Record<InOutEntity['kind'], string> = {
   unknown: 'Unknown',
 };
 
+// ── Selection treatment tokens ──────────────────────────────────────────
+// Selection uses the brand accent (orange) but with a SOFT background and a
+// thick left-bar indicator so it never looks like an error state. Error
+// tones are reserved for actual errors.
+const SELECTED_CARD_CLS = 'border-brand-border bg-brand-muted/60 ring-1 ring-brand/30';
+const HIGHLIGHTED_CARD_CLS = 'border-brand/40 bg-brand-muted/20';
+const DIMMED_CARD_CLS = 'opacity-50';
+
 // ── Screen ──────────────────────────────────────────────────────────────
 
 export function InOutScreen() {
@@ -202,17 +212,14 @@ export function InOutScreen() {
   }, [selectedSlug]);
 
   // Determine which relationships are "highlighted" by the current selection.
-  // - If an input is selected, highlight its visible connection.
-  // - If an output is selected, highlight its visible connection.
-  // - If a relationship is selected, highlight its two endpoints.
-  // - If nothing is selected but the experiment is "active" (i.e. we have
-  //   detail closed), all visible relationships are equally un-highlighted.
   const highlightedInputIds = useMemo<Set<string>>(() => {
     const set = new Set<string>();
     if (selectedInputId) set.add(selectedInputId);
     if (selectedRelationship) {
       const inId = viewModel.inputs.find((i) => i.entity.id === selectedRelationship.from.id)?.id;
       if (inId) set.add(inId);
+      const inIdTo = viewModel.inputs.find((i) => i.entity.id === selectedRelationship.to.id)?.id;
+      if (inIdTo) set.add(inIdTo);
     }
     return set;
   }, [selectedInputId, selectedRelationship, viewModel.inputs]);
@@ -223,6 +230,8 @@ export function InOutScreen() {
     if (selectedRelationship) {
       const outId = viewModel.outputs.find((o) => o.entity.id === selectedRelationship.to.id)?.id;
       if (outId) set.add(outId);
+      const outIdFrom = viewModel.outputs.find((o) => o.entity.id === selectedRelationship.from.id)?.id;
+      if (outIdFrom) set.add(outIdFrom);
     }
     return set;
   }, [selectedOutputId, selectedRelationship, viewModel.outputs]);
@@ -268,10 +277,6 @@ export function InOutScreen() {
               setSelectedOutputId(o.id);
               setSelectedInputId(null);
             }}
-            onOpenExperimentDetail={() => {
-              if (!viewModel.experiment) return;
-              // Mobile detail opens the experiment entity detail.
-            }}
           />
         ) : (
           <InOutMap
@@ -297,11 +302,22 @@ export function InOutScreen() {
               setSelectedInputId(null);
               setSelectedOutputId(null);
             }}
-            onCloseDetail={closeDetail}
             navigate={navigate}
           />
         )}
       </div>
+
+      {/* Desktop/tablet: overlay detail drawer (does NOT compress the map) */}
+      {!isMobile && detailOpen && (
+        <InOutDetailDrawer
+          viewModel={viewModel}
+          selectedInput={selectedInput}
+          selectedOutput={selectedOutput}
+          selectedRelationship={selectedRelationship}
+          onClose={closeDetail}
+          navigate={navigate}
+        />
+      )}
 
       {/* Mobile: full-screen detail sheet */}
       {isMobile && detailOpen && (
@@ -318,7 +334,7 @@ export function InOutScreen() {
   );
 }
 
-// ── Combobox ────────────────────────────────────────────────────────────
+// ── Combobox (anchored to trigger) ──────────────────────────────────────
 
 function InOutCombobox({
   experiments,
@@ -341,6 +357,8 @@ function InOutCombobox({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const [popStyle, setPopStyle] = useState<React.CSSProperties>({ position: 'fixed', top: 0, left: 0, width: 320 });
 
   const selected = experiments.find((e) => e.slug === selectedSlug) ?? experiments[0];
 
@@ -356,11 +374,45 @@ function InOutCombobox({
     setActiveIndex(0);
   }, [query, open]);
 
+  // Position the popup anchored to the trigger. Recalculate on scroll,
+  // resize, and open state changes.
+  const reposition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger || !open) return;
+    const r = trigger.getBoundingClientRect();
+    const POP_W = Math.max(r.width, 320);
+    const POP_MAX_H = Math.min(420, window.innerHeight * 0.6);
+    let left = r.left;
+    let top = r.bottom + 6;
+    // Keep within viewport.
+    if (left + POP_W > window.innerWidth - 8) {
+      left = Math.max(8, window.innerWidth - POP_W - 8);
+    }
+    if (top + POP_MAX_H > window.innerHeight - 8) {
+      // Flip above if there's not enough room below.
+      const aboveTop = r.top - POP_MAX_H - 6;
+      if (aboveTop > 8) top = aboveTop;
+    }
+    setPopStyle({ position: 'fixed', top, left, width: POP_W });
+  }, [open]);
+
+  useLayoutEffect(() => {
+    reposition();
+  }, [reposition]);
+
   useEffect(() => {
     if (!open) return;
+    const onScroll = () => reposition();
+    const onResize = () => reposition();
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
     const t = window.setTimeout(() => inputRef.current?.focus(), 30);
-    return () => window.clearTimeout(t);
-  }, [open]);
+    return () => {
+      window.clearTimeout(t);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [open, reposition]);
 
   useEffect(() => {
     if (!open) return;
@@ -368,6 +420,7 @@ function InOutCombobox({
       if (e.key === 'Escape') {
         e.preventDefault();
         setOpen(false);
+        setQuery('');
         triggerRef.current?.focus();
       } else if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -431,25 +484,27 @@ function InOutCombobox({
       </div>
 
       {open && (
-        <div
-          role="presentation"
-          className="fixed inset-0 z-40 flex items-start justify-center px-4 pt-[12vh] md:items-start md:justify-end md:pr-4 md:pt-[10vh]"
-        >
+        <>
+          {/* Lightweight click-away layer (no heavy dim) */}
           <button
             type="button"
             aria-label="Close experiment selector"
+            tabIndex={-1}
             onClick={() => {
               setOpen(false);
               setQuery('');
               triggerRef.current?.focus();
             }}
-            className="absolute inset-0 bg-black/60"
+            className="fixed inset-0 z-40 cursor-default"
+            style={{ background: 'transparent' }}
           />
           <div
+            ref={popRef}
             role="dialog"
-            aria-modal="true"
+            aria-modal="false"
             aria-label="Select experiment"
-            className="relative z-50 flex max-h-[70vh] w-full max-w-[420px] flex-col overflow-hidden rounded-sm border border-border-strong bg-surface shadow-2xl"
+            style={popStyle}
+            className="z-50 flex max-h-[60vh] flex-col overflow-hidden rounded-sm border border-border-strong bg-surface shadow-2xl"
           >
             <div className="flex items-center gap-2 border-b border-border-subtle px-3 py-2">
               <Search className="size-4 shrink-0 text-text-muted" aria-hidden />
@@ -481,7 +536,7 @@ function InOutCombobox({
               ref={listRef}
               role="listbox"
               aria-label="Experiments"
-              className="min-h-0 flex-1 overflow-auto p-1"
+              className="min-h-0 max-h-[50vh] flex-1 overflow-auto p-1"
             >
               {filtered.length === 0 ? (
                 <li className="px-3 py-6 text-center text-[12px] text-text-muted">
@@ -530,7 +585,7 @@ function InOutCombobox({
               {filtered.length} of {experiments.length} · ↑↓ navigate · ↵ select · esc close
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -549,7 +604,6 @@ function InOutMap({
   onSelectInput,
   onSelectOutput,
   onSelectRelationship,
-  onCloseDetail,
   navigate,
 }: {
   viewModel: InOutViewModel;
@@ -562,20 +616,25 @@ function InOutMap({
   onSelectInput: (i: InOutInput) => void;
   onSelectOutput: (o: InOutOutput) => void;
   onSelectRelationship: (r: InOutRelationship) => void;
-  onCloseDetail: () => void;
   navigate: (to: string) => void;
 }) {
-  const detailOpen = !!(selectedInputId || selectedOutputId || selectedRelationshipId);
+  // The map always keeps the same 3-column grid. The detail drawer is an
+  // overlay so it never compresses these columns.
+  const mapRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-5 px-4 py-6 sm:px-6">
+    <div ref={mapRef} className="relative mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">
+      {/* Directional banner between columns */}
+      <div className="mb-4 flex items-center justify-center gap-2 text-text-muted" aria-hidden>
+        <span className="font-mono text-[10px] uppercase tracking-wider">Inputs</span>
+        <ArrowRight className="size-3.5" />
+        <span className="font-mono text-[10px] uppercase tracking-wider">Experiment</span>
+        <ArrowRight className="size-3.5" />
+        <span className="font-mono text-[10px] uppercase tracking-wider">Outputs</span>
+      </div>
+
       <div
-        className={cn(
-          'grid gap-x-4 gap-y-3',
-          detailOpen
-            ? 'grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)_minmax(0,420px)]'
-            : 'grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)_minmax(0,1fr)]',
-        )}
+        className="relative grid gap-x-6 gap-y-3 lg:grid-cols-[minmax(220px,1fr)_minmax(280px,1.3fr)_minmax(220px,1fr)]"
       >
         <InputsColumn
           viewModel={viewModel}
@@ -584,7 +643,7 @@ function InOutMap({
           dimUnrelated={dimUnrelated}
           onSelect={onSelectInput}
         />
-        <ExperimentColumn viewModel={viewModel} onCloseDetail={onCloseDetail} detailOpen={detailOpen} />
+        <ExperimentColumn viewModel={viewModel} />
         <OutputsColumn
           viewModel={viewModel}
           selectedId={selectedOutputId}
@@ -592,17 +651,14 @@ function InOutMap({
           dimUnrelated={dimUnrelated}
           onSelect={onSelectOutput}
         />
-        {detailOpen && (
-          <DetailPanel
-            viewModel={viewModel}
-            selectedInputId={selectedInputId}
-            selectedOutputId={selectedOutputId}
-            selectedRelationshipId={selectedRelationshipId}
-            onSelectRelationship={onSelectRelationship}
-            onClose={onCloseDetail}
-            navigate={navigate}
-          />
-        )}
+
+        {/* SVG connector layer — sits behind cards, draws directional arrows */}
+        <ConnectorLayer
+          viewModel={viewModel}
+          highlightedInputIds={highlightedInputIds}
+          highlightedOutputIds={highlightedOutputIds}
+          dimUnrelated={dimUnrelated}
+        />
       </div>
 
       <AdditionalRelationshipsPanel
@@ -612,6 +668,137 @@ function InOutMap({
       />
     </div>
   );
+}
+
+// ── Connector layer ─────────────────────────────────────────────────────
+// Renders directional arrows from input cards → the experiment card and
+// from the experiment card → output cards. The layer is an absolutely
+// positioned SVG that sits behind the cards (z-0) while cards are z-10.
+
+function ConnectorLayer({
+  viewModel,
+  highlightedInputIds,
+  highlightedOutputIds,
+  dimUnrelated,
+}: {
+  viewModel: InOutViewModel;
+  highlightedInputIds: Set<string>;
+  highlightedOutputIds: Set<string>;
+  dimUnrelated: boolean;
+}) {
+  const layerRef = useRef<SVGSVGElement>(null);
+  const [, force] = useState(0);
+  const recompute = useCallback(() => force((n) => n + 1), []);
+
+  // Recompute on mount, on data change, on resize, on scroll, and after a
+  // font-render tick.
+  useLayoutEffect(() => {
+    recompute();
+    const t = window.setTimeout(recompute, 60); // after fonts settle
+    return () => window.clearTimeout(t);
+  }, [viewModel, recompute]);
+  useEffect(() => {
+    const onResize = () => recompute();
+    const onScroll = () => recompute();
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onScroll, true);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('scroll', onScroll, true);
+    };
+  }, [recompute]);
+
+  const container = layerRef.current?.parentElement;
+  if (!container) {
+    return <svg ref={layerRef} className="pointer-events-none absolute inset-0 z-0 size-full" aria-hidden />;
+  }
+
+  const containerRect = container.getBoundingClientRect();
+  const W = container.scrollWidth;
+  const H = container.scrollHeight;
+
+  const inputCards = viewModel.inputs
+    .map((i) => {
+      const el = container.querySelector<HTMLElement>(`[data-card-id="${cssEscape(i.id)}"]`);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { id: i.id, x: r.right - containerRect.left, y: r.top + r.height / 2 - containerRect.top };
+    })
+    .filter((c): c is { id: string; x: number; y: number } => !!c);
+
+  const outputCards = viewModel.outputs
+    .map((o) => {
+      const el = container.querySelector<HTMLElement>(`[data-card-id="${cssEscape(o.id)}"]`);
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { id: o.id, x: r.left - containerRect.left, y: r.top + r.height / 2 - containerRect.top };
+    })
+    .filter((c): c is { id: string; x: number; y: number } => !!c);
+
+  const expEl = container.querySelector<HTMLElement>('[data-experiment-anchor]');
+  const expRect = expEl?.getBoundingClientRect();
+  const expLeft = expRect ? expRect.left - containerRect.left : 0;
+  const expRight = expRect ? expRect.right - containerRect.left : 0;
+  const expTop = expRect ? expRect.top + expRect.height / 2 - containerRect.top : 0;
+
+  const lines: { d: string; highlight: boolean; dim: boolean; key: string }[] = [];
+  for (const ic of inputCards) {
+    const highlight = highlightedInputIds.has(ic.id);
+    const dim = dimUnrelated && !highlight;
+    lines.push({
+      d: `M ${ic.x} ${ic.y} C ${(ic.x + expLeft) / 2} ${ic.y}, ${(ic.x + expLeft) / 2} ${expTop}, ${expLeft} ${expTop}`,
+      highlight,
+      dim,
+      key: `in-${ic.id}`,
+    });
+  }
+  for (const oc of outputCards) {
+    const highlight = highlightedOutputIds.has(oc.id);
+    const dim = dimUnrelated && !highlight;
+    lines.push({
+      d: `M ${expRight} ${expTop} C ${(expRight + oc.x) / 2} ${expTop}, ${(expRight + oc.x) / 2} ${oc.y}, ${oc.x} ${oc.y}`,
+      highlight,
+      dim,
+      key: `out-${oc.id}`,
+    });
+  }
+
+  return (
+    <svg
+      ref={layerRef}
+      className="pointer-events-none absolute inset-0 z-0 size-full"
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      aria-hidden
+    >
+      <defs>
+        <marker id="inout-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--text-muted)" />
+        </marker>
+        <marker id="inout-arrow-hi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--brand-primary)" />
+        </marker>
+      </defs>
+      {lines.map((l) => (
+        <path
+          key={l.key}
+          d={l.d}
+          fill="none"
+          stroke={l.highlight ? 'var(--brand-primary)' : 'var(--border-strong)'}
+          strokeWidth={l.highlight ? 2 : 1}
+          strokeDasharray={l.dim ? '4 4' : undefined}
+          opacity={l.dim ? 0.25 : l.highlight ? 0.95 : 0.45}
+          markerEnd={l.highlight ? 'url(#inout-arrow-hi)' : 'url(#inout-arrow)'}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function cssEscape(s: string): string {
+  // Minimal CSS.escape polyfill — sufficient for our id charset.
+  return s.replace(/[^a-zA-Z0-9_-]/g, (m) => `\\${m}`);
 }
 
 // ── Inputs column ───────────────────────────────────────────────────────
@@ -631,7 +818,7 @@ function InputsColumn({
 }) {
   const groups = useMemo(() => groupInputs(viewModel.inputs), [viewModel.inputs]);
   return (
-    <section aria-label="Inputs" className="flex min-w-0 flex-col">
+    <section aria-label="Inputs" className="relative z-10 flex min-w-0 flex-col">
       <ColumnHeader
         eyebrow="Inputs"
         title="What went into the experiment"
@@ -720,7 +907,7 @@ function OutputsColumn({
 }) {
   const groups = useMemo(() => groupOutputs(viewModel.outputs), [viewModel.outputs]);
   return (
-    <section aria-label="Outputs" className="flex min-w-0 flex-col">
+    <section aria-label="Outputs" className="relative z-10 flex min-w-0 flex-col">
       <ColumnHeader
         eyebrow="Outputs"
         title="What the experiment produced"
@@ -796,25 +983,18 @@ function OutputGroup({
 
 // ── Experiment column ───────────────────────────────────────────────────
 
-function ExperimentColumn({
-  viewModel,
-  detailOpen,
-  onCloseDetail,
-}: {
-  viewModel: InOutViewModel;
-  detailOpen: boolean;
-  onCloseDetail: () => void;
-}) {
+function ExperimentColumn({ viewModel }: { viewModel: InOutViewModel }) {
   const exp = viewModel.experiment;
   if (!exp) return null;
   const figures = pluralizeExp(exp.meta.figuresCount, 'figure', 'figures');
-  const findings = pluralizeExp(exp.meta.findingsCount, 'finding', 'findings');
-  const questions = pluralizeExp(exp.meta.questionsCount, 'open question', 'open questions');
+  const findingsCount = pluralizeExp(exp.meta.findingsCount, 'finding', 'findings');
+  const questionsCount = pluralizeExp(exp.meta.questionsCount, 'open question', 'open questions');
 
   return (
-    <section aria-label="Experiment" className="flex min-w-0 flex-col items-stretch">
+    <section aria-label="Experiment" className="relative z-10 flex min-w-0 flex-col items-stretch">
       <ColumnHeader eyebrow="Experiment" title="The selected experiment" count={null} align="center" />
       <article
+        data-experiment-anchor
         className={cn(
           'relative flex flex-col gap-3 rounded-sm border-2 border-brand-border bg-elevated px-5 py-4',
           'shadow-[inset_0_0_0_1px_rgba(255,62,1,0.04)]',
@@ -840,22 +1020,12 @@ function ExperimentColumn({
         <dl className="grid grid-cols-2 gap-3 border-t border-border-subtle pt-3 sm:grid-cols-4">
           <ExperimentMeta label="Date" value={exp.date} />
           <ExperimentMeta label="Stage" value={exp.stage} />
-          <ExperimentMeta label="Findings" value={findings} />
-          <ExperimentMeta label="Open Qs" value={questions} />
+          <ExperimentMeta label="Findings" value={findingsCount} />
+          <ExperimentMeta label="Open Qs" value={questionsCount} />
         </dl>
         <p className="text-[11px] text-text-muted">
           <span className="font-mono">{figures}</span> · <span className="font-mono">{exp.lastModified}</span>
         </p>
-
-        {detailOpen && (
-          <button
-            type="button"
-            onClick={onCloseDetail}
-            className="self-end font-mono text-[10px] uppercase tracking-wider text-text-muted hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring"
-          >
-            Close detail
-          </button>
-        )}
       </article>
     </section>
   );
@@ -909,17 +1079,20 @@ function EntityCard({
       data-card-kind={kind}
       data-card-entity-id={entity.id}
       aria-pressed={selected}
+      title={entity.title}
       className={cn(
         'group relative flex w-full min-h-11 items-start gap-2.5 rounded-sm border bg-surface-2 px-2.5 py-2 text-left transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring',
         selected
-          ? 'border-brand-border bg-brand-muted shadow-[inset_0_0_0_1px_rgba(255,62,1,0.06)]'
+          ? SELECTED_CARD_CLS
           : highlighted
-            ? 'border-brand/40 bg-surface-2'
+            ? HIGHLIGHTED_CARD_CLS
             : 'border-border-subtle hover:border-border-strong hover:bg-surface',
-        dim && 'opacity-55',
+        dim && DIMMED_CARD_CLS,
       )}
     >
+      {/* Selection indicator — a left bar so selection is not communicated by color alone */}
+      {selected && <span className="absolute inset-y-1.5 left-0 w-1 rounded-r-full bg-brand" aria-hidden />}
       <span
         className={cn(
           'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm border bg-surface',
@@ -1003,83 +1176,106 @@ function ColumnHeader({
   );
 }
 
-// ── Detail panel (desktop / tablet) ─────────────────────────────────────
+// ── Detail drawer (overlay — does NOT compress the map) ─────────────────
 
-function DetailPanel({
+function InOutDetailDrawer({
   viewModel,
-  selectedInputId,
-  selectedOutputId,
-  selectedRelationshipId,
-  onSelectRelationship,
+  selectedInput,
+  selectedOutput,
+  selectedRelationship,
   onClose,
   navigate,
 }: {
   viewModel: InOutViewModel;
-  selectedInputId: string | null;
-  selectedOutputId: string | null;
-  selectedRelationshipId: string | null;
-  onSelectRelationship: (r: InOutRelationship) => void;
+  selectedInput: InOutInput | null;
+  selectedOutput: InOutOutput | null;
+  selectedRelationship: InOutRelationship | null;
   onClose: () => void;
   navigate: (to: string) => void;
 }) {
-  const selectedInput = viewModel.inputs.find((i) => i.id === selectedInputId) ?? null;
-  const selectedOutput = viewModel.outputs.find((o) => o.id === selectedOutputId) ?? null;
-  const selectedRelationship =
-    viewModel.relationships.find((r) => r.id === selectedRelationshipId) ?? null;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    previouslyFocused.current = document.activeElement as HTMLElement;
+    const t = window.setTimeout(() => panelRef.current?.focus(), 30);
+    return () => {
+      window.clearTimeout(t);
+      previouslyFocused.current?.focus();
+    };
+  }, []);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   return (
-    <aside
-      role="complementary"
-      aria-label="Entity detail"
-      className="flex min-w-0 flex-col rounded-sm border border-border-subtle bg-surface"
-    >
-      <header className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
-        <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Detail</span>
-        <IconButton icon={X} label="Close detail" onClick={onClose} />
-      </header>
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
-        {selectedInput && (
-          <InputDetail
-            input={selectedInput}
-            experiment={viewModel.experiment}
-            onSelectRelationship={onSelectRelationship}
-            onClose={onClose}
-            navigate={navigate}
-          />
-        )}
-        {selectedOutput && (
-          <OutputDetail
-            output={selectedOutput}
-            experiment={viewModel.experiment}
-            onSelectRelationship={onSelectRelationship}
-            onClose={onClose}
-            navigate={navigate}
-          />
-        )}
-        {selectedRelationship && (
-          <RelationshipDetail
-            relationship={selectedRelationship}
-            experiment={viewModel.experiment}
-            onSelectRelationship={onSelectRelationship}
-            onClose={onClose}
-            navigate={navigate}
-          />
-        )}
-      </div>
-    </aside>
+    <div className="fixed inset-0 z-40" role="presentation">
+      {/* Subtle backdrop — does not dim the entire app, just indicates the overlay */}
+      <button
+        type="button"
+        aria-label="Close detail"
+        tabIndex={-1}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/30"
+      />
+      <aside
+        ref={panelRef}
+        role="complementary"
+        aria-label="Entity detail"
+        tabIndex={-1}
+        className="absolute right-0 top-0 bottom-0 flex w-full max-w-[420px] flex-col border-l border-border-subtle bg-surface shadow-2xl outline-none"
+      >
+        <header className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-text-muted">Detail</span>
+          <IconButton icon={X} label="Close detail" onClick={onClose} />
+        </header>
+        <div className="min-h-0 flex-1 overflow-auto px-4 py-4">
+          {selectedInput && (
+            <InputDetail
+              input={selectedInput}
+              experiment={viewModel.experiment}
+              onClose={onClose}
+              navigate={navigate}
+            />
+          )}
+          {selectedOutput && (
+            <OutputDetail
+              output={selectedOutput}
+              experiment={viewModel.experiment}
+              onClose={onClose}
+              navigate={navigate}
+            />
+          )}
+          {selectedRelationship && (
+            <RelationshipDetail
+              relationship={selectedRelationship}
+              experiment={viewModel.experiment}
+              onClose={onClose}
+              navigate={navigate}
+            />
+          )}
+        </div>
+      </aside>
+    </div>
   );
 }
 
 function InputDetail({
   input,
   experiment,
-  onSelectRelationship,
   onClose,
   navigate,
 }: {
   input: InOutInput;
   experiment: InOutExperiment | null;
-  onSelectRelationship: (r: InOutRelationship) => void;
   onClose: () => void;
   navigate: (to: string) => void;
 }) {
@@ -1103,9 +1299,7 @@ function InputDetail({
       )}
 
       {input.note && <DetailRow label="Note" value={input.note} />}
-
       {input.entity.status && <DetailRow label="Status" value={input.entity.status} />}
-
       {input.entity.href && <DetailRow label="Link" value={input.entity.href} mono />}
 
       <DetailActions
@@ -1120,13 +1314,11 @@ function InputDetail({
 function OutputDetail({
   output,
   experiment,
-  onSelectRelationship,
   onClose,
   navigate,
 }: {
   output: InOutOutput;
   experiment: InOutExperiment | null;
-  onSelectRelationship: (r: InOutRelationship) => void;
   onClose: () => void;
   navigate: (to: string) => void;
 }) {
@@ -1153,7 +1345,7 @@ function OutputDetail({
         <UnavailableState />
       ) : (
         <p className="text-[12px] text-text-secondary">
-          {sentenceFor(output.entity, experiment, 'output')}
+          {sentenceFor(output.entity, experiment, 'output', output.role)}
         </p>
       )}
 
@@ -1178,7 +1370,6 @@ function RelationshipDetail({
 }: {
   relationship: InOutRelationship;
   experiment: InOutExperiment | null;
-  onSelectRelationship: (r: InOutRelationship) => void;
   onClose: () => void;
   navigate: (to: string) => void;
 }) {
@@ -1218,7 +1409,7 @@ function RelationshipDetail({
       <DetailActions
         primary={
           experiment
-            ? { label: 'Open experiment report', href: `/experiments/${experiment.slug}` }
+            ? { label: 'Open experiment report', href: canonicalExperimentPath(experiment.slug) }
             : null
         }
         askAgent={
@@ -1319,7 +1510,6 @@ function InOutMobileFlow({
   selectedOutputId: string | null;
   onSelectInput: (i: InOutInput) => void;
   onSelectOutput: (o: InOutOutput) => void;
-  onOpenExperimentDetail: () => void;
 }) {
   const exp = viewModel.experiment;
   if (!exp) return null;
@@ -1506,7 +1696,6 @@ function InOutDetailSheet({
           <InputDetail
             input={selectedInput}
             experiment={viewModel.experiment}
-            onSelectRelationship={() => {}}
             onClose={onClose}
             navigate={navigate}
           />
@@ -1515,7 +1704,6 @@ function InOutDetailSheet({
           <OutputDetail
             output={selectedOutput}
             experiment={viewModel.experiment}
-            onSelectRelationship={() => {}}
             onClose={onClose}
             navigate={navigate}
           />
@@ -1524,7 +1712,6 @@ function InOutDetailSheet({
           <RelationshipDetail
             relationship={selectedRelationship}
             experiment={viewModel.experiment}
-            onSelectRelationship={() => {}}
             onClose={onClose}
             navigate={navigate}
           />
@@ -1551,7 +1738,7 @@ function AdditionalRelationshipsPanel({
     return (
       <section
         aria-label="Additional relationships"
-        className="rounded-sm border border-dashed border-border-subtle bg-surface-2/40 px-4 py-3"
+        className="mt-6 rounded-sm border border-dashed border-border-subtle bg-surface-2/40 px-4 py-3"
       >
         <div className="flex items-center gap-2">
           <GitBranch className="size-3.5 text-text-muted" aria-hidden />
@@ -1569,7 +1756,7 @@ function AdditionalRelationshipsPanel({
   return (
     <section
       aria-label="Additional relationships"
-      className="rounded-sm border border-border-subtle bg-surface"
+      className="mt-6 rounded-sm border border-border-subtle bg-surface"
     >
       <header className="flex items-center justify-between border-b border-border-subtle px-4 py-2.5">
         <div className="flex items-center gap-2">
@@ -1639,7 +1826,7 @@ function RelationshipRow({
           'flex w-full flex-col gap-1 rounded-sm border px-3 py-2 text-left transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring',
           selected
-            ? 'border-brand-border bg-brand-muted'
+            ? SELECTED_CARD_CLS
             : 'border-border-subtle bg-surface-2 hover:border-border-strong hover:bg-surface',
         )}
       >
@@ -1671,13 +1858,20 @@ function sentenceFor(
   entity: InOutEntity,
   experiment: InOutExperiment | null,
   side: 'input' | 'output',
+  outputRole?: InOutOutput['role'],
 ): string {
   if (entity.unresolved) return 'Referenced entity unavailable.';
   if (!experiment) return '';
   if (side === 'input') {
     return `This ${ENTITY_KIND_LABEL[entity.kind].toLowerCase()} predates ${experiment.title} and contributed to the experiment.`;
   }
-  return `${experiment.title} registered or updated this ${ENTITY_KIND_LABEL[entity.kind].toLowerCase()}.`;
+  if (outputRole === 'carried-forward') {
+    return `Carried forward as a reference output by ${experiment.title}. Not newly produced.`;
+  }
+  if (outputRole === 'updated-finding') {
+    return `${experiment.title} updated this ${ENTITY_KIND_LABEL[entity.kind].toLowerCase()}.`;
+  }
+  return `${experiment.title} registered or produced this ${ENTITY_KIND_LABEL[entity.kind].toLowerCase()}.`;
 }
 
 // ── Grouping helpers ────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Crosshair, GitBranch, Zap, FileText } from 'lucide-react';
 import type { Edge, GraphNode } from '../../data';
-import { getFindingById, getQuestionById, getExperimentBySlug } from '../../data';
+import { getFindingById, getQuestionById, getExperimentBySlug, canonicalExperimentPath } from '../../data';
 import { MonoId } from '../common/primitives';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
@@ -245,7 +245,7 @@ export function NodeInspector({
                 </NavActionButton>
               )}
               {e && (
-                <NavActionButton onClick={() => navigate(`/experiments/${node.id}`)}>
+                <NavActionButton onClick={() => navigate(canonicalExperimentPath(node.id))}>
                   <FileText className="size-3.5" /> Open Report
                 </NavActionButton>
               )}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FileText, Share2, GitBranch, ArrowUpRight, Clock, Activity, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import type { Finding, OpenQuestion } from '../../data';
-import { getLatestVersion } from '../../data';
+import { getLatestVersion, canonicalExperimentPath } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { PriorityBadge } from '../common/PriorityBadge';
 import { ConfidenceIndicator } from '../common/ConfidenceIndicator';
@@ -202,7 +202,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
             <div className="rounded-sm border border-border-subtle bg-surface-2 px-3 py-2">
               <MonoId className="text-info">{finding.evidence}</MonoId>
             </div>
-            <NavActionButton onClick={() => navigate(`/experiments/${finding.evidence}`)}>
+            <NavActionButton onClick={() => navigate(canonicalExperimentPath(finding.evidence))}>
               <FileText className="size-3.5" /> View Evidence Report
             </NavActionButton>
           </div>
@@ -388,7 +388,7 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
                     count={1}
                     label={r}
                     onClick={() =>
-                      navigate(r.startsWith('experiments/') ? `/experiments/${r}` : `/findings?focus=${r}`)
+                      navigate(r.startsWith('experiments/') ? canonicalExperimentPath(r) : `/findings?focus=${r}`)
                     }
                   />
                 ))

@@ -28,8 +28,9 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
 const children = [
   // Authenticated root lands on Experiments (the main landing page after login).
   { index: true, element: <Navigate to="/experiments" replace /> },
-  // Legacy /chat now points at /experiments to honour the post-login redirect contract.
-  { path: 'chat', element: <Navigate to="/experiments" replace /> },
+  // Chat is a first-class destination — keep its route live so the sidebar
+  // item, direct URLs, refresh, and Back/Forward all work.
+  { path: 'chat', element: <ChatWorkspaceScreen /> },
   { path: 'findings', element: <FindingsScreen /> },
   {
     path: 'experiments/*',
@@ -51,6 +52,9 @@ const children = [
   { path: 'overview', element: <Navigate to="/experiments" replace /> },
   { path: 'search', element: <Navigate to="/in-out" replace /> },
   { path: 'lineage', element: <Navigate to="/in-out" replace /> },
+  // Tolerate the previous malformed `/experiments/experiments/<id>` URLs
+  // by stripping the duplicated segment and redirecting to the canonical route.
+  { path: 'experiments/experiments/*', element: <RedirectDuplicatedExperimentRoute /> },
   { path: '*', element: <Navigate to="/experiments" replace /> },
 ];
 
@@ -71,6 +75,25 @@ const router = createHashRouter([
     children,
   },
 ]);
+
+function RedirectDuplicatedExperimentRoute() {
+  // The previous implementation generated `/experiments/experiments/<slug>`
+  // because the slug already includes the `experiments/` prefix. This
+  // component gracefully redirects those legacy URLs to the canonical route.
+  return <NavigateToCanonicalExperiment />;
+}
+
+import { useParams } from 'react-router';
+import { canonicalExperimentPath } from './data/routes';
+
+function NavigateToCanonicalExperiment() {
+  const params = useParams();
+  const rest = params['*'] ?? '';
+  // The duplicated segment looks like `experiments/<date>_<name>`. Strip a
+  // leading `experiments/` if present, then build the canonical path.
+  const normalized = rest.replace(/^experiments\//, '');
+  return <Navigate to={canonicalExperimentPath(normalized)} replace />;
+}
 
 export default function App() {
   return (

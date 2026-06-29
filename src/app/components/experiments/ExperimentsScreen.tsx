@@ -10,7 +10,7 @@ import {
   PanelRightOpen,
   Share2,
 } from 'lucide-react';
-import { experiments, getExperimentBySlug } from '../../data';
+import { experiments, getExperimentBySlug, canonicalExperimentPath } from '../../data';
 import type { Experiment } from '../../data';
 import { StatusBadge } from '../common/StatusBadge';
 import { MonoId } from '../common/primitives';
@@ -55,7 +55,7 @@ export function ExperimentsScreen() {
                 key={experiment.slug}
                 exp={experiment}
                 active={active?.slug === experiment.slug}
-                onClick={() => navigate(`/experiments/${experiment.slug}`)}
+                onClick={() => navigate(canonicalExperimentPath(experiment.slug))}
               />
             ))}
           </div>

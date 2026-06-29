@@ -13,6 +13,7 @@ import type {
   InOutEntity,
   InOutEntityKind,
 } from './inOut';
+import { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId } from './routes';
 
 export * from './types';
 export { findings } from './findings';
@@ -24,6 +25,7 @@ export { edges, graphNodes, edgeTypes, neighborhood } from './edges';
 export type { Edge, EdgeType, GraphNode, NodeKind } from './edges';
 export { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId };
 export type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel, InOutEntity, InOutEntityKind };
+export { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId };
 
 export function getFindingById(id: string) {
   return findings.find((f) => f.id === id);
