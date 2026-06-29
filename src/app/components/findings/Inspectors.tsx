@@ -234,7 +234,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
                 </button>
               </>
             )}
-            <NavActionButton onClick={() => navigate('/lineage')}>
+            <NavActionButton onClick={() => navigate('/in-out')}>
               <GitBranch className="size-3.5" /> View Full Lineage
             </NavActionButton>
           </div>

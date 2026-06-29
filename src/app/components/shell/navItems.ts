@@ -1,11 +1,9 @@
 import {
   MessageSquare,
-  LayoutGrid,
   Table2,
   FlaskConical,
-  SlidersHorizontal,
+  ArrowRightLeft,
   Share2,
-  GitBranch,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -17,10 +15,8 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { to: '/chat', label: 'Chat', icon: MessageSquare },
-  { to: '/overview', label: 'Overview', icon: LayoutGrid },
+  { to: '/experiments', label: 'Experiments', icon: FlaskConical },
+  { to: '/in-out', label: 'In/Out', icon: ArrowRightLeft },
   { to: '/findings', label: 'Findings & Questions', icon: Table2 },
-  { to: '/experiments', label: 'Experiments & Reports', icon: FlaskConical },
-  { to: '/search', label: 'Faceted Search', icon: SlidersHorizontal },
   { to: '/graph', label: 'Knowledge Graph', icon: Share2 },
-  { to: '/lineage', label: 'Lineage', icon: GitBranch },
 ];

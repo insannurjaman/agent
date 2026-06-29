@@ -41,7 +41,7 @@ export function ChatWorkspaceScreen() {
       setMobilePanel('viewer');
     },
     onAttachResults: (ids) => setAttachedContext((prev) => [...new Set([...prev, ...ids])]),
-    onOpenFacetedSearch: () => navigate('/search'),
+    onOpenInOut: () => navigate('/in-out'),
     onReview: (findings, questions) => setReviewing({ findings, questions }),
     onConfirmFinding: (p) => setProposalStatus((prev) => ({ ...prev, [p.findingId]: 'pending' })),
     onConfirmQuestion: (p) => setProposalStatus((prev) => ({ ...prev, [p.questionId]: 'pending' })),

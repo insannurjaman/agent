@@ -1,6 +1,10 @@
 import { findings } from './findings';
 import { openQuestions } from './openQuestions';
 import { experiments } from './experiments';
+import { edges } from './edges';
+
+import { buildInOutViewModel } from './inOut';
+import type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel } from './inOut';
 
 export * from './types';
 export { findings } from './findings';
@@ -10,6 +14,8 @@ export { facetDimensions } from './tagTaxonomy';
 export { repoStatus } from './repoStatus';
 export { edges, graphNodes, edgeTypes, neighborhood } from './edges';
 export type { Edge, EdgeType, GraphNode, NodeKind } from './edges';
+export { buildInOutViewModel };
+export type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel };
 
 export function getFindingById(id: string) {
   return findings.find((f) => f.id === id);

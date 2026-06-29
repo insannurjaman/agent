@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     // Mock logout — in real app: clear tokens, redirect
-    window.location.hash = '#/chat';
+    window.location.hash = '#/experiments';
   }, []);
 
   return (

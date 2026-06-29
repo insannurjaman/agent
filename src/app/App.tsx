@@ -6,12 +6,10 @@ import { AppShell } from './components/shell/AppShell';
 import { RouteErrorBoundary } from './components/shell/RouteErrorBoundary';
 import { ChatWorkspaceScreen } from './components/chat/ChatWorkspaceScreen';
 import { FindingsScreen } from './components/findings/FindingsScreen';
-import { OverviewScreen } from './components/overview/OverviewScreen';
 
 const ExperimentsScreen = lazy(() => import('./components/experiments/ExperimentsScreen').then(m => ({ default: m.ExperimentsScreen })));
-const FacetedSearchScreen = lazy(() => import('./components/search/FacetedSearchScreen').then(m => ({ default: m.FacetedSearchScreen })));
+const InOutScreen = lazy(() => import('./components/inout/InOutScreen').then(m => ({ default: m.InOutScreen })));
 const KnowledgeGraphScreen = lazy(() => import('./components/graph/KnowledgeGraphScreen').then(m => ({ default: m.KnowledgeGraphScreen })));
-const LineageScreen = lazy(() => import('./components/lineage/LineageScreen').then(m => ({ default: m.LineageScreen })));
 
 function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -28,27 +26,32 @@ function SuspenseWrapper({ children }: { children: React.ReactNode }) {
 }
 
 const children = [
-  { index: true, element: <Navigate to="/chat" replace /> },
-  { path: 'chat', element: <ChatWorkspaceScreen /> },
+  // Authenticated root lands on Experiments (the main landing page after login).
+  { index: true, element: <Navigate to="/experiments" replace /> },
+  // Legacy /chat now points at /experiments to honour the post-login redirect contract.
+  { path: 'chat', element: <Navigate to="/experiments" replace /> },
   { path: 'findings', element: <FindingsScreen /> },
   {
     path: 'experiments/*',
     element: <SuspenseWrapper><ExperimentsScreen /></SuspenseWrapper>,
   },
-  { path: 'overview', element: <OverviewScreen /> },
   {
-    path: 'search',
-    element: <SuspenseWrapper><FacetedSearchScreen /></SuspenseWrapper>,
+    path: 'in-out',
+    element: <SuspenseWrapper><InOutScreen /></SuspenseWrapper>,
+  },
+  {
+    path: 'in-out/:slug',
+    element: <SuspenseWrapper><InOutScreen /></SuspenseWrapper>,
   },
   {
     path: 'graph',
     element: <SuspenseWrapper><KnowledgeGraphScreen /></SuspenseWrapper>,
   },
-  {
-    path: 'lineage',
-    element: <SuspenseWrapper><LineageScreen /></SuspenseWrapper>,
-  },
-  { path: '*', element: <Navigate to="/chat" replace /> },
+  // Legacy routes — preserve bookmarks by redirecting rather than 404-ing.
+  { path: 'overview', element: <Navigate to="/experiments" replace /> },
+  { path: 'search', element: <Navigate to="/in-out" replace /> },
+  { path: 'lineage', element: <Navigate to="/in-out" replace /> },
+  { path: '*', element: <Navigate to="/experiments" replace /> },
 ];
 
 // Dev-only design system route

@@ -12,7 +12,7 @@ function handlers(status: Record<string, ProposalStatus> = {}, density: Density 
     onNav: noop,
     onOpenArtifact: noop,
     onAttachResults: noop,
-    onOpenFacetedSearch: noop,
+    onOpenInOut: noop,
     onReview: noop,
     onConfirmFinding: noop,
     onConfirmQuestion: noop,

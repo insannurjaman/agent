@@ -23,7 +23,7 @@ export interface ChatEventHandlers {
   onNav: (id: string) => void;
   onOpenArtifact: (artifactId: string) => void;
   onAttachResults: (ids: string[]) => void;
-  onOpenFacetedSearch: () => void;
+  onOpenInOut: () => void;
   onReview: (findings: FindingProposal[], questions: QuestionProposal[]) => void;
   onConfirmFinding: (p: FindingProposal) => void;
   onConfirmQuestion: (p: QuestionProposal) => void;

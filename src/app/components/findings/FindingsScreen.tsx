@@ -10,6 +10,7 @@ import { EmptyState } from '../common/EmptyState';
 import { FilterSelect } from '../common/FilterSelect';
 import { SegmentedControl } from '../common/SegmentedControl';
 import { SummaryMetrics } from '../common/SummaryMetrics';
+import { CsvExportButton } from '../common/CsvExportButton';
 import { ResponsiveInspectorOverlay } from '../responsive/ResponsiveInspectorOverlay';
 import { FindingInspector, QuestionInspector } from './Inspectors';
 import { FindingRow } from './FindingRow';
@@ -291,7 +292,11 @@ export function FindingsScreen() {
   return (
     <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
-        <ScreenHeader title="Findings & Open Questions" subtitle="Browse accumulated findings and unresolved issues from knowledge/*.csv." />
+        <ScreenHeader
+          title="Findings & Open Questions"
+          subtitle="Browse accumulated findings and unresolved issues from knowledge/*.csv."
+          right={<CsvExportButton />}
+        />
 
         {/* Desktop metrics */}
         <div className="hidden lg:block">
@@ -341,7 +346,7 @@ export function FindingsScreen() {
 
           {/* Scope tabs row — dedicated row, never overflows */}
           <div className="flex items-center px-3 pb-1.5">
-            <SegmentedControl compact segments={tabsConfig.map(t => ({ id: t.id, label: t.id === 'questions' ? 'Questions' : t.label, count: t.count }))} value={query.dataset} onChange={(id) => switchDataset(id as DatasetType)} className="shrink-0" aria-label="View options" />
+            <SegmentedControl compact segments={tabsConfig.map(t => ({ id: t.id, label: t.id === 'questions' ? 'Questions' : t.label, count: t.count }))} value={query.dataset} onChange={(id) => switchDataset(id as DatasetType)} className="shrink-0" />
           </div>
 
           {/* Filters + Sort row — dedicated row, never overflows */}

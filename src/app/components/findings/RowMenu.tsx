@@ -41,7 +41,7 @@ export function RowMenu({ id, isQuestion }: RowMenuProps) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="font-mono text-[12px]">
         <DropdownMenuItem onClick={() => navigate(`/graph?focus=${id}`)}>View in Graph</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate(`/lineage?focus=${id}`)}>View Lineage</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate(`/in-out?focus=${id}`)}>View Lineage</DropdownMenuItem>
         <DropdownMenuItem onClick={copyId}>Copy ID</DropdownMenuItem>
         <DropdownMenuItem className="text-brand" onClick={() => navigate(`/chat?ctx=${id}`)}>
           {isQuestion ? 'Ask Claude to resolve' : 'Ask Claude about this'}

@@ -250,7 +250,7 @@ export function NodeInspector({
                 </NavActionButton>
               )}
               {(f || e) && (
-                <NavActionButton onClick={() => navigate('/lineage')}>
+                <NavActionButton onClick={() => navigate('/in-out')}>
                   <GitBranch className="size-3.5" /> View Lineage
                 </NavActionButton>
               )}
