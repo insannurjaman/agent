@@ -263,7 +263,7 @@ export function NodeInspector({
                 )
               }
             >
-              <Zap className="size-3.5" /> Ask Claude about this node
+              <Zap className="size-3.5" /> Ask the agent about this node
             </AskClaudeButton>
           </div>
         )}

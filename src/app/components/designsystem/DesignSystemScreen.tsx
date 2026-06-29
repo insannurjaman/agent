@@ -57,8 +57,8 @@ const ops = opEvents as OpEvent[];
 
 const messageSamples: { label: string; event: ChatEvent }[] = [
   { label: 'User message', event: { kind: 'user', id: 'u', time: '11:30', text: 'Investigate residual thickness variance after roll-gap adjustment.' } },
-  { label: 'Claude planning response', event: { kind: 'claude', id: 'c1', time: '11:30', text: "I'll search existing findings, then create a follow-up experiment if evidence is insufficient." } },
-  { label: 'Claude analysis response', event: { kind: 'analysis', id: 'a', time: '11:32', summary: 'Roll-gap explains most variance; entry temperature appears as a residual factor.', relatedFindings: [{ id: 'F-0050', text: 'Entry temperature accounts for residual variance' }], openQuestions: [{ id: 'Q-0014', text: 'Does entry temperature interact with roll-gap?' }] } },
+  { label: 'Agent planning response', event: { kind: 'claude', id: 'c1', time: '11:30', text: "I'll search existing findings, then create a follow-up experiment if evidence is insufficient." } },
+  { label: 'Agent analysis response', event: { kind: 'analysis', id: 'a', time: '11:32', summary: 'Roll-gap explains most variance; entry temperature appears as a residual factor.', relatedFindings: [{ id: 'F-0050', text: 'Entry temperature accounts for residual variance' }], openQuestions: [{ id: 'Q-0014', text: 'Does entry temperature interact with roll-gap?' }] } },
   { label: 'Error event', event: { kind: 'error', id: 'er', time: '09:55', command: 'analysis.py', exitCode: 1, reason: 'missing parquet snapshot for handover window' } },
 ];
 
@@ -130,7 +130,7 @@ export function DesignSystemScreen() {
             <Spec label="Streaming + stop">
               <div className="flex items-center gap-3">
                 <span className="flex items-center gap-2 text-[13px] text-brand">
-                  <Loader2 className="size-3.5 animate-spin" /> Claude is working…
+                  <Loader2 className="size-3.5 animate-spin" /> Agent is working…
                 </span>
                 <span className="flex items-center gap-1.5 rounded-sm border border-red/40 bg-red/10 px-3 py-1.5 text-[12px] text-red">
                   <Square className="size-3.5" /> Stop

@@ -3,7 +3,8 @@ import { openQuestions } from './openQuestions';
 import { experiments } from './experiments';
 import { edges } from './edges';
 
-import { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId } from './inOut';
+import { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId, getSummary,
+  buildFindingDetail, buildQuestionDetail, buildDatasetDetail, buildDocumentDetail, buildArtifactDetail, buildExperimentDetail, buildRelationshipDetailModel } from './inOut';
 import type {
   InOutInput,
   InOutExperiment,
@@ -12,6 +13,16 @@ import type {
   InOutViewModel,
   InOutEntity,
   InOutEntityKind,
+  InOutDetail,
+  FindingDetail,
+  QuestionDetail,
+  DatasetDetail,
+  DocumentDetail,
+  ArtifactDetail,
+  ExperimentDetail,
+  RelationshipDetailModel,
+  InOutSummary,
+  InOutOutputGroup,
 } from './inOut';
 import { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId } from './routes';
 
@@ -23,8 +34,41 @@ export { facetDimensions } from './tagTaxonomy';
 export { repoStatus } from './repoStatus';
 export { edges, graphNodes, edgeTypes, neighborhood } from './edges';
 export type { Edge, EdgeType, GraphNode, NodeKind } from './edges';
-export { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId };
-export type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel, InOutEntity, InOutEntityKind };
+export {
+  buildInOutViewModel,
+  resolveEntityStrict,
+  describeRelationshipSentence,
+  formatRowCount,
+  pluralize,
+  formatShortId,
+  getSummary,
+  buildFindingDetail,
+  buildQuestionDetail,
+  buildDatasetDetail,
+  buildDocumentDetail,
+  buildArtifactDetail,
+  buildExperimentDetail,
+  buildRelationshipDetailModel,
+};
+export type {
+  InOutInput,
+  InOutExperiment,
+  InOutOutput,
+  InOutRelationship,
+  InOutViewModel,
+  InOutEntity,
+  InOutEntityKind,
+  InOutDetail,
+  FindingDetail,
+  QuestionDetail,
+  DatasetDetail,
+  DocumentDetail,
+  ArtifactDetail,
+  ExperimentDetail,
+  RelationshipDetailModel,
+  InOutSummary,
+  InOutOutputGroup,
+};
 export { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId };
 
 export function getFindingById(id: string) {

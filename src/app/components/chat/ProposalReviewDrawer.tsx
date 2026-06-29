@@ -129,7 +129,7 @@ export function ProposalReviewDrawer({
         <SectionLabel>Execution</SectionLabel>
         <p className="flex items-start gap-2 rounded-sm border border-border-subtle bg-surface-2 px-2.5 py-2 text-[12px] leading-relaxed text-text-muted">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" />
-          Frontend is read-only. Updates are performed through Claude-mediated workflows.
+          Frontend is read-only. Updates are performed through the agent-mediated workflows.
         </p>
       </div>
 
@@ -145,14 +145,14 @@ export function ProposalReviewDrawer({
             navigate(`/chat?ctx=${id}`);
           }}
         >
-          Ask Claude to revise
+          Ask the agent to revise
         </Button>
         <Button
           variant="primary"
           size="sm"
           onClick={() => onConfirm(tab.kind, isFinding ? tab.finding!.findingId : tab.question!.questionId)}
         >
-          Confirm through Claude
+          Confirm through the agent
         </Button>
       </div>
     </aside>

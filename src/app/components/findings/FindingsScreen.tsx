@@ -456,7 +456,7 @@ export function FindingsScreen() {
               {!hasActiveFilters && hasActiveSearch && <button type="button" onClick={() => updateQuery({ search: '' })} className="mt-2 text-[12px] text-brand hover:underline">Clear search</button>}
             </EmptyState>
           ) : totalRows === 0 && !hasActiveQuery ? (
-            <EmptyState icon={Search} title="No findings yet" hint="Findings are registered through Claude-mediated knowledge workflows." />
+            <EmptyState icon={Search} title="No findings yet" hint="Findings are registered through the agent-mediated knowledge workflows." />
           ) : (
             <>
               {/* Mobile cards */}

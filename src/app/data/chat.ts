@@ -1,5 +1,5 @@
-// Chat Workspace data — Claude-like local agent sessions, each bound to exactly
-// one experiment directory. Read-only knowledge rule: updates are Claude-mediated.
+// Chat Workspace data — agent-like local sessions, each bound to exactly
+// one experiment directory. Read-only knowledge rule: updates are agent-mediated.
 // V2: every session owns a complete bundle so panes never leak across experiments.
 
 export type SessionStatus = 'running' | 'completed' | 'failed';
@@ -534,17 +534,17 @@ export const suggestedActions = [
   'Create follow-up experiment',
   'Generate report summary',
   'Check superseded lineage',
-  'Add open question through Claude',
-  'Resolve open question through Claude',
+  'Add open question through the agent',
+  'Resolve open question through the agent',
 ];
 
 export const composerModes = ['Ask', 'Investigate', 'Create Experiment', 'Write Report', 'Update Knowledge'] as const;
 export type ComposerMode = (typeof composerModes)[number];
 
 export const composerModeDescriptions: Record<ComposerMode, string> = {
-  Ask: 'Claude will answer using attached context and repository knowledge.',
-  Investigate: 'Claude may create a new experiment directory and run analysis.',
-  'Create Experiment': 'Claude will create a new experiment workspace and prepare files.',
-  'Write Report': 'Claude will update REPORT.md through report-writer.',
-  'Update Knowledge': 'Claude will propose knowledge or issue updates through a Claude-mediated workflow.',
+  Ask: 'The agent will answer using attached context and repository knowledge.',
+  Investigate: 'The agent may create a new experiment directory and run analysis.',
+  'Create Experiment': 'The agent will create a new experiment workspace and prepare files.',
+  'Write Report': 'The agent will update REPORT.md through report-writer.',
+  'Update Knowledge': 'The agent will propose knowledge or issue updates through a agent-mediated workflow.',
 };

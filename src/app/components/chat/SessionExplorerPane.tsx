@@ -78,7 +78,7 @@ export function SessionExplorerPane({
             </button>
             <div className="mb-2 flex items-center gap-2 px-1">
               <span className={cn('size-1.5 rounded-full', relay === 'connected' ? 'bg-green' : relay === 'connecting' ? 'bg-amber' : 'bg-red')} />
-              <span className="font-mono text-[10px] text-text-muted">{relay === 'connected' ? 'Claude relay connected' : relay}</span>
+              <span className="font-mono text-[10px] text-text-muted">{relay === 'connected' ? 'Agent connected' : relay}</span>
             </div>
             {/* Single pass through groups — never duplicated */}
             {groups.map((group) => group.sessions.length > 0 && (

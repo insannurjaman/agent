@@ -451,7 +451,7 @@ function ReportDetailsContent({
                 )
               }
             >
-              Ask Claude about this report
+              Ask the agent about this report
             </AskClaudeButton>
           </div>
         </DetailSection>

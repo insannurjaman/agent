@@ -194,7 +194,7 @@ export function NewChatModal({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               rows={3}
-              placeholder="Describe what you want Claude to look into…"
+              placeholder="Describe what you want the agent to look into…"
               className="w-full resize-none rounded-sm border border-border-subtle bg-surface-2 px-3 py-2.5 text-[13px] text-text outline-none placeholder:text-text-muted focus:border-brand-border"
             />
           </div>

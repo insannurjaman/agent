@@ -34,9 +34,9 @@ const MORE_PROMPTS = [
   'Trace evidence',
   'Generate report summary',
   'Check superseded lineage',
-  'Add open question through Claude',
-  'Resolve open question through Claude',
-  'Update knowledge through Claude',
+  'Add open question through agent',
+  'Resolve open question through agent',
+  'Update knowledge through agent',
 ];
 
 type OpEvent = Extract<ChatEvent, { kind: 'system' | 'tool' | 'exec' | 'artifact' | 'report' }>;
@@ -259,7 +259,7 @@ export function ChatStream({
             <EmptyState
               icon={MessageSquareDashed}
               title="What would you like to investigate?"
-              hint="Ask Claude anything about your findings, experiments, or knowledge base."
+              hint="Ask the agent anything about your findings, experiments, or knowledge base."
             >
               <div className="flex flex-wrap justify-center gap-2">
                 {PRIMARY_PROMPTS.map((p) => (
@@ -285,7 +285,7 @@ export function ChatStream({
               {streaming && (
                 <div role="status" aria-live="polite" className="flex items-center gap-2 text-[13px] text-brand">
                   <Loader2 className="size-3.5 animate-spin" />
-                  <span>Claude is working…</span>
+                  <span>Agent is working…</span>
                 </div>
               )}
             </div>
@@ -450,7 +450,7 @@ function Composer({
 
       {/* Input */}
       <div className="rounded-sm border border-border-subtle bg-surface-2 focus-within:border-brand-border">
-        <label htmlFor="chat-composer" className="sr-only">Message Claude</label>
+        <label htmlFor="chat-composer" className="sr-only">Message the agent</label>
         <textarea
           ref={textareaRef}
           id="chat-composer"
@@ -463,7 +463,7 @@ function Composer({
             }
           }}
           rows={2}
-          placeholder="Message Claude…"
+          placeholder="Message the agent…"
           aria-describedby="composer-helper"
           className="w-full resize-none bg-transparent px-3 py-2.5 text-[14px] text-text outline-none placeholder:text-text-muted"
         />

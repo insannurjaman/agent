@@ -191,7 +191,7 @@ export function FindingInspector({ finding, onClose }: { finding: Finding; onClo
                 )
               }
             >
-              <Zap className="size-3.5" /> Ask Claude about this finding
+              <Zap className="size-3.5" /> Ask the agent about this finding
             </AskClaudeButton>
           </div>
         )}
@@ -348,7 +348,7 @@ export function QuestionInspector({ question, onClose }: { question: OpenQuestio
             <AskClaudeButton
               onClick={() => navigate(`/chat?ctx=${[question.id, ...question.related].join(',')}`)}
             >
-              <Zap className="size-3.5" /> Ask Claude about this question
+              <Zap className="size-3.5" /> Ask the agent about this question
             </AskClaudeButton>
           </div>
         )}
