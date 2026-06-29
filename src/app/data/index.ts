@@ -3,8 +3,16 @@ import { openQuestions } from './openQuestions';
 import { experiments } from './experiments';
 import { edges } from './edges';
 
-import { buildInOutViewModel } from './inOut';
-import type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel } from './inOut';
+import { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId } from './inOut';
+import type {
+  InOutInput,
+  InOutExperiment,
+  InOutOutput,
+  InOutRelationship,
+  InOutViewModel,
+  InOutEntity,
+  InOutEntityKind,
+} from './inOut';
 
 export * from './types';
 export { findings } from './findings';
@@ -14,8 +22,8 @@ export { facetDimensions } from './tagTaxonomy';
 export { repoStatus } from './repoStatus';
 export { edges, graphNodes, edgeTypes, neighborhood } from './edges';
 export type { Edge, EdgeType, GraphNode, NodeKind } from './edges';
-export { buildInOutViewModel };
-export type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel };
+export { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId };
+export type { InOutInput, InOutExperiment, InOutOutput, InOutRelationship, InOutViewModel, InOutEntity, InOutEntityKind };
 
 export function getFindingById(id: string) {
   return findings.find((f) => f.id === id);

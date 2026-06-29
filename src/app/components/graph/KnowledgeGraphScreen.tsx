@@ -516,7 +516,7 @@ export function KnowledgeGraphScreen() {
                     const isFocused = !exploredCluster && scope === 'neighborhood' && id === focusId;
                     const isSelected = selectedId === id; const color = KIND_COLOR[node.kind];
                     const tier = exploredCluster ? 'full' : getNodeTier(depth, hopDist, scope);
-                    const nodeOpacity = isSelected ? 1 : isFocused ? 1 : dim ? 0.08 : tier === 'full' ? 0.95 : tier === 'compact' ? 0.7 : 0.4;
+                    const nodeOpacity = isSelected ? 1 : isFocused ? 1 : dim ? ZOOM.dimOpacity : tier === 'full' ? 0.95 : tier === 'compact' ? 0.75 : 0.45;
                     if (zoomLevel < 0.2 && !isFocused && !isSelected && !exploredCluster) return null;
                     const hasAggEdge = selectedCluster && boundaryEdges.some((ae) => ae.targetId === id);
 

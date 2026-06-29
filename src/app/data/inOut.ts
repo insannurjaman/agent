@@ -1,30 +1,57 @@
-// In/Out view model — the data-driven presentation contract used by the
-// In/Out page. The page is intentionally decoupled from the raw CSV shapes
-// so the final Imai-san specification can be wired in without rewriting
-// the layout. Keep this file free of UI concerns.
+// In/Out view model.
+//
+// Design rules:
+// 1. The same finding / open-question ID MUST NOT appear as both an input
+//    and an output without an explicit role. Either it predates the
+//    experiment (input) or it was produced by it (output), not both.
+// 2. Relationship endpoints resolve to the actual entity. There is no
+//    silent fallback to the selected experiment title.
+// 3. The view model is decoupled from the raw CSV shapes so the final
+//    Imai-san specification can be wired in without rewriting the page.
 
 import type { Edge, EdgeType, Experiment, Finding, OpenQuestion } from './types';
 
-export type InOutInputKind =
-  | 'dataset'
-  | 'document'
-  | 'search-condition'
-  | 'instruction'
-  | 'previous-finding'
-  | 'previous-question'
-  | 'other';
+// ── Entity types ────────────────────────────────────────────────────────
+
+export type InOutEntityKind = 'finding' | 'question' | 'experiment' | 'document' | 'dataset' | 'artifact' | 'unknown';
+
+export interface InOutEntity {
+  id: string;
+  kind: InOutEntityKind;
+  title: string;
+  status?: string;
+  confidence?: string;
+  href?: string;
+  unresolved?: boolean;
+}
+
+// ── Inputs ──────────────────────────────────────────────────────────────
+
+export type InOutInputRole = 'previous-finding' | 'previous-question' | 'source-data' | 'source-document';
 
 export interface InOutInput {
   id: string;
-  kind: InOutInputKind;
-  label: string;
-  detail?: string;
-  source?: string;
-  meta?: { tone?: 'green' | 'teal' | 'amber' | 'blue' | 'purple' | 'muted' };
-  href?: string;
+  role: InOutInputRole;
+  entity: InOutEntity;
+  note?: string;
+  group: 'data' | 'documents' | 'previous-findings' | 'previous-questions';
 }
 
-export type InOutExperimentStatus = 'planned' | 'running' | 'completed' | 'blocked' | 'exploration';
+// ── Outputs ─────────────────────────────────────────────────────────────
+
+export type InOutOutputRole = 'produced-finding' | 'produced-question' | 'updated-finding' | 'carried-forward' | 'artifact';
+
+export interface InOutOutput {
+  id: string;
+  role: InOutOutputRole;
+  entity: InOutEntity;
+  note?: string;
+  group: 'findings' | 'open-questions' | 'artifacts';
+}
+
+// ── Experiment ──────────────────────────────────────────────────────────
+
+export type InOutExperimentStatus = 'completed' | 'in-progress' | 'planned' | 'exploration' | 'blocked';
 
 export interface InOutExperiment {
   id: string;
@@ -34,7 +61,8 @@ export interface InOutExperiment {
   date: string;
   lastModified: string;
   description?: string;
-  stage?: string;
+  stage: string;
+  entity: InOutEntity;
   meta: {
     findingsCount: number;
     questionsCount: number;
@@ -42,34 +70,23 @@ export interface InOutExperiment {
   };
 }
 
-export type InOutOutputKind =
-  | 'finding'
-  | 'open-question'
-  | 'artifact'
-  | 'result-data'
-  | 'other';
+// ── Relationships ───────────────────────────────────────────────────────
 
-export interface InOutOutput {
-  id: string;
-  kind: InOutOutputKind;
-  label: string;
-  detail?: string;
-  source?: string;
-  meta?: { tone?: 'green' | 'teal' | 'amber' | 'blue' | 'purple' | 'muted' };
-  href?: string;
-}
-
-export type InOutRelationshipKind = 'input-to-experiment' | 'experiment-to-output' | 'cross-link';
+export type InOutRelationshipKind = 'input-to-experiment' | 'experiment-to-output' | 'cross-link' | 'external';
+export type InOutRelationshipScope = 'visible' | 'external' | 'unresolved';
 
 export interface InOutRelationship {
   id: string;
   kind: InOutRelationshipKind;
-  from: string;
-  to: string;
-  label?: string;
+  scope: InOutRelationshipScope;
+  from: InOutEntity;
+  to: InOutEntity;
+  edgeType: EdgeType | 'produces' | 'updates' | 'reuses' | 'cites';
+  label: string;
   basis?: string;
   detail?: string;
-  edgeType?: EdgeType;
+  /** Whether the relationship is already visible via a connector. */
+  shownInMap: boolean;
 }
 
 export interface InOutViewModel {
@@ -77,61 +94,32 @@ export interface InOutViewModel {
   inputs: InOutInput[];
   outputs: InOutOutput[];
   relationships: InOutRelationship[];
+  /** Subset of relationships already drawn as connectors in the map. */
+  visibleRelationships: InOutRelationship[];
+  /** Subset of relationships outside the map (external / unresolved). */
+  additionalRelationships: InOutRelationship[];
 }
 
-// ── Helpers used by the adapter. Keep CSV specifics here, not in the UI. ──
+// ── Helpers ─────────────────────────────────────────────────────────────
 
-function findingTone(): 'green' {
-  return 'green';
-}
-function questionTone(): 'amber' {
-  return 'amber';
-}
-
-function findingAsInput(f: Finding): InOutInput {
-  return {
-    id: `input:finding:${f.id}`,
-    kind: 'previous-finding',
-    label: f.title,
-    detail: `${f.id} · ${f.confidence}`,
-    source: f.evidence,
-    meta: { tone: findingTone() },
-    href: `/findings?focus=${f.id}`,
-  };
+function formatRowCount(value: string | number | undefined): string {
+  if (value == null) return '—';
+  const str = String(value).trim();
+  if (!str) return '—';
+  // Avoid duplicated "rows rows" style artifacts.
+  const m = str.match(/^([\d,.]+)\s*(.*)$/);
+  if (!m) return str;
+  const num = m[1];
+  const tail = m[2] ? ` ${m[2].replace(/\brows rows\b/g, 'rows')}` : '';
+  return `${num}${tail}`.replace(/\s{2,}/g, ' ').trim();
 }
 
-function questionAsInput(q: OpenQuestion): InOutInput {
-  return {
-    id: `input:question:${q.id}`,
-    kind: 'previous-question',
-    label: q.title,
-    detail: `${q.id} · ${q.status}`,
-    meta: { tone: questionTone() },
-    href: `/findings?tab=questions&focus=${q.id}`,
-  };
+function pluralize(n: number, singular: string, plural: string): string {
+  return `${n} ${n === 1 ? singular : plural}`;
 }
 
-function findingAsOutput(f: Finding): InOutOutput {
-  return {
-    id: `output:finding:${f.id}`,
-    kind: 'finding',
-    label: f.title,
-    detail: `${f.id} · ${f.confidence}`,
-    source: f.evidence,
-    meta: { tone: findingTone() },
-    href: `/findings?focus=${f.id}`,
-  };
-}
-
-function questionAsOutput(q: OpenQuestion): InOutOutput {
-  return {
-    id: `output:question:${q.id}`,
-    kind: 'open-question',
-    label: q.title,
-    detail: `${q.id} · ${q.status}`,
-    meta: { tone: questionTone() },
-    href: `/findings?tab=questions&focus=${q.id}`,
-  };
+function formatShortId(id: string): string {
+  return id.replace('experiments/', '');
 }
 
 function experimentStatus(e: Experiment): InOutExperimentStatus {
@@ -146,6 +134,49 @@ function experimentStatus(e: Experiment): InOutExperimentStatus {
   }
 }
 
+function experimentStageLabel(e: Experiment): string {
+  if (e.outdated) return 'Superseded data';
+  switch (e.reportStatus) {
+    case 'report':
+      return 'REPORT.md published';
+    case 'exploration-only':
+      return 'README only';
+    case 'missing':
+      return 'No report yet';
+  }
+}
+
+function findingAsEntity(f: Finding): InOutEntity {
+  return {
+    id: f.id,
+    kind: 'finding',
+    title: f.title,
+    confidence: f.confidence,
+    status: f.confidence === 'superseded' ? 'superseded' : f.confidence,
+    href: `/findings?focus=${f.id}`,
+  };
+}
+
+function questionAsEntity(q: OpenQuestion): InOutEntity {
+  return {
+    id: q.id,
+    kind: 'question',
+    title: q.title,
+    status: q.status,
+    href: `/findings?tab=questions&focus=${q.id}`,
+  };
+}
+
+function experimentAsEntity(e: Experiment): InOutEntity {
+  return {
+    id: e.slug,
+    kind: 'experiment',
+    title: e.title,
+    status: e.outdated ? 'outdated' : e.reportStatus,
+    href: `/experiments/${e.slug}`,
+  };
+}
+
 function buildExperimentVm(e: Experiment): InOutExperiment {
   return {
     id: e.slug,
@@ -155,7 +186,8 @@ function buildExperimentVm(e: Experiment): InOutExperiment {
     date: e.date,
     lastModified: e.lastModified,
     description: e.conclusions[0],
-    stage: e.outdated ? 'Superseded data' : e.reportStatus === 'report' ? 'REPORT.md published' : 'Exploration',
+    stage: experimentStageLabel(e),
+    entity: experimentAsEntity(e),
     meta: {
       findingsCount: e.relatedFindings.length,
       questionsCount: e.relatedQuestions?.length ?? 0,
@@ -164,102 +196,58 @@ function buildExperimentVm(e: Experiment): InOutExperiment {
   };
 }
 
-function buildRelationships(
-  experiment: Experiment,
-  inputs: InOutInput[],
-  outputs: InOutOutput[],
-  edges: Edge[],
-): InOutRelationship[] {
-  const relationships: InOutRelationship[] = [];
-
-  // Inputs that come from previous findings/questions are linked to the
-  // experiment via `relatedFindings` and `relatedQuestions` on the model.
-  for (const f of experiment.relatedFindings) {
-    const inputId = `input:finding:${f}`;
-    if (inputs.some((i) => i.id === inputId)) {
-      relationships.push({
-        id: `rel:in:${experiment.slug}:${f}`,
-        kind: 'input-to-experiment',
-        from: inputId,
-        to: experiment.slug,
-        label: 'informs',
-        basis: 'relatedFindings',
-        detail: `${f} contributed to this experiment`,
-      });
-    }
-  }
-  for (const q of experiment.relatedQuestions ?? []) {
-    const inputId = `input:question:${q}`;
-    if (inputs.some((i) => i.id === inputId)) {
-      relationships.push({
-        id: `rel:in:${experiment.slug}:${q}`,
-        kind: 'input-to-experiment',
-        from: inputId,
-        to: experiment.slug,
-        label: 'motivated by',
-        basis: 'relatedQuestions',
-        detail: `${q} motivated this experiment`,
-      });
-    }
-  }
-
-  // Outputs are wired the same way.
-  for (const f of experiment.relatedFindings) {
-    const outputId = `output:finding:${f}`;
-    if (outputs.some((o) => o.id === outputId)) {
-      relationships.push({
-        id: `rel:out:${experiment.slug}:${f}`,
-        kind: 'experiment-to-output',
-        from: experiment.slug,
-        to: outputId,
-        label: 'produced',
-        basis: 'relatedFindings',
-        detail: `${f} was produced by this experiment`,
-      });
-    }
-  }
-  for (const q of experiment.relatedQuestions ?? []) {
-    const outputId = `output:question:${q}`;
-    if (outputs.some((o) => o.id === outputId)) {
-      relationships.push({
-        id: `rel:out:${experiment.slug}:${q}`,
-        kind: 'experiment-to-output',
-        from: experiment.slug,
-        to: outputId,
-        label: 'surfaced',
-        basis: 'relatedQuestions',
-        detail: `${q} was surfaced by this experiment`,
-      });
-    }
-  }
-
-  // Traceability edges from the knowledge graph are added as cross-links
-  // when the data clearly supports them. This is a safe, narrow surface:
-  // we only label an edge when both endpoints are present in the view.
-  for (const e of edges) {
-    const inputIds = new Set(inputs.map((i) => i.id));
-    const outputIds = new Set(outputs.map((o) => o.id));
-
-    const inInput = inputIds.has(`input:finding:${e.src}`) || inputIds.has(`input:question:${e.src}`);
-    const inOutput = outputIds.has(`output:finding:${e.src}`) || outputIds.has(`output:question:${e.src}`);
-    if (inInput && inOutput) {
-      relationships.push({
-        id: `rel:x:${e.src}:${e.edgeType}:${e.dst}`,
-        kind: 'cross-link',
-        from: e.src,
-        to: e.dst,
-        label: e.edgeType,
-        basis: e.basis,
-        detail: e.detail,
-        edgeType: e.edgeType,
-      });
-    }
-  }
-
-  return relationships;
+// Determine whether a finding existed before the experiment's date so we
+// can place it in the right side (input vs output) without producing
+// unexplained duplicates.
+function findingIsPredecessor(findingDate: string | undefined, experimentDate: string): boolean {
+  if (!findingDate) return false;
+  return findingDate < experimentDate;
 }
 
-// ── Public adapter. The shape is what the UI consumes. ──
+// ── Relationship label mapping ──────────────────────────────────────────
+
+const EDGE_TYPE_LABEL: Record<EdgeType, string> = {
+  origin: 'originates',
+  cite: 'cites',
+  'report-use': 'uses',
+  relates: 'relates to',
+  'resolve-partial': 'partially resolves',
+  'conflict-suspected': 'conflicts with',
+  supersedes: 'supersedes',
+  'relates-finding': 'relates to',
+  addresses: 'addresses',
+  strengthens: 'strengthens',
+  resolves: 'resolves',
+};
+
+const EDGE_TYPE_VERB: Record<EdgeType, string> = {
+  origin: 'originated from',
+  cite: 'cites',
+  'report-use': 'used in report',
+  relates: 'relates to',
+  'resolve-partial': 'partially resolves',
+  'conflict-suspected': 'conflicts with',
+  supersedes: 'superseded by',
+  'relates-finding': 'relates to',
+  addresses: 'addresses',
+  strengthens: 'strengthens',
+  resolves: 'resolves',
+};
+
+function describeRelationshipSentence(
+  fromEntity: InOutEntity,
+  toEntity: InOutEntity,
+  edgeType: EdgeType | 'produces' | 'updates' | 'reuses' | 'cites',
+): string {
+  if (edgeType === 'produces') return `${fromEntity.title} ${pluralize(1, 'produces', 'produces').replace('1 produces', 'produces')} ${toEntity.title}`;
+  if (edgeType === 'updates') return `${fromEntity.title} updates ${toEntity.title}`;
+  if (edgeType === 'reuses') return `${fromEntity.title} is reused by ${toEntity.title}`;
+  if (edgeType === 'cites') return `${fromEntity.title} cites ${toEntity.title}`;
+  const verb = EDGE_TYPE_VERB[edgeType as EdgeType] ?? 'relates to';
+  return `${fromEntity.title} ${verb} ${toEntity.title}`;
+}
+
+// ── Adapter ─────────────────────────────────────────────────────────────
 
 export interface BuildInOutOptions {
   experiments: Experiment[];
@@ -278,69 +266,296 @@ export function buildInOutViewModel(opts: BuildInOutOptions): InOutViewModel {
     : sorted[0];
 
   if (!experiment) {
-    return { experiment: null, inputs: [], outputs: [], relationships: [] };
+    return emptyViewModel();
   }
 
-  // Build inputs from related findings + related questions
-  const inputFindings = experiment.relatedFindings
-    .map((id) => findings.find((f) => f.id === id))
-    .filter((f): f is Finding => !!f);
-  const inputQuestions = (experiment.relatedQuestions ?? [])
-    .map((id) => openQuestions.find((q) => q.id === id))
-    .filter((q): q is OpenQuestion => !!q);
+  const expEntity = experimentAsEntity(experiment);
+  const findingMap = new Map(findings.map((f) => [f.id, f] as const));
+  const questionMap = new Map(openQuestions.map((q) => [q.id, q] as const));
 
-  const inputs: InOutInput[] = [
-    ...inputFindings.map(findingAsInput),
-    ...inputQuestions.map(questionAsInput),
-  ];
+  // ── Inputs ────────────────────────────────────────────────────────────
+  // Anything in `relatedFindings` / `relatedQuestions` that PREDATES the
+  // experiment is treated as a previous-input. Same-id findings that date
+  // on/after the experiment are intentionally NOT shown as inputs; they
+  // belong on the output side.
+  const inputs: InOutInput[] = [];
+  const seenInput = new Set<string>();
 
-  // Add explicit input tokens so the column always has the conceptual
-  // input categories represented — these come from the current
-  // representation in the product and are not invented data.
-  inputs.push(
-    {
-      id: `input:dataset:${experiment.slug}`,
-      kind: 'dataset',
-      label: 'Parquet inputs',
-      detail: `${experiment.freshness.rowCounts} rows · ${experiment.freshness.dateRange}`,
-      source: experiment.freshness.parquetMtime,
-      meta: { tone: 'blue' },
-    },
-    {
-      id: `input:document:${experiment.slug}`,
-      kind: 'document',
-      label: 'README.md',
-      detail: experiment.slug,
-      meta: { tone: 'muted' },
-    },
-  );
-
-  // Outputs are the same findings/questions but framed as outputs.
-  const outputFindings = inputFindings;
-  const outputQuestions = inputQuestions;
-
-  const outputs: InOutOutput[] = [
-    ...outputFindings.map(findingAsOutput),
-    ...outputQuestions.map(questionAsOutput),
-  ];
-
-  if (experiment.figures.length > 0) {
-    outputs.push({
-      id: `output:figures:${experiment.slug}`,
-      kind: 'artifact',
-      label: `${experiment.figures.length} figure${experiment.figures.length === 1 ? '' : 's'}`,
-      detail: experiment.figures[0].replace('outputs/figures/', ''),
-      meta: { tone: 'teal' },
-      href: `/experiments/${experiment.slug}`,
+  for (const fid of experiment.relatedFindings) {
+    const f = findingMap.get(fid);
+    if (!f) continue;
+    if (!findingIsPredecessor(f.date, experiment.date)) continue;
+    if (seenInput.has(fid)) continue;
+    seenInput.add(fid);
+    inputs.push({
+      id: `input:finding:${fid}`,
+      role: 'previous-finding',
+      entity: findingAsEntity(f),
+      group: 'previous-findings',
+      note: f.confidence === 'superseded' ? 'Superseded claim' : undefined,
+    });
+  }
+  for (const qid of experiment.relatedQuestions ?? []) {
+    const q = questionMap.get(qid);
+    if (!q) continue;
+    // Open questions are by definition pre-existing inputs.
+    if (seenInput.has(qid)) continue;
+    seenInput.add(qid);
+    inputs.push({
+      id: `input:question:${qid}`,
+      role: 'previous-question',
+      entity: questionAsEntity(q),
+      group: 'previous-questions',
+      note: q.status === 'resolved' ? 'Resolved' : undefined,
     });
   }
 
-  const relationships = buildRelationships(experiment, inputs, outputs, edges);
+  // Source data (parquet inputs) and source document (README/REPORT) come
+  // from the experiment's own metadata — not invented.
+  inputs.push({
+    id: `input:dataset:${experiment.slug}`,
+    role: 'source-data',
+    entity: {
+      id: `dataset:${experiment.slug}`,
+      kind: 'dataset',
+      title: 'Parquet inputs',
+      status: `${formatRowCount(experiment.freshness.rowCounts)} · ${experiment.freshness.dateRange}`,
+    },
+    group: 'data',
+    note: experiment.freshness.parquetMtime,
+  });
+  inputs.push({
+    id: `input:document:${experiment.slug}`,
+    role: 'source-document',
+    entity: {
+      id: `doc:${experiment.slug}`,
+      kind: 'document',
+      title: experiment.reportStatus === 'report' ? 'REPORT.md' : 'README.md',
+      status: experiment.reportStatus === 'report' ? 'REPORT available' : experiment.reportStatus,
+    },
+    group: 'documents',
+    note: experiment.slug,
+  });
 
+  // ── Outputs ───────────────────────────────────────────────────────────
+  // Anything in `relatedFindings` / `relatedQuestions` that does NOT predate
+  // the experiment is a produced output. Older findings that are still on
+  // the experiment's relatedFindings list are carried-forward: keep them
+  // in the output column but mark them with the `carried-forward` role.
+  const outputs: InOutOutput[] = [];
+  const seenOutput = new Set<string>();
+
+  for (const fid of experiment.relatedFindings) {
+    const f = findingMap.get(fid);
+    if (!f) continue;
+    if (seenOutput.has(fid)) continue;
+    seenOutput.add(fid);
+
+    const predates = findingIsPredecessor(f.date, experiment.date);
+    if (predates) {
+      outputs.push({
+        id: `output:finding:${fid}`,
+        role: 'carried-forward',
+        entity: findingAsEntity(f),
+        group: 'findings',
+        note: 'Carried forward as a reference output',
+      });
+    } else if (f.supersededBy) {
+      outputs.push({
+        id: `output:finding:${fid}`,
+        role: 'updated-finding',
+        entity: findingAsEntity(f),
+        group: 'findings',
+        note: `Updated by ${f.supersededBy}`,
+      });
+    } else {
+      outputs.push({
+        id: `output:finding:${fid}`,
+        role: 'produced-finding',
+        entity: findingAsEntity(f),
+        group: 'findings',
+      });
+    }
+  }
+  for (const qid of experiment.relatedQuestions ?? []) {
+    const q = questionMap.get(qid);
+    if (!q) continue;
+    if (seenOutput.has(qid)) continue;
+    seenOutput.add(qid);
+    outputs.push({
+      id: `output:question:${qid}`,
+      role: 'produced-question',
+      entity: questionAsEntity(q),
+      group: 'open-questions',
+    });
+  }
+  if (experiment.figures.length > 0) {
+    outputs.push({
+      id: `output:artifacts:${experiment.slug}`,
+      role: 'artifact',
+      entity: {
+        id: `artifacts:${experiment.slug}`,
+        kind: 'artifact',
+        title: pluralize(experiment.figures.length, 'figure', 'figures'),
+        status: experiment.figures[0]?.replace('outputs/figures/', ''),
+        href: `/experiments/${experiment.slug}`,
+      },
+      group: 'artifacts',
+    });
+  }
+
+  // ── Visible relationships (input→exp, exp→output) ─────────────────────
+  const visibleRelationships: InOutRelationship[] = [];
+  for (const input of inputs) {
+    if (input.role === 'previous-finding' || input.role === 'previous-question') {
+      visibleRelationships.push({
+        id: `rel:visible:in:${input.id}:${experiment.slug}`,
+        kind: 'input-to-experiment',
+        scope: 'visible',
+        from: input.entity,
+        to: expEntity,
+        edgeType: 'origin',
+        label: 'informs',
+        basis: 'relatedFindings / relatedQuestions',
+        detail: `${input.entity.id} predates the experiment`,
+        shownInMap: true,
+      });
+    }
+  }
+  for (const output of outputs) {
+    if (
+      output.role === 'produced-finding' ||
+      output.role === 'produced-question' ||
+      output.role === 'updated-finding' ||
+      output.role === 'carried-forward'
+    ) {
+      visibleRelationships.push({
+        id: `rel:visible:out:${experiment.slug}:${output.id}`,
+        kind: 'experiment-to-output',
+        scope: 'visible',
+        from: expEntity,
+        to: output.entity,
+        edgeType: output.role === 'updated-finding' ? 'updates' : 'produces',
+        label: output.role === 'updated-finding' ? 'updates' : 'produced',
+        basis: 'relatedFindings / relatedQuestions',
+        detail: `${output.entity.id} is registered against this experiment`,
+        shownInMap: true,
+      });
+    }
+  }
+
+  // ── Additional relationships from the knowledge graph ─────────────────
+  // We include only the relationships that touch entities visible in the
+  // current view (inputs, outputs, the experiment itself). Endpoints that
+  // are not part of the current view are still resolvable but tagged as
+  // `external`.
+  const additionalRelationships: InOutRelationship[] = [];
+  const inputEntityIds = new Set(inputs.map((i) => i.entity.id));
+  const outputEntityIds = new Set(outputs.map((o) => o.entity.id));
+
+  for (const edge of edges) {
+    const fromIn = inputEntityIds.has(edge.src) || outputEntityIds.has(edge.src) || edge.src === experiment.slug;
+    const toIn = inputEntityIds.has(edge.dst) || outputEntityIds.has(edge.dst) || edge.dst === experiment.slug;
+    if (!fromIn || !toIn) continue;
+
+    // Already expressed as a visible-map connection? Skip.
+    if (edge.src === experiment.slug || edge.dst === experiment.slug) {
+      // Edges to/from the experiment are surfaced via the experiment's
+      // own connections; if they're the same as the relatedFindings list
+      // we already cover them.
+      if (visibleRelationships.some((r) => r.from.id === edge.src && r.to.id === edge.dst)) continue;
+      if (visibleRelationships.some((r) => r.from.id === edge.dst && r.to.id === edge.src)) continue;
+    }
+
+    const fromEntity = resolveEntityStrict(edge.src, findings, openQuestions, experiments);
+    const toEntity = resolveEntityStrict(edge.dst, findings, openQuestions, experiments);
+
+    const isVisible =
+      fromEntity.kind !== 'unknown' &&
+      toEntity.kind !== 'unknown' &&
+      (inputEntityIds.has(fromEntity.id) || outputEntityIds.has(fromEntity.id) || fromEntity.id === experiment.slug) &&
+      (inputEntityIds.has(toEntity.id) || outputEntityIds.has(toEntity.id) || toEntity.id === experiment.slug);
+
+    const relationship: InOutRelationship = {
+      id: `rel:extra:${edge.src}:${edge.edgeType}:${edge.dst}`,
+      kind: isVisible ? 'cross-link' : 'external',
+      scope: fromEntity.kind === 'unknown' || toEntity.kind === 'unknown' ? 'unresolved' : isVisible ? 'visible' : 'external',
+      from: fromEntity,
+      to: toEntity,
+      edgeType: edge.edgeType,
+      label: EDGE_TYPE_LABEL[edge.edgeType] ?? 'relates to',
+      basis: edge.basis,
+      detail: edge.detail,
+      shownInMap: isVisible,
+    };
+    additionalRelationships.push(relationship);
+  }
+
+  const all = [...visibleRelationships, ...additionalRelationships];
   return {
     experiment: buildExperimentVm(experiment),
     inputs,
     outputs,
-    relationships,
+    relationships: all,
+    visibleRelationships,
+    additionalRelationships,
   };
 }
+
+function emptyViewModel(): InOutViewModel {
+  return {
+    experiment: null,
+    inputs: [],
+    outputs: [],
+    relationships: [],
+    visibleRelationships: [],
+    additionalRelationships: [],
+  };
+}
+
+// ── Entity resolver (strict — no experiment fallback) ──────────────────
+
+export function resolveEntityStrict(
+  id: string,
+  findings: Finding[],
+  openQuestions: OpenQuestion[],
+  experiments: Experiment[],
+): InOutEntity {
+  if (id.startsWith('F-')) {
+    const f = findings.find((x) => x.id === id);
+    return f ? findingAsEntity(f) : { id, kind: 'unknown', title: id, unresolved: true };
+  }
+  if (id.startsWith('Q-')) {
+    const q = openQuestions.find((x) => x.id === id);
+    return q ? questionAsEntity(q) : { id, kind: 'unknown', title: id, unresolved: true };
+  }
+  if (id.startsWith('experiments/')) {
+    const e = experiments.find((x) => x.slug === id);
+    return e ? experimentAsEntity(e) : { id, kind: 'unknown', title: id, unresolved: true };
+  }
+  // Could be a synthetic id like "input:finding:F-0050" or "output:question:Q-0014".
+  if (id.startsWith('input:finding:')) {
+    const fid = id.replace('input:finding:', '');
+    const f = findings.find((x) => x.id === fid);
+    return f ? findingAsEntity(f) : { id: fid, kind: 'unknown', title: fid, unresolved: true };
+  }
+  if (id.startsWith('input:question:')) {
+    const qid = id.replace('input:question:', '');
+    const q = openQuestions.find((x) => x.id === qid);
+    return q ? questionAsEntity(q) : { id: qid, kind: 'unknown', title: qid, unresolved: true };
+  }
+  if (id.startsWith('output:finding:')) {
+    const fid = id.replace('output:finding:', '');
+    const f = findings.find((x) => x.id === fid);
+    return f ? findingAsEntity(f) : { id: fid, kind: 'unknown', title: fid, unresolved: true };
+  }
+  if (id.startsWith('output:question:')) {
+    const qid = id.replace('output:question:', '');
+    const q = openQuestions.find((x) => x.id === qid);
+    return q ? questionAsEntity(q) : { id: qid, kind: 'unknown', title: qid, unresolved: true };
+  }
+  return { id, kind: 'unknown', title: id, unresolved: true };
+}
+
+// Re-export for convenience.
+export { describeRelationshipSentence, formatRowCount, pluralize, formatShortId };
