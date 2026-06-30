@@ -23,6 +23,7 @@ import type {
   RelationshipDetailModel,
   InOutSummary,
   InOutOutputGroup,
+  InOutOutputRole,
 } from './inOut';
 import { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId } from './routes';
 
@@ -68,6 +69,7 @@ export type {
   RelationshipDetailModel,
   InOutSummary,
   InOutOutputGroup,
+  InOutOutputRole,
 };
 export { canonicalExperimentPath, canonicalInOutPath, normalizeExperimentId };
 

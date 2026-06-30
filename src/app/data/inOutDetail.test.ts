@@ -200,17 +200,17 @@ describe('Summary counts', () => {
   const vm = buildInOutViewModel({ experiments, findings, openQuestions, edges, focusSlug: 'experiments/2026-06-08_anomaly_check' });
   const summary = getSummary(vm);
 
-  it('produced + updated + carriedForward + artifacts = outputs (excluding open-questions)', () => {
-    const nonQuestionOutputs = vm.outputs.filter((o) => o.group !== 'open-questions').length;
-    expect(summary.produced + summary.updated + summary.carriedForward + summary.artifacts).toBe(nonQuestionOutputs);
+  it('newFindings + newQuestions + updatedFindings + resolvedQuestions + carriedForward + artifacts = total outputs (minus report)', () => {
+    const nonReportOutputs = vm.outputs.filter((o) => o.group !== 'generated-report').length;
+    expect(summary.newFindings + summary.newQuestions + summary.updatedFindings + summary.resolvedQuestions + summary.carriedForward + summary.artifacts).toBe(nonReportOutputs);
   });
 
-  it('carriedForward is not counted as produced', () => {
+  it('carriedForward is not counted as newFindings', () => {
     expect(summary.carriedForward).toBe(vm.outputs.filter((o) => o.group === 'carried-forward').length);
-    expect(summary.produced).toBe(vm.outputs.filter((o) => o.group === 'produced').length);
+    expect(summary.newFindings).toBe(vm.outputs.filter((o) => o.group === 'new-findings').length);
   });
 
-  it('confirmedRelationships equals visibleRelationships length', () => {
-    expect(summary.confirmedRelationships).toBe(vm.visibleRelationships.length);
+  it('connections equals visibleRelationships length', () => {
+    expect(summary.connections).toBe(vm.visibleRelationships.length);
   });
 });

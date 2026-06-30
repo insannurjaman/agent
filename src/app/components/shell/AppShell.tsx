@@ -13,6 +13,17 @@ export function AppShell() {
   const mainRef = useRef<HTMLElement>(null);
   const prevPathname = useRef(location.pathname);
 
+  // Normalize outer URL: strip any pre-hash query parameters (e.g.
+  // `?selected=F-0050#/in-out`) that may persist from legacy bookmarks
+  // or prior routing. Uses history.replaceState so no duplicate history
+  // entries are created.
+  useEffect(() => {
+    if (window.location.search) {
+      const hash = window.location.hash || '#/experiments';
+      window.history.replaceState(null, '', hash);
+    }
+  }, []);
+
   const openNav = useCallback((tab?: DrawerTab) => {
     if (tab) setDrawerTab(tab);
     setMobileNavOpen(true);
