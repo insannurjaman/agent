@@ -88,11 +88,27 @@ export function ArtifactViewer({
           <ArtifactBody artifact={artifact} />
         </TabsContent>
 
-        {/* Source — raw markdown */}
+        {/* Source — raw content or unavailable state */}
         <TabsContent value="source" className="min-h-0 flex-1 overflow-auto p-3">
-          <pre className="whitespace-pre-wrap text-[12px] text-text-secondary font-mono leading-relaxed">
-            {artifact.markdown || artifact.log || artifact.json ? JSON.stringify(artifact.json, null, 2) : ''}
-          </pre>
+          {artifact.markdown ? (
+            <pre className="whitespace-pre-wrap text-[12px] text-text-secondary font-mono leading-relaxed">
+              {artifact.markdown}
+            </pre>
+          ) : artifact.log ? (
+            <pre className="whitespace-pre-wrap text-[12px] text-text-secondary font-mono leading-relaxed">
+              {artifact.log}
+            </pre>
+          ) : artifact.json ? (
+            <pre className="whitespace-pre-wrap text-[12px] text-text-secondary font-mono leading-relaxed">
+              {JSON.stringify(artifact.json, null, 2)}
+            </pre>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center px-6 py-8 text-center">
+              <FileText className="size-5 text-text-muted mb-2" />
+              <p className="text-[13px] text-text-secondary">Source text is not available for this file type.</p>
+              <p className="mt-1 text-[11px] text-text-muted">Binary or image artifacts do not have a text source view.</p>
+            </div>
+          )}
         </TabsContent>
 
         {/* Metadata */}

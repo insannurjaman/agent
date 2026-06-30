@@ -4,7 +4,7 @@ import { experiments } from './experiments';
 import { edges } from './edges';
 
 import { buildInOutViewModel, resolveEntityStrict, describeRelationshipSentence, formatRowCount, pluralize, formatShortId, getSummary,
-  buildFindingDetail, buildQuestionDetail, buildDatasetDetail, buildDocumentDetail, buildArtifactDetail, buildExperimentDetail, buildRelationshipDetailModel } from './inOut';
+  buildFindingDetail, buildQuestionDetail, buildDatasetDetail, buildDocumentDetail, buildArtifactDetail, buildExperimentDetail, buildReportDetail, buildRelationshipDetailModel } from './inOut';
 import type {
   InOutInput,
   InOutExperiment,
@@ -20,6 +20,7 @@ import type {
   DocumentDetail,
   ArtifactDetail,
   ExperimentDetail,
+  ReportDetail,
   RelationshipDetailModel,
   InOutSummary,
   InOutOutputGroup,
@@ -49,6 +50,7 @@ export {
   buildDocumentDetail,
   buildArtifactDetail,
   buildExperimentDetail,
+  buildReportDetail,
   buildRelationshipDetailModel,
 };
 export type {
@@ -66,6 +68,7 @@ export type {
   DocumentDetail,
   ArtifactDetail,
   ExperimentDetail,
+  ReportDetail,
   RelationshipDetailModel,
   InOutSummary,
   InOutOutputGroup,

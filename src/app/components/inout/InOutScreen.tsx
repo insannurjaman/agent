@@ -11,14 +11,14 @@ import {
   buildInOutViewModel, getSummary,
   buildFindingDetail, buildQuestionDetail, buildDatasetDetail,
   buildDocumentDetail, buildArtifactDetail, buildExperimentDetail,
-  buildRelationshipDetailModel,
+  buildReportDetail, buildRelationshipDetailModel,
   experiments, findings, openQuestions, edges, getExperimentBySlug,
   describeRelationshipSentence, formatShortId, canonicalExperimentPath,
   type InOutEntity, type InOutExperiment, type InOutInput, type InOutOutput,
   type InOutRelationship, type InOutViewModel, type InOutSummary,
   type InOutDetail, type FindingDetail, type QuestionDetail,
   type DatasetDetail, type DocumentDetail, type ArtifactDetail,
-  type ExperimentDetail, type RelationshipDetailModel,
+  type ExperimentDetail, type ReportDetail, type RelationshipDetailModel,
 } from '../../data';
 import type { Finding, OpenQuestion, Experiment } from '../../data/types';
 import { MonoId } from '../common/primitives';
@@ -105,7 +105,7 @@ const ENTITY_KIND_LABEL: Record<InOutEntity['kind'], string> = {
 // Selection: blue accent, distinct from orange brand and error red
 const SELECTED_CARD_CLS = 'border-blue/50 bg-blue/8 ring-1 ring-blue/20';
 const HIGHLIGHTED_CARD_CLS = 'border-blue/30 bg-blue/5';
-const DIMMED_CARD_CLS = 'opacity-45';
+const DIMMED_CARD_CLS = 'opacity-55';
 
 // Sticky header height constant for scroll offsets
 const STICKY_HEADER_H = 56;
@@ -295,17 +295,17 @@ function CompactHeader({ summary, right }: { summary: InOutSummary; right: React
       <div className="flex items-center gap-3 min-w-0">
         <h1 className="text-[16px] font-semibold text-text whitespace-nowrap">In/Out</h1>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[10px] text-text-muted">
-          <span>{summary.inputs} in</span>
+          <span>{pluralize(summary.inputs, 'input', 'inputs')}</span>
           <span aria-hidden>·</span>
-          <span className="text-green">{summary.newFindings} new</span>
+          <span className="text-green">{pluralize(summary.newFindings, 'new', 'new')}</span>
           <span aria-hidden>·</span>
-          <span className="text-amber">{summary.resolvedQuestions} transitions</span>
+          <span className="text-amber">{pluralize(summary.resolvedQuestions, 'transition', 'transitions')}</span>
           <span aria-hidden>·</span>
-          <span className="text-text-muted">{summary.carriedForward} carried</span>
-          {summary.generatedReport && <><span aria-hidden>·</span><span className="text-blue">report</span></>}
-          {summary.artifacts > 0 && <><span aria-hidden>·</span><span className="text-teal">{summary.artifacts} artifacts</span></>}
+          <span className="text-text-muted">{pluralize(summary.carriedForward, 'carried ref', 'carried refs')}</span>
+          {summary.generatedReport && <><span aria-hidden>·</span><span className="text-blue">1 report</span></>}
+          {summary.artifacts > 0 && <><span aria-hidden>·</span><span className="text-teal">{pluralize(summary.artifacts, 'artifact', 'artifacts')}</span></>}
           <span aria-hidden>·</span>
-          <span>{summary.connections} links</span>
+          <span>{pluralize(summary.connections, 'link', 'links')}</span>
         </div>
       </div>
       {right}
@@ -856,6 +856,7 @@ function DetailRenderer({ detail, experiment, navigate }: {
     case 'document': return <DocumentDetailView detail={detail} navigate={navigate} />;
     case 'artifact': return <ArtifactDetailView detail={detail} navigate={navigate} />;
     case 'experiment': return <ExperimentDetailView detail={detail} navigate={navigate} />;
+    case 'report': return <ReportDetailView detail={detail} navigate={navigate} />;
     case 'relationship': return <RelationshipDetailView detail={detail} navigate={navigate} />;
   }
 }
@@ -1068,6 +1069,28 @@ function ExperimentDetailView({ detail, navigate }: { detail: ExperimentDetail; 
   );
 }
 
+function ReportDetailView({ detail, navigate }: { detail: ReportDetail; navigate: (to: string) => void }) {
+  return (
+    <article className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <FileText className="size-4 text-text-secondary" strokeWidth={1.75} aria-hidden />
+        <StatusBadge value="Report" tone="blue" showDot={false} />
+        <StatusBadge value={detail.role} tone="neutral" showDot={false} />
+      </div>
+      <div>
+        <h3 className="text-[15px] font-semibold leading-snug text-text">{detail.title}</h3>
+      </div>
+      <DetailSection label="Relationship to experiment">{detail.relationshipToCurrent}</DetailSection>
+      <div className="grid grid-cols-2 gap-3">
+        <DetailSection label="Availability">{detail.availability}</DetailSection>
+        <DetailSection label="Generated date">{detail.generatedDate}</DetailSection>
+      </div>
+      <DetailActions actions={detail.actions} navigate={navigate} />
+      <TechnicalDetails items={[{ label: 'Source exp', value: detail.sourceExperiment }]} />
+    </article>
+  );
+}
+
 function RelationshipDetailView({ detail, navigate }: { detail: RelationshipDetailModel; navigate: (to: string) => void }) {
   const isUnresolved = detail.from.unresolved || detail.to.unresolved;
   return (
@@ -1157,7 +1180,7 @@ function buildOutputDetail(output: InOutOutput, experiment: Experiment | null): 
   }
   if (output.role === 'artifact' && experiment) return buildArtifactDetail(experiment, output.role);
   if (output.role === 'generated-report' && experiment) {
-    return buildDocumentDetail(experiment, output.role);
+    return buildReportDetail(experiment, output.role);
   }
   return {
     kind: 'finding', role: output.role, title: output.entity.title, id: output.entity.id,
@@ -1282,21 +1305,26 @@ function AdditionalRelationshipsPanel({ viewModel, selectedRelationshipId, onSel
 function RelationshipRow({ relationship, selected, onSelect }: {
   relationship: InOutRelationship; selected: boolean; onSelect: (r: InOutRelationship) => void;
 }) {
+  const fromTitle = relationship.from.unresolved ? relationship.from.id : relationship.from.title;
+  const toTitle = relationship.to.unresolved ? relationship.to.id : relationship.to.title;
   const fromId = relationship.from.id;
   const toId = relationship.to.id;
   const verb = relationship.label;
   return (
     <li>
       <button type="button" onClick={() => onSelect(relationship)} aria-pressed={selected}
+        title={`${fromTitle} ${verb} ${toTitle}`}
         className={cn('flex w-full flex-col gap-0.5 rounded-sm border px-2.5 py-1.5 text-left transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-ring',
           selected ? SELECTED_CARD_CLS : 'border-border-subtle bg-surface-2 hover:border-border-strong hover:bg-surface')}>
         <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[11px] font-medium text-text">{fromId}</span>
-          <ArrowRight className="size-3 text-text-muted" aria-hidden />
-          <span className="font-mono text-[11px] font-medium text-text">{toId}</span>
+          <span className="truncate text-[12px] font-medium text-text">{fromTitle}</span>
+          <ArrowRight className="size-3 shrink-0 text-text-muted" aria-hidden />
+          <span className="truncate text-[12px] font-medium text-text">{toTitle}</span>
         </div>
-        <span className="font-mono text-[9px] uppercase tracking-wider text-text-muted">{verb} · {relationship.basis ?? '—'}</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-text-muted">
+          {fromId} → {toId} · {verb} · {relationship.basis ?? '—'}
+        </span>
         {relationship.scope === 'external' && <StatusBadge value="External" tone="neutral" showDot={false} />}
         {relationship.scope === 'unresolved' && <StatusBadge value="Unresolved" tone="warning" showDot={false} />}
       </button>

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { X, Search, Layers } from 'lucide-react';
-import { sessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
+import { sessions as initialSessions, getSessionBundle, type ChatSession, type FindingProposal, type QuestionProposal, type TimelineItem } from '../../data/chat';
 import type { ChatEventHandlers, ProposalStatus } from './ChatEvents';
 import { ChatStream } from './ChatStream';
 import { SessionExplorerPane } from './SessionExplorerPane';
@@ -17,10 +17,22 @@ const EMPTY_BUNDLE = { transcript: [], tree: [], artifacts: {}, timeline: [] as 
 
 type MobilePanel = 'workspace' | 'explorer' | 'viewer' | null;
 
+/** Sanitize a user prompt into a readable session title. */
+function sanitizeTitle(prompt: string): string {
+  const trimmed = prompt.trim();
+  if (!trimmed) return 'New investigation';
+  // Take first line, truncate to 60 chars, collapse whitespace
+  const firstLine = trimmed.split('\n')[0].trim();
+  const collapsed = firstLine.replace(/\s+/g, ' ');
+  if (collapsed.length <= 60) return collapsed;
+  return collapsed.slice(0, 57) + '…';
+}
+
 export function ChatWorkspaceScreen() {
   const bp = useBreakpoint();
   const navigate = useNavigate();
-  const [session, setSession] = useState<ChatSession>(sessions[0]);
+  const [sessionList, setSessionList] = useState<ChatSession[]>(initialSessions);
+  const [session, setSession] = useState<ChatSession>(initialSessions[0]);
   const [mobilePanel, setMobilePanel] = useState<MobilePanel>(null);
   const [artifactId, setArtifactId] = useState<string | null>(null);
   const [attachedContext, setAttachedContext] = useState<string[]>(['F-0050', 'Q-0014']);
@@ -66,6 +78,28 @@ export function ChatWorkspaceScreen() {
     setMobilePanel(null);
   }, []);
 
+  /** Create a new session with a sanitized title and add it to the sidebar list. */
+  const handleStart = useCallback((slug: string, prompt: string, context: string[]) => {
+    const trimmedPrompt = prompt.trim();
+    if (!trimmedPrompt) return; // Guard against empty prompts
+    const newSession: ChatSession = {
+      id: `s-${Date.now()}`,
+      slug: slug || 'auto',
+      title: sanitizeTitle(trimmedPrompt),
+      status: 'running',
+      lastUpdated: 'just now',
+    };
+    setSessionList((prev) => [newSession, ...prev]);
+    setSession(newSession);
+    setAttachedContext(context);
+    setNewChatOpen(false);
+  }, []);
+
+  const selectSession = useCallback((id: string) => {
+    const s = sessionList.find((x) => x.id === id);
+    if (s) setSession(s);
+  }, [sessionList]);
+
   const isDesktop = bp === 'desktop';
 
   // Desktop: CSS Grid layout
@@ -78,9 +112,9 @@ export function ChatWorkspaceScreen() {
         >
           <div className="hidden border-r border-border-subtle md:block xl:block">
             <SessionExplorerPane
-              sessionList={sessions}
+              sessionList={sessionList}
               activeSessionId={session.id}
-              onSelectSession={(id) => { const s = sessions.find((x) => x.id === id); if (s) setSession(s); }}
+              onSelectSession={selectSession}
               onNewChat={handleNewChat}
               relay="connected"
               tree={bundle.tree}
@@ -123,10 +157,7 @@ export function ChatWorkspaceScreen() {
         )}
         {newChatOpen && (
           <NewChatModal onClose={() => setNewChatOpen(false)}
-            onStart={(slug, prompt, context) => {
-              setSession({ id: `s-${Date.now()}`, slug, title: prompt || 'New session', status: 'running', lastUpdated: 'just now' });
-              setAttachedContext(context); setNewChatOpen(false);
-            }} />
+            onStart={handleStart} />
         )}
       </>
     );
@@ -138,8 +169,8 @@ export function ChatWorkspaceScreen() {
       {/* Workspace navigation drawer */}
       <Drawer open={mobilePanel === 'workspace'} onClose={closeMobilePanel} side="left" width="w-full sm:w-[360px]" ariaLabel="Session explorer">
         <SessionExplorerPane
-          sessionList={sessions} activeSessionId={session.id}
-          onSelectSession={(id) => { const s = sessions.find((x) => x.id === id); if (s) { setSession(s); closeMobilePanel(); } }}
+          sessionList={sessionList} activeSessionId={session.id}
+          onSelectSession={(id) => { selectSession(id); closeMobilePanel(); }}
           onNewChat={() => { closeMobilePanel(); setNewChatOpen(true); }}
           relay="connected" tree={bundle.tree} artifacts={bundle.artifacts}
           onSelectArtifact={(id) => { setArtifactId(id); setMobilePanel('viewer'); }}
@@ -183,10 +214,7 @@ export function ChatWorkspaceScreen() {
 
       {newChatOpen && (
         <NewChatModal onClose={() => setNewChatOpen(false)}
-          onStart={(slug, prompt, context) => {
-            setSession({ id: `s-${Date.now()}`, slug, title: prompt || 'New session', status: 'running', lastUpdated: 'just now' });
-            setAttachedContext(context); setNewChatOpen(false);
-          }} />
+          onStart={handleStart} />
       )}
     </div>
   );
