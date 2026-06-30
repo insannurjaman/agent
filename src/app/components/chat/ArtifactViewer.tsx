@@ -151,7 +151,7 @@ export function ArtifactViewer({
         <TabsContent value="timeline" className="min-h-0 flex-1 overflow-auto p-3">
           <div className="space-y-0">
             {timeline.map((item, i) => (
-              <button key={i} type="button" onClick={() => item.artifactId && onTimelineOpen(item)}
+              <button key={item.artifactId ?? i} type="button" onClick={() => item.artifactId && onTimelineOpen(item)}
                 disabled={!item.artifactId}
                 className={cn('flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-[11px]', item.artifactId ? 'text-text-secondary hover:bg-surface-2 hover:text-text cursor-pointer' : 'text-text-muted cursor-default')}>
                 <Clock className="size-3 shrink-0" />
@@ -228,7 +228,7 @@ function JsonTree({ data, depth = 0 }: { data: unknown; depth?: number }) {
   if (typeof data !== 'object') return <span className="text-text-secondary">{String(data)}</span>;
   if (Array.isArray(data)) {
     return (<div className="ml-2"><span className="text-text-muted">[</span>
-      {data.slice(0, 10).map((item, i) => (<div key={i} className="ml-2"><JsonTree data={item} depth={depth + 1} />{i < Math.min(data.length, 10) - 1 && <span className="text-text-muted">,</span>}</div>))}
+      {data.slice(0, 10).map((item, i) => (<div key={typeof item === 'object' ? JSON.stringify(item).slice(0, 40) + i : String(item) + i} className="ml-2"><JsonTree data={item} depth={depth + 1} />{i < Math.min(data.length, 10) - 1 && <span className="text-text-muted">,</span>}</div>))}
       {data.length > 10 && <div className="ml-2 text-text-muted">… {data.length - 10} more</div>}
       <span className="text-text-muted">]</span>
     </div>);

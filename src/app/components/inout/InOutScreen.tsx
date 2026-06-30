@@ -225,16 +225,18 @@ export function InOutScreen() {
     if (selectedOutput) return buildOutputDetail(selectedOutput, rawExperiment);
     if (selectedRelationship) return buildRelationshipDetailModel(selectedRelationship, rawExperiment);
     return null;
-  }, [selectedInput, selectedOutput, selectedRelationship, viewModel]);
+  }, [selectedInput, selectedOutput, selectedRelationship, viewModel.experiment]);
 
   // Scroll selected card into view when drawer opens
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!detailOpen || !entityParam) return;
+    const targetId = entityParam;
     const t = window.setTimeout(() => {
       const container = scrollContainerRef.current;
       if (!container) return;
-      const card = container.querySelector<HTMLElement>(`[data-card-entity-id="${cssEscape(entityParam)}"]`);
+      const escaped = cssEscape(targetId);
+      const card = container.querySelector<HTMLElement>(`[data-card-entity-id="${escaped}"]`);
       if (card) {
         const cardRect = card.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
@@ -1032,8 +1034,8 @@ function ArtifactDetailView({ detail, navigate }: { detail: ArtifactDetail; navi
         <div>
           <div className="font-mono text-[10px] uppercase tracking-wider text-text-muted">File list</div>
           <ul className="mt-1 space-y-1">
-            {detail.files.map((f, i) => (
-              <li key={i} className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[10px] text-text-secondary">
+            {detail.files.map((f) => (
+              <li key={f} className="flex items-center gap-1.5 rounded-sm border border-border-subtle bg-surface-2 px-2 py-1 font-mono text-[10px] text-text-secondary">
                 <FileText className="size-3 shrink-0 text-text-muted" />{f}
               </li>
             ))}
@@ -1161,6 +1163,15 @@ function buildInputDetail(input: InOutInput, experiment: Experiment | null): InO
   }
   if (input.role === 'source-data' && experiment) return buildDatasetDetail(experiment, input.role);
   if (input.role === 'source-document' && experiment) return buildDocumentDetail(experiment, input.role);
+  const fallbackKind = input.entity.kind !== 'unknown' ? input.entity.kind : 'finding';
+  if (fallbackKind === 'question') {
+    return {
+      kind: 'question' as const, role: input.role, title: input.entity.title, id: input.entity.id,
+      summary: '', status: '—', priority: '—', area: '—', raisedDate: '—',
+      sourceExperiment: '—', relationshipToCurrent: 'Referenced entity unavailable.',
+      actions: [], unresolved: true,
+    };
+  }
   return {
     kind: 'finding', role: input.role, title: input.entity.title, id: input.entity.id,
     summary: '', confidence: '—', category: '—', actionStatus: '—', date: '—',
@@ -1181,6 +1192,15 @@ function buildOutputDetail(output: InOutOutput, experiment: Experiment | null): 
   if (output.role === 'artifact' && experiment) return buildArtifactDetail(experiment, output.role);
   if (output.role === 'generated-report' && experiment) {
     return buildReportDetail(experiment, output.role);
+  }
+  const fallbackKind = output.entity.kind !== 'unknown' ? output.entity.kind : 'finding';
+  if (fallbackKind === 'question') {
+    return {
+      kind: 'question' as const, role: output.role, title: output.entity.title, id: output.entity.id,
+      summary: '', status: '—', priority: '—', area: '—', raisedDate: '—',
+      sourceExperiment: '—', relationshipToCurrent: 'Referenced entity unavailable.',
+      actions: [], unresolved: true,
+    };
   }
   return {
     kind: 'finding', role: output.role, title: output.entity.title, id: output.entity.id,

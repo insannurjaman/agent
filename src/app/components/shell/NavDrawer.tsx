@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink } from 'react-router';
 import { X } from 'lucide-react';
 import { navItems } from './navItems';
 import { Drawer } from '../responsive/Drawer';
@@ -12,10 +12,7 @@ export function NavDrawer({
   open: boolean;
   onClose: () => void;
 }) {
-  const navigate = useNavigate();
-
-  function handleNavSelect(to: string) {
-    navigate(to);
+  function handleNavSelect() {
     onClose();
   }
 

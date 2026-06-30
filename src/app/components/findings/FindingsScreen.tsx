@@ -183,8 +183,6 @@ export function FindingsScreen() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const mobileFilterRef = useRef<HTMLDivElement>(null);
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-
   const updateQuery = useCallback((partial: Partial<QueryState>) => { setQueryRaw(prev => ({ ...prev, ...partial })); }, []);
   const updateFindingFilter = useCallback((key: string, value: string) => { setQueryRaw(prev => ({ ...prev, findingFilters: { ...prev.findingFilters, [key]: value } })); }, []);
   const updateQuestionFilter = useCallback((key: string, value: string) => { setQueryRaw(prev => ({ ...prev, questionFilters: { ...prev.questionFilters, [key]: value } })); }, []);

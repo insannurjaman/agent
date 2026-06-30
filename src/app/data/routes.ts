@@ -26,7 +26,7 @@ export function normalizeExperimentId(slugOrId: string): string {
  * Build the canonical experiment route: `/experiments/:id`.
  * The id is the bare slug (without the `experiments/` prefix).
  */
-export function canonicalExperimentPath(slugOrId: string): string {
+export function canonicalExperimentPath(slugOrId?: string): string {
   const id = normalizeExperimentId(slugOrId);
   if (!id) return '/experiments';
   return `/experiments/${id}`;

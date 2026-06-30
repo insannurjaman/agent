@@ -64,7 +64,7 @@ if (import.meta.env.DEV) {
   children.splice(children.length - 1, 0, {
     path: 'design',
     element: <SuspenseWrapper><DesignSystemScreen /></SuspenseWrapper>,
-  } as never);
+  } as (typeof children)[number]);
 }
 
 const router = createHashRouter([

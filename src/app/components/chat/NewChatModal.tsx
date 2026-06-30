@@ -7,6 +7,7 @@ import { cn } from '../ui/utils';
 const MODES = [
   { label: 'Ask', desc: 'General questions' },
   { label: 'Investigate', desc: 'Deep analysis' },
+  { label: 'Create Experiment', desc: 'Design a new experiment' },
   { label: 'Write Report', desc: 'Generate report' },
   { label: 'Update Knowledge', desc: 'Modify findings' },
 ];

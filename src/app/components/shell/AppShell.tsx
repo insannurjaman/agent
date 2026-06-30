@@ -22,7 +22,7 @@ export function AppShell() {
       const hash = window.location.hash || '#/experiments';
       window.history.replaceState(null, '', hash);
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.hash, location.search]);
 
   const openNav = useCallback((tab?: DrawerTab) => {
     if (tab) setDrawerTab(tab);

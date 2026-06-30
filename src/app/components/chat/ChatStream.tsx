@@ -277,10 +277,14 @@ export function ChatStream({
           ) : (
             <div className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-5">
               {segments.map((seg, i) => {
-                if (seg.type === 'artifact') return <ArtifactItem key={i} event={seg.event} h={h} />;
-                if (seg.type === 'event') return <ChatEventView key={i} event={seg.event} h={h} />;
-                if (seg.type === 'activity') return <ActivityGroup key={i} events={seg.events} h={h} />;
-                return <ProposalGroup key={i} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
+                const k = seg.type === 'event' ? seg.event.id
+                  : seg.type === 'artifact' ? seg.event.id
+                  : seg.type === 'activity' ? seg.events[0]?.id ?? i
+                  : `${seg.time}-${i}`;
+                if (seg.type === 'artifact') return <ArtifactItem key={k} event={seg.event} h={h} />;
+                if (seg.type === 'event') return <ChatEventView key={k} event={seg.event} h={h} />;
+                if (seg.type === 'activity') return <ActivityGroup key={k} events={seg.events} h={h} />;
+                return <ProposalGroup key={k} findings={seg.findings} questions={seg.questions} time={seg.time} h={h} />;
               })}
               {streaming && (
                 <div role="status" aria-live="polite" className="flex items-center gap-2 text-[13px] text-brand">

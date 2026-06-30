@@ -255,7 +255,7 @@ function ProposalSummary({
   h: ChatEventHandlers;
 }) {
   const ids = [...findings.map((f) => f.findingId), ...questions.map((q) => q.questionId)];
-  const status = statusOf(ids, h?.proposalStatus);
+  const status = statusOf(ids, h.proposalStatus);
   return (
     <div className="rounded-sm border border-border-subtle bg-surface">
       <div className="flex items-center gap-1.5 px-3 py-1.5">
