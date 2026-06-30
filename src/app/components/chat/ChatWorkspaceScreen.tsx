@@ -147,13 +147,11 @@ export function ChatWorkspaceScreen() {
           )}
         </div>
         {reviewing && (
-          <Drawer open onClose={() => setReviewing(null)} side="right" ariaLabel="Proposal review">
-            <ProposalReviewDrawer set={reviewing} onClose={() => setReviewing(null)}
-              onConfirm={(kind, id) => {
-                if (kind === 'finding') { const p = reviewing.findings.find((f) => f.findingId === id); if (p) handlers.onConfirmFinding(p); }
-                else { const p = reviewing.questions.find((q) => q.questionId === id); if (p) handlers.onConfirmQuestion(p); }
-              }} />
-          </Drawer>
+          <ProposalReviewDrawer set={reviewing} onClose={() => setReviewing(null)}
+            onConfirm={(kind, id) => {
+              if (kind === 'finding') { const p = reviewing.findings.find((f) => f.findingId === id); if (p) handlers.onConfirmFinding(p); }
+              else { const p = reviewing.questions.find((q) => q.questionId === id); if (p) handlers.onConfirmQuestion(p); }
+            }} />
         )}
         {newChatOpen && (
           <NewChatModal onClose={() => setNewChatOpen(false)}
@@ -203,13 +201,11 @@ export function ChatWorkspaceScreen() {
 
       {/* Proposal review */}
       {reviewing && (
-        <Drawer open onClose={() => setReviewing(null)} side="right" ariaLabel="Proposal review">
-          <ProposalReviewDrawer set={reviewing} onClose={() => setReviewing(null)}
-            onConfirm={(kind, id) => {
-              if (kind === 'finding') { const p = reviewing.findings.find((f) => f.findingId === id); if (p) handlers.onConfirmFinding(p); }
-              else { const p = reviewing.questions.find((q) => q.questionId === id); if (p) handlers.onConfirmQuestion(p); }
-            }} />
-        </Drawer>
+        <ProposalReviewDrawer set={reviewing} onClose={() => setReviewing(null)}
+          onConfirm={(kind, id) => {
+            if (kind === 'finding') { const p = reviewing.findings.find((f) => f.findingId === id); if (p) handlers.onConfirmFinding(p); }
+            else { const p = reviewing.questions.find((q) => q.questionId === id); if (p) handlers.onConfirmQuestion(p); }
+          }} />
       )}
 
       {newChatOpen && (
