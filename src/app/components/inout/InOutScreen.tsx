@@ -13,7 +13,7 @@ import {
   buildDocumentDetail, buildArtifactDetail, buildExperimentDetail,
   buildReportDetail, buildRelationshipDetailModel,
   experiments, findings, openQuestions, edges, getExperimentBySlug,
-  describeRelationshipSentence, formatShortId, canonicalExperimentPath,
+  describeRelationshipSentence, formatShortId, canonicalExperimentPath, pluralize,
   type InOutEntity, type InOutExperiment, type InOutInput, type InOutOutput,
   type InOutRelationship, type InOutViewModel, type InOutSummary,
   type InOutDetail, type FindingDetail, type QuestionDetail,
